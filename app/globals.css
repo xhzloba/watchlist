@@ -1,0 +1,780 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Основные стили для скроллбара */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+/* Трек (фон) скроллбара */
+::-webkit-scrollbar-track {
+  background: rgba(31, 41, 55, 0.5);
+  border-radius: 5px;
+}
+
+/* Ползунок скроллбара */
+::-webkit-scrollbar-thumb {
+  background: rgba(245, 158, 11, 0.5);
+  border-radius: 5px;
+  border: 2px solid rgba(31, 41, 55, 0.5);
+  transition: all 0.2s ease;
+}
+
+/* Ховер эффект для ползунка */
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(245, 158, 11, 0.8);
+}
+
+/* Стили для Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(245, 158, 11, 0.5) rgba(31, 41, 55, 0.5);
+}
+
+/* Стили для горизонтального скроллбара в карточках фильмов */
+.movie-row::-webkit-scrollbar {
+  height: 6px;
+}
+
+.movie-row::-webkit-scrollbar-track {
+  background: rgba(31, 41, 55, 0.3);
+  border-radius: 3px;
+}
+
+.movie-row::-webkit-scrollbar-thumb {
+  background: rgba(245, 158, 11, 0.4);
+  border-radius: 3px;
+  border: none;
+}
+
+.movie-row::-webkit-scrollbar-thumb:hover {
+  background: rgba(245, 158, 11, 0.6);
+}
+
+/* Плавный скролл для всей страницы */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Скрываем скроллбар в мобильных устройствах */
+@media (max-width: 768px) {
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  .movie-row::-webkit-scrollbar {
+    height: 3px;
+  }
+}
+
+/* Стили для темного режима */
+@media (prefers-color-scheme: dark) {
+  ::-webkit-scrollbar-track {
+    background: rgba(17, 24, 39, 0.5);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    border-color: rgba(17, 24, 39, 0.5);
+  }
+}
+
+:root {
+  /* Базовый цвет фона */
+  --bg-color: #121212;
+
+  /* Основные цвета для градиентов */
+  --color-ultrablur-tl: #171717;
+  --color-ultrablur-tr: #1c1c1c;
+  --color-ultrablur-br: #414141;
+  --color-ultrablur-bl: #272727;
+
+  /* Цвет поверхности (поверх градиента) */
+  --color-surface-background-100: #121212;
+}
+
+html {
+  background-color: var(--bg-color);
+}
+
+body {
+  background-color: var(--bg-color);
+  color: white;
+  min-height: 100vh;
+}
+
+/* Дополнительные стили для предотвращения вспышки */
+::before,
+::after {
+  background-color: var(--bg-color);
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@layer base {
+  :root {
+    --background: 0 0% 7%;
+    --foreground: 0 0% 100%;
+  }
+}
+
+/* Индикатор загрузки */
+body.loading::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(to right, transparent, #ffcc00, transparent);
+  animation: loading 1.5s infinite;
+  z-index: 9999;
+}
+
+@keyframes loading {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.clip-path-polygon {
+  clip-path: polygon(15% 0%, 100% 0%, 100% 100%, 0% 100%);
+}
+
+/* Анимации для короны первого места в рейтинге */
+@keyframes shinePulse {
+  0% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+  50% {
+    opacity: 1;
+    filter: brightness(1.5);
+  }
+  100% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+}
+
+@keyframes bounceSlow {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+/* Анимации для частиц вокруг короны */
+@keyframes particle1 {
+  0% {
+    transform: translate(0, 0) scale(0.8);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translate(-5px, -5px) scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(0, 0) scale(0.8);
+    opacity: 0.5;
+  }
+}
+
+@keyframes particle2 {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translate(5px, -3px) scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.7;
+  }
+}
+
+@keyframes particle3 {
+  0% {
+    transform: translate(0, 0) scale(0.9);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translate(-4px, 4px) scale(1.3);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(0, 0) scale(0.9);
+    opacity: 0.6;
+  }
+}
+
+@keyframes particle4 {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translate(3px, 5px) scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.5;
+  }
+}
+
+@keyframes particle5 {
+  0% {
+    transform: translate(0, 0) scale(0.7);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translate(-2px, 3px) scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(0, 0) scale(0.7);
+    opacity: 0.4;
+  }
+}
+
+@keyframes particle6 {
+  0% {
+    transform: translate(0, 0) scale(0.8);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translate(4px, -2px) scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(0, 0) scale(0.8);
+    opacity: 0.6;
+  }
+}
+
+/* Золотые лучи */
+.gold-rays {
+  position: relative;
+  overflow: hidden;
+}
+
+.gold-rays::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(
+    circle at center,
+    rgba(234, 179, 8, 0.7) 0%,
+    transparent 70%
+  );
+  animation: raysPulse 3s infinite;
+}
+
+/* Серебряные лучи */
+.silver-rays {
+  position: relative;
+  overflow: hidden;
+}
+
+.silver-rays::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(
+    circle at center,
+    rgba(203, 213, 225, 0.7) 0%,
+    transparent 70%
+  );
+  animation: raysPulse 3s infinite;
+}
+
+/* Бронзовые лучи */
+.bronze-rays {
+  position: relative;
+  overflow: hidden;
+}
+
+.bronze-rays::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(
+    circle at center,
+    rgba(180, 83, 9, 0.7) 0%,
+    transparent 70%
+  );
+  animation: raysPulse 3s infinite;
+}
+
+@keyframes raysPulse {
+  0% {
+    opacity: 0.5;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.2);
+  }
+  100% {
+    opacity: 0.5;
+    transform: scale(0.8);
+  }
+}
+
+/* Применение анимаций */
+.animate-shine-pulse {
+  animation: shinePulse 2s infinite;
+}
+
+.animate-bounce-slow {
+  animation: bounceSlow 3s infinite;
+}
+
+.animate-particle-1 {
+  animation: particle1 3s infinite;
+}
+
+.animate-particle-2 {
+  animation: particle2 4s infinite;
+}
+
+.animate-particle-3 {
+  animation: particle3 3.5s infinite;
+}
+
+.animate-particle-4 {
+  animation: particle4 4.5s infinite;
+}
+
+.animate-particle-5 {
+  animation: particle5 3.2s infinite;
+}
+
+.animate-particle-6 {
+  animation: particle6 3.8s infinite;
+}
+
+/* Анимация пинга с медленной скоростью */
+@keyframes ping-slow {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.3;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+}
+
+/* Анимация для микрочастиц */
+@keyframes micro-particle-1 {
+  0%,
+  100% {
+    transform: translate(0, 0);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translate(-2px, 2px);
+    opacity: 1;
+  }
+}
+
+@keyframes micro-particle-2 {
+  0%,
+  100% {
+    transform: translate(0, 0);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translate(3px, -1px);
+    opacity: 1;
+  }
+}
+
+@keyframes micro-particle-3 {
+  0%,
+  100% {
+    transform: translate(0, 0);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translate(1px, 2px);
+    opacity: 1;
+  }
+}
+
+@keyframes micro-particle-4 {
+  0%,
+  100% {
+    transform: translate(0, 0);
+    opacity: 0.5;
+  }
+  33% {
+    transform: translate(-2px, 0);
+    opacity: 1;
+  }
+  66% {
+    transform: translate(0, -2px);
+    opacity: 0.7;
+  }
+}
+
+@keyframes micro-particle-5 {
+  0%,
+  100% {
+    transform: translate(0, 0);
+    opacity: 0.6;
+  }
+  33% {
+    transform: translate(2px, 2px);
+    opacity: 1;
+  }
+  66% {
+    transform: translate(-1px, 1px);
+    opacity: 0.8;
+  }
+}
+
+/* Анимация для светящихся линий */
+@keyframes light-ray-1 {
+  0%,
+  100% {
+    opacity: 0;
+    transform: translateX(0) scaleX(0.8);
+  }
+  50% {
+    opacity: 0.7;
+    transform: translateX(2px) scaleX(1.2);
+  }
+}
+
+@keyframes light-ray-2 {
+  0%,
+  100% {
+    opacity: 0;
+    transform: translateY(0) scaleY(0.8);
+  }
+  50% {
+    opacity: 0.7;
+    transform: translateY(2px) scaleY(1.2);
+  }
+}
+
+/* Пульсация для медалей */
+@keyframes pulse-slow {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.2);
+  }
+}
+
+/* Применение анимаций */
+.animate-ping-slow {
+  animation: ping-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 2.5s ease-in-out infinite;
+}
+
+.animate-micro-particle-1 {
+  animation: micro-particle-1 3.5s ease-in-out infinite;
+}
+
+.animate-micro-particle-2 {
+  animation: micro-particle-2 4s ease-in-out infinite;
+}
+
+.animate-micro-particle-3 {
+  animation: micro-particle-3 3.2s ease-in-out infinite;
+}
+
+.animate-micro-particle-4 {
+  animation: micro-particle-4 3.7s ease-in-out infinite;
+}
+
+.animate-micro-particle-5 {
+  animation: micro-particle-5 4.2s ease-in-out infinite;
+}
+
+.animate-light-ray-1 {
+  animation: light-ray-1 4s ease-in-out infinite;
+}
+
+.animate-light-ray-2 {
+  animation: light-ray-2 4.5s ease-in-out infinite;
+}
+
+/* Стили для цифр рангов */
+.rank-number {
+  text-shadow: 2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000,
+    -1px 1px 0 #000, 1px 1px 0 #000;
+}
+
+/* Анимация появления */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* Анимации для модального окна */
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes modalBackdropFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes floatUp {
+  0% {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(-15px);
+    opacity: 0.7;
+  }
+}
+
+@keyframes glow {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.05);
+  }
+}
+
+/* Классы для анимаций */
+.animate-modal-fade-in {
+  animation: modalFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-backdrop-fade-in {
+  animation: modalBackdropFadeIn 0.4s ease forwards;
+}
+
+.animate-float-up {
+  animation: floatUp 3s ease-in-out infinite alternate;
+}
+
+.animate-glow {
+  animation: glow 4s ease-in-out infinite;
+}
+
+.animate-pulse-slow {
+  animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Примените к нужному классу для заголовков */
+.letter-spacing-1 {
+  letter-spacing: 0.1em;
+}
+
+.letter-spacing-2 {
+  letter-spacing: 0.15em;
+}
+
+/* Стили для заголовков с желтой подсветкой */
+.heading-glow {
+  position: relative;
+}
+
+.heading-glow::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    rgba(234, 179, 8, 0.1),
+    rgba(234, 179, 8, 0.5) 50%,
+    rgba(234, 179, 8, 0.1)
+  );
+  filter: blur(0.5px);
+  animation: headingGlow 3s ease-in-out infinite;
+}
+
+@keyframes headingGlow {
+  0%,
+  100% {
+    opacity: 0.5;
+    filter: blur(0.5px);
+  }
+  50% {
+    opacity: 0.8;
+    filter: blur(1px);
+  }
+}
+
+/* Анимации для восходящих частиц */
+@keyframes float-up-1 {
+  0% {
+    transform: translateY(0px);
+    opacity: 0.3;
+  }
+  100% {
+    transform: translateY(-25px);
+    opacity: 0;
+  }
+}
+
+@keyframes float-up-2 {
+  0% {
+    transform: translateY(0px);
+    opacity: 0.4;
+  }
+  100% {
+    transform: translateY(-28px);
+    opacity: 0;
+  }
+}
+
+@keyframes float-up-3 {
+  0% {
+    transform: translateY(0px);
+    opacity: 0.3;
+  }
+  100% {
+    transform: translateY(-22px);
+    opacity: 0;
+  }
+}
+
+@keyframes float-up-4 {
+  0% {
+    transform: translateY(0px);
+    opacity: 0.2;
+  }
+  100% {
+    transform: translateY(-30px);
+    opacity: 0;
+  }
+}
+
+@keyframes float-up-5 {
+  0% {
+    transform: translateY(0px);
+    opacity: 0.3;
+  }
+  100% {
+    transform: translateY(-26px);
+    opacity: 0;
+  }
+}
+
+/* Тени для эффектов свечения */
+.shadow-glow-sm {
+  box-shadow: 0 0 5px rgba(234, 179, 8, 0.5);
+}
+
+.shadow-glow-md {
+  box-shadow: 0 0 10px rgba(234, 179, 8, 0.6);
+}
+
+.shadow-glow-lg {
+  box-shadow: 0 0 15px rgba(234, 179, 8, 0.7);
+}
+
+.shadow-glow-xs {
+  box-shadow: 0 0 3px rgba(234, 179, 8, 0.4);
+}
+
+/* Анимации для восходящих частиц */
+.animate-float-up-1 {
+  animation: float-up-1 3s ease-out infinite;
+}
+
+.animate-float-up-2 {
+  animation: float-up-2 2.5s ease-out infinite;
+}
+
+.animate-float-up-3 {
+  animation: float-up-3 3.2s ease-out infinite;
+}
+
+.animate-float-up-4 {
+  animation: float-up-4 4s ease-out infinite;
+}
+
+.animate-float-up-5 {
+  animation: float-up-5 3.7s ease-out infinite;
+}
