@@ -29,10 +29,7 @@ const ViewingHistoryRow = dynamic(
 );
 
 // Компонент-обертка для модального окна, с клиентской проверкой
-const WelcomeModalWrapper = dynamic(
-  () => import("@/components/ui/welcome-modal-wrapper"),
-  { ssr: false }
-);
+// ... existing code ...
 
 // Вынесем компонент домашней страницы в отдельную функцию
 // Это теперь серверный компонент
@@ -294,9 +291,8 @@ async function HomePageContent() {
             )}
           </div>
         </main>
-
         {/* Модальное окно приветствия и ввода имени */}
-        <WelcomeModalWrapper />
+        // ... existing code ...
       </div>
     );
   } catch (error) {
