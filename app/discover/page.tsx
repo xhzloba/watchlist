@@ -697,7 +697,7 @@ function DiscoverContent() {
           } transition-all duration-300 shadow-lg`}
         >
           <img
-            src={getImageUrl(movie.poster_path, "w500")}
+            src={getImageUrl(movie.poster_path || "", "w500")}
             alt={movie.title || movie.name || ""}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             onError={(e) => {
@@ -808,8 +808,8 @@ function DiscoverContent() {
               <DynamicHeading />
             </div>
 
-            {/* Выбор размера вертикального промежутка */}
-            <div className="flex items-center gap-2 mr-4 flex-shrink-0">
+            {/* Выбор размера вертикального промежутка - СКРЫТ на мобильных */}
+            <div className="hidden md:flex items-center gap-2 mr-4 flex-shrink-0">
               <span className="text-xs text-gray-400">
                 Вертикальный промежуток:
               </span>
@@ -847,11 +847,14 @@ function DiscoverContent() {
               </div>
             </div>
 
-            {/* Слайдер размера постеров */}
-            <div className="flex items-center gap-3 flex-shrink-0 w-48">
+            {/* Слайдер размера постеров - ВИДЕН всегда, но ЛЕЙБЛЫ скрыты на мобильных */}
+            {/* Делаем gap одинаковым: gap-3 */}
+            {/* Устанавливаем ширину: 80px по умолчанию, w-48 (192px) на md+ */}
+            <div className="flex items-center gap-3 flex-shrink-0 w-[80px] md:w-48">
+              {/* ЛЕЙБЛ "Размер:" СКРЫТ на мобильных */}
               <label
                 htmlFor="poster-size-slider"
-                className="text-xs text-gray-400 whitespace-nowrap"
+                className="hidden md:inline text-xs text-gray-400 whitespace-nowrap"
               >
                 Размер:
               </label>
@@ -880,8 +883,8 @@ function DiscoverContent() {
                     : "Крупный"
                 }`}
               />
-              {/* Отображение текущего размера */}
-              <span className="text-xs font-medium text-gray-300 w-14 text-right">
+              {/* Отображение текущего размера - СКРЫТО на мобильных */}
+              <span className="hidden md:inline text-xs font-medium text-gray-300 w-14 text-right">
                 {posterSize === "small" && "Мелкий"}
                 {posterSize === "medium" && "Средний"}
                 {posterSize === "large" && "Крупный"}
