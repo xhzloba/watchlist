@@ -17,6 +17,7 @@ import {
   Clock,
   Search,
   ChevronUp,
+  Menu,
 } from "lucide-react";
 import SearchBar from "./search-bar";
 import { useColorContext } from "@/contexts/color-context";
@@ -29,19 +30,6 @@ import { useUsername } from "@/contexts/username-context";
 import { useDebounce } from "@/hooks/use-debounce";
 import clsx from "clsx";
 import { playSound } from "@/lib/sound-utils";
-
-// Убираем ключ для размера постеров из этого объекта, он теперь не нужен в header
-const LOCAL_STORAGE_KEYS = {
-  ...STORAGE_KEYS,
-  USERNAME: "username",
-  // SETTINGS_SHOW_MOVIE_RATING: "settings_show_movie_rating", // Перенесено
-  // SETTINGS_ENABLE_SOUND_EFFECTS: "settings_enable_sound_effects", // Перенесено
-  // SETTINGS_ROUNDED_CORNERS: "settings_rounded_corners", // Перенесено
-  // SETTINGS_SHOW_TITLES: "settings_show_titles", // Перенесено
-  // SETTINGS_YELLOW_HOVER: "settings_yellow_hover", // Перенесено
-  // SETTINGS_DYNAMIC_BACKDROP: "settings_dynamic_backdrop", // Перенесено
-  // SETTINGS_DISABLE_COLOR_OVERLAY: "settings_disable_color_overlay", // Перенесено
-};
 
 // Создаем безопасные функции для работы с localStorage
 function safeGetItem(key: string): string | null {
@@ -557,16 +545,7 @@ export default function Header() {
   const [tempUsername, setTempUsername] = useState("");
   const [mounted, setMounted] = useState(false);
   const profileId = useId();
-  // Удаляем состояния и логику поповера профиля
-  // const [showProfilePopover, setShowProfilePopover] = useState(false);
-  // const [activeSettingsTab, setActiveSettingsTab] = useState("interface");
-  // const [showMovieRating, setShowMovieRating] = useState(() => { ... }); // Перенесено
-  // const [enableSoundEffects, setEnableSoundEffects] = useState(() => { ... }); // Перенесено
-  // const [roundedCorners, setRoundedCorners] = useState(() => { ... }); // Перенесено
-  // const [showTitles, setShowTitles] = useState(() => { ... }); // Перенесено
-  // const [yellowHover, setYellowHover] = useState(() => { ... }); // Перенесено
-  // const [dynamicBackdrop, setDynamicBackdrop] = useState(() => { ... }); // Перенесено
-  // const [disableColorOverlay, setDisableColorOverlay] = useState(() => { ... }); // Перенесено
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // Состояние для мобильного меню
 
   const [movieLogo, setMovieLogo] = useState<string | null>(null);
   const [movieTitle, setMovieTitle] = useState<string | null>(null);
@@ -888,28 +867,6 @@ export default function Header() {
     }
   }, [mounted, profileId]);
 
-  // Удаляем эффект сохранения настроек - он переедет на страницу профиля
-  // useEffect(() => {
-  //   if (mounted) {
-  //     safeSetItem( ... );
-  //     // ... остальное ...
-  //     document.dispatchEvent(event);
-  //   }
-  // }, [
-  //   showMovieRating,
-  //   enableSoundEffects,
-  //   roundedCorners,
-  //   showTitles,
-  //   yellowHover,
-  //   dynamicBackdrop,
-  //   disableColorOverlay, // Добавили новую настройку
-  //   mounted,
-  // ]);
-
-  // Удаляем функции управления поповером профиля
-  // const handleShowProfilePopover = () => { ... };
-  // const handleHideProfilePopover = () => { ... };
-
   // Восстанавливаем состояние для времени
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
 
@@ -1046,6 +1003,25 @@ export default function Header() {
     }, 300); // Время должно совпадать с продолжительностью анимации
   };
 
+  // Функция для переключения мобильного меню
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+    playSound(isMobileMenuOpen ? "menu_close.mp3" : "menu_open.mp3");
+  };
+
+  // Функция для закрытия мобильного меню (например, при клике на ссылку)
+  const closeMobileMenu = () => {
+    if (isMobileMenuOpen) {
+      setIsMobileMenuOpen(false);
+      playSound("menu_close.mp3");
+    }
+  };
+
+  // Добавляем эффект для закрытия меню при изменении маршрута
+  useEffect(() => {
+    closeMobileMenu();
+  }, [pathname, searchParams]);
+
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -1053,15 +1029,23 @@ export default function Header() {
       }`}
       style={headerStyle}
     >
-      <div className="container-fluid mx-auto py-4 px-6">
-        <div className="flex items-center justify-between w-full">
-          {/* Левая часть с логотипом */}
-          <div className="flex items-center">
-            {/* Заменяем логотип КиноПортал на лого фильма, если оно есть */}
+      {/* Добавляем контейнер-обертку для flex на мобильных */}
+      <div className="container-fluid mx-auto py-3 px-4 md:py-4 md:px-6">
+        {" "}
+        {/* Уменьшаем padding на мобильных */}
+        <div className="flex items-center justify-between w-full gap-4">
+          {" "}
+          {/* Добавляем gap */}
+          {/* Левая часть с логотипом + ДЕСКТОПНАЯ навигация */}
+          <div className="flex items-center flex-shrink-0">
+            {" "}
+            {/* Лого + десктоп-нав не должны сжиматься */}
+            {/* Логотип */}
             {isMoviePage ? (
-              <div className="h-auto flex items-center mr-10">
+              <div className="h-auto flex items-center md:mr-10">
+                {" "}
+                {/* Убираем отступ справа на мобильных */}
                 {movieLogo ? (
-                  // Лого фильма, если оно загружено
                   <img
                     src={getImageUrl(movieLogo, "w300")}
                     alt={movieTitle || "Лого фильма"}
@@ -1070,7 +1054,6 @@ export default function Header() {
                     style={{ cursor: "pointer" }}
                   />
                 ) : (
-                  // Если лого нет, но мы на странице фильма, показываем HDPlanetLogo
                   <Link href="/" className="cursor-pointer">
                     <HDPlanetLogo />
                   </Link>
@@ -1081,15 +1064,16 @@ export default function Header() {
                 <HDPlanetLogo />
               </Link>
             )}
-
-            {/* Основная навигация */}
-            <nav className="hidden md:flex items-center gap-6">
+            {/* Основная ДЕСКТОПНАЯ навигация - СКРЫТА на мобильных */}
+            {/* Возвращаем SearchBar сюда */}
+            <nav className="hidden md:flex items-center gap-6 ml-10">
+              {" "}
+              {/* Добавил ml-10 для отступа от лого */}
               <AINavigationLink
                 href="/"
                 label="Главная"
                 isActive={pathname === "/"}
               />
-
               <AINavigationLink
                 href="/keywords"
                 label="Коллекции"
@@ -1097,8 +1081,7 @@ export default function Header() {
                   pathname === "/keywords" || pathname.startsWith("/keywords/")
                 }
               />
-
-              {/* Модифицирую пункт "Актеры" для отображения всплывающего меню с алфавитным списком */}
+              {/* ===== ВОССТАНАВЛИВАЕМ Актеры ===== */}
               <div className="relative">
                 <div className="flex items-center">
                   <AINavigationLink
@@ -1113,6 +1096,7 @@ export default function Header() {
                     className="ml-1 w-5 h-5 rounded-full bg-yellow-500 hover:bg-gray-400 flex items-center justify-center transition-colors group"
                     aria-label="Поиск актеров"
                   >
+                    {/* ... svg иконка плюса ... */}
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width="12"
@@ -1130,16 +1114,15 @@ export default function Header() {
                     </svg>
                   </button>
                 </div>
-
                 {/* Всплывающее меню актеров по алфавиту */}
                 {showActorsPopover && (
                   <>
-                    {/* Добавляем оверлей для закрытия попапа по клику вне */}
+                    {/* Оверлей */}
                     <div
                       className="fixed inset-0 z-40"
                       onClick={handleHideActorsPopover}
                     ></div>
-
+                    {/* Поповер */}
                     <div
                       className={`absolute top-full left-0 mt-4 w-[600px] overflow-hidden z-50 border ${
                         isActorsPopoverClosing
@@ -1162,18 +1145,17 @@ export default function Header() {
                       <div className="relative">
                         <div className="absolute -bottom-20 -right-20 w-64 h-64 rounded-full bg-yellow-500/5 blur-3xl pointer-events-none"></div>
                         <div className="absolute -top-20 -left-20 w-40 h-40 rounded-full bg-yellow-500/5 blur-3xl pointer-events-none"></div>
-
-                        {/* Компонент с актерами по алфавиту */}
                         <DynamicActorsAlphabetical />
                       </div>
                     </div>
                   </>
                 )}
               </div>
-
-              {/* Существующий пункт "Обзор" - возвращаем обычную ссылку */}
+              {/* ==================================== */}
+              {/* ===== ВОССТАНАВЛИВАЕМ Обзор ===== */}
               <div ref={discoverRef} className="relative">
                 <div className="flex items-center">
+                  {/* Обертка для AINavigationLink (или просто стилизованная ссылка) */}
                   <div
                     onClick={(e) => {
                       e.preventDefault();
@@ -1184,6 +1166,7 @@ export default function Header() {
                     <Compass className="w-4 h-4" />
                     <span>ОБЗОР</span>
                   </div>
+                  {/* Кнопка поповера */}
                   <button
                     onClick={(e) => {
                       e.preventDefault();
@@ -1196,6 +1179,7 @@ export default function Header() {
                     className="ml-1 w-5 h-5 rounded-full bg-yellow-500 hover:bg-gray-400 flex items-center justify-center transition-colors group"
                     aria-label="Фильтры обзора"
                   >
+                    {/* ... svg иконка стрелки ... */}
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width="12"
@@ -1216,12 +1200,10 @@ export default function Header() {
                     </svg>
                   </button>
                 </div>
-
                 {/* Popover для "Обзор" */}
                 {showDiscoverPopover && (
                   <>
-                    {/* Удаляем затемнение фона при активном поповере */}
-
+                    {/* Содержимое поповера Обзор - ВОССТАНАВЛИВАЕМ */}
                     <div
                       ref={popoverRef}
                       className={`absolute top-full left-0 mt-4 w-[680px] overflow-hidden z-50 border ${
@@ -1242,6 +1224,7 @@ export default function Header() {
                           Фильтры
                         </h3>
                       </div>
+                      {/* ВОССТАНАВЛИВАЕМ СОДЕРЖИМОЕ */}
                       <div className="relative grid grid-cols-12 gap-0 p-5">
                         {/* Фоновый декоративный элемент */}
                         <div className="absolute -bottom-20 -right-20 w-64 h-64 rounded-full bg-yellow-500/5 blur-3xl pointer-events-none"></div>
@@ -1256,16 +1239,13 @@ export default function Header() {
                             <li>
                               <button
                                 onClick={() => {
-                                  // Применяем выбранные жанры (если есть) + переходим на обычную страницу обзора
                                   const params = new URLSearchParams();
-
                                   if (selectedGenres.length > 0) {
                                     params.set(
                                       "with_genres",
                                       selectedGenres.join(",")
                                     );
                                   }
-
                                   router.push(
                                     `/discover${
                                       params.toString()
@@ -1305,21 +1285,15 @@ export default function Header() {
                             <li>
                               <button
                                 onClick={() => {
-                                  // Применяем упрощенный параметр года для фильмов 2025
                                   const params = new URLSearchParams();
-
-                                  // Устанавливаем короткий параметр year=2025
                                   params.set("year", "2025");
-                                  // Сортируем по популярности
                                   params.set("sort_by", "popularity.desc");
-
                                   if (selectedGenres.length > 0) {
                                     params.set(
                                       "with_genres",
                                       selectedGenres.join(",")
                                     );
                                   }
-
                                   router.push(`/discover?${params.toString()}`);
                                   setShowDiscoverPopover(false);
                                 }}
@@ -1351,25 +1325,17 @@ export default function Header() {
                             <li>
                               <button
                                 onClick={() => {
-                                  // Очищаем sessionStorage перед переходом
-                                  console.log(
-                                    "[SCROLL CLEAR] Очистка sessionStorage при переходе на новую страницу (В тренде сейчас)"
-                                  );
                                   Object.values(STORAGE_KEYS).forEach((key) => {
                                     sessionStorage.removeItem(key);
                                   });
-
-                                  // Применяем выбранные жанры (если есть) + trending=day
                                   const params = new URLSearchParams();
                                   params.set("trending", "day");
-
                                   if (selectedGenres.length > 0) {
                                     params.set(
                                       "with_genres",
                                       selectedGenres.join(",")
                                     );
                                   }
-
                                   router.push(`/discover?${params.toString()}`);
                                   setShowDiscoverPopover(false);
                                 }}
@@ -1396,25 +1362,17 @@ export default function Header() {
                             <li>
                               <button
                                 onClick={() => {
-                                  // Очищаем sessionStorage перед переходом
-                                  console.log(
-                                    "[SCROLL CLEAR] Очистка sessionStorage при переходе на новую страницу (В тренде за неделю)"
-                                  );
                                   Object.values(STORAGE_KEYS).forEach((key) => {
                                     sessionStorage.removeItem(key);
                                   });
-
-                                  // Применяем выбранные жанры (если есть) + trending=week
                                   const params = new URLSearchParams();
                                   params.set("trending", "week");
-
                                   if (selectedGenres.length > 0) {
                                     params.set(
                                       "with_genres",
                                       selectedGenres.join(",")
                                     );
                                   }
-
                                   router.push(`/discover?${params.toString()}`);
                                   setShowDiscoverPopover(false);
                                 }}
@@ -1447,14 +1405,14 @@ export default function Header() {
                           </ul>
                         </div>
 
-                        {/* Разделитель - по-прежнему занимает 1/12 ширины */}
+                        {/* Разделитель */}
                         <div className="col-span-1 flex justify-center px-2">
                           <div className="w-px bg-gradient-to-b from-gray-700/30 via-yellow-500/20 to-gray-700/30 h-full opacity-70"></div>
                         </div>
 
                         {/* Жанры (правая колонка) */}
                         <div className="col-span-7 pl-4">
-                          {/* Жанры - существующий код */}
+                          {/* Жанры */}
                           <div className="mb-5">
                             <div className="flex justify-between items-center mb-3 border-b border-yellow-500/30 pb-2">
                               <h3 className="text-yellow-500 text-base uppercase font-bebas-neue tracking-wider">
@@ -1463,8 +1421,7 @@ export default function Header() {
                               {selectedGenres.length > 0 && (
                                 <button
                                   onClick={clearGenres}
-                                  className="text-xs text-black flex items-center gap-1.5 
-                                  transition-all duration-200 bg-yellow-500 px-2.5 py-1 rounded-full hover:bg-yellow-400 backdrop-blur-sm font-medium"
+                                  className="text-xs text-black flex items-center gap-1.5 transition-all duration-200 bg-yellow-500 px-2.5 py-1 rounded-full hover:bg-yellow-400 backdrop-blur-sm font-medium"
                                 >
                                   <X className="w-2.5 h-2.5" />
                                   Очистить{" "}
@@ -1473,27 +1430,23 @@ export default function Header() {
                                 </button>
                               )}
                             </div>
-
                             <div className="flex flex-wrap gap-1.5 mb-4">
                               {genres.map((genre) => (
                                 <button
                                   key={genre.id}
                                   onClick={() => toggleGenre(genre.id)}
-                                  className={`px-2.5 py-1 rounded-full text-xs transition-all duration-200
-                                    ${
-                                      selectedGenres.includes(genre.id)
-                                        ? "bg-white text-black font-medium shadow-md"
-                                        : "bg-transparent text-gray-300 hover:bg-white hover:text-black"
-                                    }
-                                  `}
+                                  className={`px-2.5 py-1 rounded-full text-xs transition-all duration-200 ${
+                                    selectedGenres.includes(genre.id)
+                                      ? "bg-white text-black font-medium shadow-md"
+                                      : "bg-transparent text-gray-300 hover:bg-white hover:text-black"
+                                  }`}
                                 >
                                   {genre.name}
                                 </button>
                               ))}
                             </div>
                           </div>
-
-                          {/* Годы выпуска - новый раздел */}
+                          {/* Годы */}
                           <div className="mb-5">
                             <div className="flex justify-between items-center mb-3 border-b border-yellow-500/30 pb-2">
                               <h3 className="text-yellow-500 text-base uppercase font-bebas-neue tracking-wider">
@@ -1502,35 +1455,30 @@ export default function Header() {
                               {selectedYear && (
                                 <button
                                   onClick={clearYearFilter}
-                                  className="text-xs text-black flex items-center gap-1.5 
-                                  transition-all duration-200 bg-yellow-500 px-2.5 py-1 rounded-full hover:bg-yellow-400 backdrop-blur-sm font-medium"
+                                  className="text-xs text-black flex items-center gap-1.5 transition-all duration-200 bg-yellow-500 px-2.5 py-1 rounded-full hover:bg-yellow-400 backdrop-blur-sm font-medium"
                                 >
                                   <X className="w-2.5 h-2.5" />
                                   Очистить
                                 </button>
                               )}
                             </div>
-
                             <div className="flex flex-wrap gap-1.5 mb-4">
                               {years.map((year) => (
                                 <button
                                   key={year}
                                   onClick={() => handleYearSelection(year)}
-                                  className={`px-2.5 py-1 rounded-full text-xs transition-all duration-200
-                                    ${
-                                      selectedYear === year
-                                        ? "bg-white text-black font-medium shadow-md"
-                                        : "bg-transparent text-gray-300 hover:bg-white hover:text-black"
-                                    }
-                                  `}
+                                  className={`px-2.5 py-1 rounded-full text-xs transition-all duration-200 ${
+                                    selectedYear === year
+                                      ? "bg-white text-black font-medium shadow-md"
+                                      : "bg-transparent text-gray-300 hover:bg-white hover:text-black"
+                                  }`}
                                 >
                                   {year}
                                 </button>
                               ))}
                             </div>
                           </div>
-
-                          {/* Страны - новый раздел */}
+                          {/* Страны */}
                           <div className="mb-5">
                             <div className="flex justify-between items-center mb-3 border-b border-yellow-500/30 pb-2">
                               <h3 className="text-yellow-500 text-base uppercase font-bebas-neue tracking-wider">
@@ -1539,15 +1487,13 @@ export default function Header() {
                               {selectedCountry && (
                                 <button
                                   onClick={clearCountryFilter}
-                                  className="text-xs text-black flex items-center gap-1.5 
-                                  transition-all duration-200 bg-yellow-500 px-2.5 py-1 rounded-full hover:bg-yellow-400 backdrop-blur-sm font-medium"
+                                  className="text-xs text-black flex items-center gap-1.5 transition-all duration-200 bg-yellow-500 px-2.5 py-1 rounded-full hover:bg-yellow-400 backdrop-blur-sm font-medium"
                                 >
                                   <X className="w-2.5 h-2.5" />
                                   Очистить
                                 </button>
                               )}
                             </div>
-
                             <div className="flex flex-wrap gap-1.5 mb-4">
                               {countries.map((country) => (
                                 <button
@@ -1555,72 +1501,49 @@ export default function Header() {
                                   onClick={() =>
                                     handleCountrySelection(country.code)
                                   }
-                                  className={`px-2.5 py-1 rounded-full text-xs transition-all duration-200
-                                    ${
-                                      selectedCountry === country.code
-                                        ? "bg-white text-black font-medium shadow-md"
-                                        : "bg-transparent text-gray-300 hover:bg-white hover:text-black"
-                                    }
-                                  `}
+                                  className={`px-2.5 py-1 rounded-full text-xs transition-all duration-200 ${
+                                    selectedCountry === country.code
+                                      ? "bg-white text-black font-medium shadow-md"
+                                      : "bg-transparent text-gray-300 hover:bg-white hover:text-black"
+                                  }`}
                                 >
                                   {country.name}
                                 </button>
                               ))}
                             </div>
                           </div>
-
-                          {/* Кнопка применения фильтров */}
+                          {/* Кнопка Применить */}
                           {(selectedGenres.length > 0 ||
                             selectedYear ||
                             selectedCountry) && (
                             <div className="mt-5 flex justify-center">
                               <button
                                 onClick={() => {
-                                  // Создаем НОВЫЕ параметры URL
                                   const params = new URLSearchParams();
-
-                                  // Добавляем выбранные жанры
                                   if (selectedGenres.length > 0) {
                                     params.set(
                                       "with_genres",
                                       selectedGenres.join(",")
                                     );
                                   }
-
-                                  // Добавляем выбранный год
                                   if (selectedYear) {
                                     params.set("year", selectedYear);
                                   }
-
-                                  // Добавляем выбранную страну
                                   if (selectedCountry) {
                                     params.set(
                                       "with_origin_country",
                                       selectedCountry
                                     );
                                   }
-
-                                  // Сортировка по популярности
                                   params.set("sort_by", "popularity.desc");
-
-                                  // Всегда добавляем случайный параметр для гарантированного обновления данных
                                   params.set("t", Date.now().toString());
-
-                                  // Принудительно обновляем данные путем перехода на новый URL
-                                  // Очищаем sessionStorage перед переходом для принудительной перезагрузки данных
                                   Object.values(STORAGE_KEYS).forEach((key) => {
                                     sessionStorage.removeItem(key);
                                   });
-
-                                  // Используем router.push для перехода на новый URL
                                   router.push(`/discover?${params.toString()}`);
-
-                                  // Закрываем поповер
                                   setShowDiscoverPopover(false);
                                 }}
-                                className="w-full px-4 py-3 bg-yellow-500 
-                                text-black rounded-full text-sm font-medium transition-all duration-200
-                                flex items-center justify-center gap-2 shadow-md hover:shadow-lg hover:bg-yellow-400"
+                                className="w-full px-4 py-3 bg-yellow-500 text-black rounded-full text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg hover:bg-yellow-400"
                               >
                                 <span>Применить фильтры</span>
                               </button>
@@ -1632,8 +1555,7 @@ export default function Header() {
                   </>
                 )}
               </div>
-
-              {/* Новый пункт меню "Избранное" */}
+              {/* ============================== */}
               <AINavigationLink
                 href="/watchlist"
                 label="Медиатека"
@@ -1642,39 +1564,31 @@ export default function Header() {
                   pathname.startsWith("/watchlist/")
                 }
               />
-
-              {/* Остальные пункты меню */}
+              {/* SearchBar теперь здесь */}
               <SearchBar />
             </nav>
           </div>
-
-          {/* Правая часть с профилем, временем и индикаторами */}
-          <div className="flex items-center gap-6">
-            {/* Профиль и настройки */}
-            <div
-              className="relative"
-              // УДАЛЯЕМ обработчики наведения
-              // onMouseEnter={handleShowProfilePopover}
-              // onMouseLeave={handleHideProfilePopover}
-            >
+          {/* Правая часть с иконками */}
+          <div className="flex items-center gap-3 md:gap-4 flex-shrink-0">
+            {" "}
+            {/* Иконки не должны сжиматься */}
+            {/* Профиль (виден всегда) */}
+            <div className="relative">
               <Link
-                href="/profile" // Ссылка ведет на страницу профиля
+                href="/profile"
                 className="flex items-center text-gray-400 hover:text-yellow-400 transition-colors cursor-pointer"
                 title={username ? `Профиль: ${username}` : "Профиль"}
-                onClick={() => playSound("choose.mp3")} // Добавим звук клика
+                onClick={() => playSound("choose.mp3")}
               >
                 <div className="w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center text-black font-medium text-sm">
-                  {/* Отображение инициала */}
                   <div
                     id={`profile-content-${profileId}`}
                     className={`transition-opacity duration-300 ${
                       mounted ? "opacity-100" : "opacity-0"
                     }`}
                   >
-                    {nameInitial || <User className="w-4 h-4" />}{" "}
-                    {/* Иконка по умолчанию, если нет инициала */}
+                    {nameInitial || <User className="w-4 h-4" />}
                   </div>
-                  {/* Временный плейсхолдер пока не загрузился username */}
                   {!mounted && (
                     <div
                       id={`profile-placeholder-${profileId}`}
@@ -1685,19 +1599,13 @@ export default function Header() {
                   )}
                 </div>
               </Link>
-
-              {/* УДАЛЯЕМ весь блок поповера */}
-              {/* {showProfilePopover && ( ... )} */}
             </div>
-
-            {/* Время и дата */}
-            <div className="text-white flex items-center gap-3">
-              {/* Левая колонка - время */}
+            {/* Время и дата - СКРЫТЫ на мобильных */}
+            <div className="hidden md:flex items-center gap-3 text-white">
               <div className="text-lg flex items-center h-full">
                 {formatDateTime(currentDateTime).time}
               </div>
 
-              {/* Правая колонка - дата и день недели */}
               <div className="flex flex-col justify-center">
                 <div className="text-xs leading-tight uppercase">
                   {formatDateTime(currentDateTime).date}
@@ -1707,12 +1615,10 @@ export default function Header() {
                 </div>
               </div>
             </div>
-
-            {/* Разделитель */}
-            <div className="h-5 w-px bg-gray-700"></div>
-
-            {/* Полноэкранный режим */}
-            <div className="text-white text-sm">
+            {/* Разделитель - СКРЫТ на мобильных */}
+            <div className="hidden md:block h-5 w-px bg-gray-700"></div>
+            {/* Полноэкранный режим - ВИДЕН только на десктопе */}
+            <div className="hidden md:block text-white text-sm">
               {isFullScreen ? (
                 <button
                   onClick={toggleFullScreen}
@@ -1731,11 +1637,103 @@ export default function Header() {
                 </button>
               )}
             </div>
+            {/* Иконка Гамбургер-меню - ВИДНА только на мобильных */}
+            <div className="md:hidden">
+              <button
+                onClick={toggleMobileMenu}
+                className="text-white hover:text-yellow-400 transition-colors p-1 -mr-1"
+                aria-label="Открыть меню"
+              >
+                <Menu size={24} />
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Модальное окно для ввода имени - оставляем, но его вызов нужно будет перенести или сделать доступным со страницы /profile */}
+      {/* Мобильное меню (Off-canvas) */}
+      {isMobileMenuOpen && (
+        <>
+          {/* Оверлей для закрытия */}
+          <div
+            className="fixed inset-0 bg-black/60 z-40 backdrop-blur-sm md:hidden"
+            onClick={closeMobileMenu}
+          ></div>
+
+          {/* Сама панель меню */}
+          <div
+            className={`fixed inset-0 bg-gray-900/98 backdrop-blur-md z-50 transform transition-transform duration-300 ease-in-out md:hidden ${
+              isMobileMenuOpen ? "translate-x-0" : "translate-x-full"
+            }`}
+          >
+            {/* Добавляем items-center justify-center для центрирования */}
+            <div className="flex flex-col h-full p-5 items-center justify-center text-center">
+              {/* Кнопка закрытия - позиционируем абсолютно в углу */}
+              <div className="absolute top-5 right-5">
+                <button
+                  onClick={closeMobileMenu}
+                  className="text-gray-400 hover:text-white transition-colors p-2" // Увеличил padding
+                  aria-label="Закрыть меню"
+                >
+                  <X size={28} /> {/* Увеличил иконку */}
+                </button>
+              </div>
+
+              {/* Поиск в мобильном меню - добавляем mx-auto для явного центрирования */}
+              <div className="mb-10 px-4 max-w-sm mx-auto">
+                {" "}
+                {/* Добавил mx-auto */}
+                <SearchBar />
+              </div>
+
+              {/* Ссылки меню */}
+              {/* Добавляем text-center к nav */}
+              <nav className="flex flex-col gap-5 text-center">
+                {" "}
+                {/* Увеличил gap */}
+                {/* Увеличиваем шрифт и меняем стиль */}
+                <Link
+                  href="/"
+                  onClick={closeMobileMenu}
+                  className="text-white hover:text-yellow-400 transition-colors py-2 text-2xl font-semibold uppercase tracking-wider flex items-center justify-center gap-3"
+                >
+                  <Home size={22} /> Главная
+                </Link>
+                <Link
+                  href="/keywords"
+                  onClick={closeMobileMenu}
+                  className="text-white hover:text-yellow-400 transition-colors py-2 text-2xl font-semibold uppercase tracking-wider flex items-center justify-center gap-3"
+                >
+                  <Bookmark size={22} /> Коллекции
+                </Link>
+                <Link
+                  href="/actors"
+                  onClick={closeMobileMenu}
+                  className="text-white hover:text-yellow-400 transition-colors py-2 text-2xl font-semibold uppercase tracking-wider flex items-center justify-center gap-3"
+                >
+                  <User size={22} /> Актеры
+                </Link>
+                <Link
+                  href="/discover"
+                  onClick={closeMobileMenu}
+                  className="text-white hover:text-yellow-400 transition-colors py-2 text-2xl font-semibold uppercase tracking-wider flex items-center justify-center gap-3"
+                >
+                  <Compass size={22} /> ОБЗОР
+                </Link>
+                <Link
+                  href="/watchlist"
+                  onClick={closeMobileMenu}
+                  className="text-white hover:text-yellow-400 transition-colors py-2 text-2xl font-semibold uppercase tracking-wider flex items-center justify-center gap-3"
+                >
+                  <MonitorSmartphone size={22} /> Медиатека
+                </Link>
+              </nav>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Модальное окно для ввода имени - оставляем без изменений */}
       {showNameModal && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[100]">
           <div className="bg-gray-900 rounded-lg p-6 max-w-md w-full border border-gray-700 shadow-xl">
@@ -1781,11 +1779,8 @@ export default function Header() {
                     ];
                   // Используем setUsername из контекста
                   setUsername(randomName);
-                  // setNameInitial(randomName.charAt(0).toUpperCase()); // nameInitial обновится через useEffect
                   setShowNameModal(false);
-                  // Убираем удаление флага editNameRequest, т.к. модалка может вызываться не только из профиля
-                  // localStorage.removeItem("editNameRequest");
-                  playSound("cancel.mp3"); // Звук отмены/пропуска
+                  playSound("cancel.mp3");
                 }}
                 className="px-4 py-2 text-gray-300 hover:text-yellow-400 mr-2"
               >
@@ -1794,9 +1789,7 @@ export default function Header() {
               <button
                 onClick={() => {
                   saveUsername(tempUsername);
-                  playSound("confirm.mp3"); // Звук подтверждения
-                  // Убираем удаление флага editNameRequest
-                  // localStorage.removeItem("editNameRequest");
+                  playSound("confirm.mp3");
                 }}
                 disabled={!tempUsername.trim()}
                 className={`px-4 py-2 rounded-lg transition-colors ${

@@ -39,6 +39,27 @@ interface MovieRowProps {
   shadow?: boolean;
 }
 
+// Простой хук для отслеживания ширины окна
+function useWindowWidth() {
+  const [width, setWidth] = useState(
+    typeof window !== "undefined" ? window.innerWidth : 0
+  );
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const handleResize = () => setWidth(window.innerWidth);
+
+    // Устанавливаем начальную ширину на клиенте
+    setWidth(window.innerWidth);
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  return width;
+}
+
 export default function MovieRow({
   title,
   items,
@@ -64,6 +85,7 @@ export default function MovieRow({
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [roundedCorners, setRoundedCorners] = useState(false);
   const router = useRouter();
+  const windowWidth = useWindowWidth(); // Получаем ширину окна
 
   // Эффект для отслеживания настройки закругленных углов
   useEffect(() => {
@@ -118,26 +140,39 @@ export default function MovieRow({
     }
   };
 
-  // Определяем размер постера в зависимости от posterSize
+  // Определяем размер постера/бэкдропа в зависимости от пропов и ширины окна
   const getPosterWidth = () => {
+    const isMobile = windowWidth < 768; // md breakpoint
+
     if (variant === "backdrop") {
+      // Если мобильное разрешение, принудительно ставим small
+      if (isMobile) {
+        return "w-[260px]"; // Класс для backdropSize="small"
+      }
+      // На десктопе используем проп backdropSize
       switch (backdropSize) {
         case "large":
           return "w-[400px]";
         case "small":
           return "w-[260px]";
         default:
-          return "w-[320px]";
+          return "w-[320px]"; // normal
       }
     }
 
+    // Логика для poster (остается прежней)
+    if (isMobile) {
+      return "w-[160px]"; // Принудительно малый размер на мобильных
+    }
+
+    // На десктопе используем проп posterSize
     switch (posterSize) {
       case "large":
         return "w-[230px]";
       case "small":
         return "w-[160px]";
       default:
-        return "w-[200px]";
+        return "w-[200px]"; // normal
     }
   };
 
