@@ -19,6 +19,12 @@ const bebasNeue = Bebas_Neue({
   variable: "--font-bebas-neue",
 });
 
+// Fallback компонент для Header (можно сделать его минималистичным)
+const HeaderFallback = () => (
+  // Простой div с высотой хедера и фоном, чтобы избежать скачка
+  <div className="fixed top-0 left-0 right-0 z-[60] h-[68px] bg-zinc-900/80 backdrop-blur-sm"></div>
+);
+
 export const metadata: Metadata = {
   title: "Фильмы и сериалы онлайн",
   description: "Смотрите фильмы и сериалы онлайн на нашей платформе",
@@ -39,7 +45,11 @@ export default function RootLayout({
               <ReleaseQualityProvider>
                 <ViewingHistoryProvider>
                   <UsernameProvider>
-                    <Header />
+                    {/* Оборачиваем Header в Suspense */}
+                    <Suspense fallback={<HeaderFallback />}>
+                      <Header />
+                    </Suspense>
+                    {/* Оборачиваем Suspense + children в div */}
                     <div>
                       <Suspense
                         fallback={

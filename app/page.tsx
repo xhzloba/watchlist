@@ -331,10 +331,14 @@ async function HomePageContent() {
 export default function Home() {
   return (
     <GradientBackground>
+      {/* Оборачиваем HomePageContent в Suspense */}
       <Suspense
         fallback={
-          // Фолбэк для Suspense, пока грузятся серверные данные
-          <div className="fixed inset-0 flex items-center justify-center bg-black z-50">
+          // Фолбэк для Suspense, пока грузятся серверные данные HomePageContent
+          // Можно использовать тот же спиннер, что и в layout
+          <div className="fixed inset-0 flex items-center justify-center bg-[#121212] z-[55]">
+            {" "}
+            {/* Немного выше основного fallback */}
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-500"></div>
           </div>
         }
