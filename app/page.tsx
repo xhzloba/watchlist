@@ -220,8 +220,8 @@ async function HomePageContent() {
     // Сортируем фильмы по показателю популярности в убывающем порядке
     return (
       <div className="min-h-screen text-white">
-        {/* Header остается клиентским компонентом, так как использует хуки */}
-        <Header />
+        {/* Header больше не рендерится здесь */}
+        {/* <Header /> */}
         <main className="pt-32 pb-8">
           <div className="container-fluid mx-auto space-y-8">
             {/* Фиксированные первые 3 слайдера - БЕЗ иконки */}
