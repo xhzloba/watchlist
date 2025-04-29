@@ -34,14 +34,13 @@ import { playSound } from "@/lib/sound-utils";
 const LOCAL_STORAGE_KEYS = {
   ...STORAGE_KEYS,
   USERNAME: "username",
-  SETTINGS_SHOW_MOVIE_RATING: "settings_show_movie_rating",
-  SETTINGS_ENABLE_SOUND_EFFECTS: "settings_enable_sound_effects",
-  SETTINGS_ROUNDED_CORNERS: "settings_rounded_corners",
-  SETTINGS_SHOW_TITLES: "settings_show_titles", // Новая настройка для отображения названий
-  SETTINGS_YELLOW_HOVER: "settings_yellow_hover", // Новая настройка для цвета обводки
-  SETTINGS_DYNAMIC_BACKDROP: "settings_dynamic_backdrop", // Настройка динамической смены фонов
-  SETTINGS_DISABLE_COLOR_OVERLAY: "settings_disable_color_overlay", // Настройка отключения цветных градиентов
-  // SETTINGS_POSTER_SIZE: "settings_poster_size", // Убрали
+  // SETTINGS_SHOW_MOVIE_RATING: "settings_show_movie_rating", // Перенесено
+  // SETTINGS_ENABLE_SOUND_EFFECTS: "settings_enable_sound_effects", // Перенесено
+  // SETTINGS_ROUNDED_CORNERS: "settings_rounded_corners", // Перенесено
+  // SETTINGS_SHOW_TITLES: "settings_show_titles", // Перенесено
+  // SETTINGS_YELLOW_HOVER: "settings_yellow_hover", // Перенесено
+  // SETTINGS_DYNAMIC_BACKDROP: "settings_dynamic_backdrop", // Перенесено
+  // SETTINGS_DISABLE_COLOR_OVERLAY: "settings_disable_color_overlay", // Перенесено
 };
 
 // Создаем безопасные функции для работы с localStorage
@@ -558,42 +557,20 @@ export default function Header() {
   const [tempUsername, setTempUsername] = useState("");
   const [mounted, setMounted] = useState(false);
   const profileId = useId();
-  const [showProfilePopover, setShowProfilePopover] = useState(false);
-  const [activeSettingsTab, setActiveSettingsTab] = useState("interface");
-  const [showMovieRating, setShowMovieRating] = useState(() => {
-    // Попробуем получить сохраненное значение
-    const saved = safeGetItem(LOCAL_STORAGE_KEYS.SETTINGS_SHOW_MOVIE_RATING);
-    return saved ? saved === "true" : true; // По умолчанию включено
-  });
-  const [enableSoundEffects, setEnableSoundEffects] = useState(() => {
-    const saved = safeGetItem(LOCAL_STORAGE_KEYS.SETTINGS_ENABLE_SOUND_EFFECTS);
-    return saved ? saved === "true" : false;
-  });
-  const [roundedCorners, setRoundedCorners] = useState(() => {
-    const saved = safeGetItem(LOCAL_STORAGE_KEYS.SETTINGS_ROUNDED_CORNERS);
-    return saved ? saved === "true" : false; // По умолчанию выключено
-  });
-  const [showTitles, setShowTitles] = useState(() => {
-    const saved = safeGetItem(LOCAL_STORAGE_KEYS.SETTINGS_SHOW_TITLES);
-    return saved ? saved === "true" : true; // По умолчанию включено
-  });
-  const [yellowHover, setYellowHover] = useState(() => {
-    const saved = safeGetItem(LOCAL_STORAGE_KEYS.SETTINGS_YELLOW_HOVER);
-    return saved ? saved === "true" : false; // По умолчанию выключено
-  });
-  const [dynamicBackdrop, setDynamicBackdrop] = useState(() => {
-    const saved = safeGetItem(LOCAL_STORAGE_KEYS.SETTINGS_DYNAMIC_BACKDROP);
-    return saved ? saved === "true" : false; // По умолчанию выключено
-  });
-  const [disableColorOverlay, setDisableColorOverlay] = useState(() => {
-    const saved = safeGetItem(
-      LOCAL_STORAGE_KEYS.SETTINGS_DISABLE_COLOR_OVERLAY
-    );
-    return saved ? saved === "true" : false; // По умолчанию выключено
-  });
+  // Удаляем состояния и логику поповера профиля
+  // const [showProfilePopover, setShowProfilePopover] = useState(false);
+  // const [activeSettingsTab, setActiveSettingsTab] = useState("interface");
+  // const [showMovieRating, setShowMovieRating] = useState(() => { ... }); // Перенесено
+  // const [enableSoundEffects, setEnableSoundEffects] = useState(() => { ... }); // Перенесено
+  // const [roundedCorners, setRoundedCorners] = useState(() => { ... }); // Перенесено
+  // const [showTitles, setShowTitles] = useState(() => { ... }); // Перенесено
+  // const [yellowHover, setYellowHover] = useState(() => { ... }); // Перенесено
+  // const [dynamicBackdrop, setDynamicBackdrop] = useState(() => { ... }); // Перенесено
+  // const [disableColorOverlay, setDisableColorOverlay] = useState(() => { ... }); // Перенесено
+
   const [movieLogo, setMovieLogo] = useState<string | null>(null);
   const [movieTitle, setMovieTitle] = useState<string | null>(null);
-  const [nameInitial, setNameInitial] = useState<string | null>(null);
+  const [nameInitial, setNameInitial] = useState<string | null>(null); // Оставляем для иконки профиля
   const [showActorsPopover, setShowActorsPopover] = useState(false);
   const [isActorsPopoverClosing, setIsActorsPopoverClosing] = useState(false);
   const actorsPopoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -911,70 +888,27 @@ export default function Header() {
     }
   }, [mounted, profileId]);
 
-  // Добавим эффект для сохранения настроек
-  useEffect(() => {
-    if (mounted) {
-      safeSetItem(
-        LOCAL_STORAGE_KEYS.SETTINGS_SHOW_MOVIE_RATING,
-        showMovieRating.toString()
-      );
-      safeSetItem(
-        LOCAL_STORAGE_KEYS.SETTINGS_ENABLE_SOUND_EFFECTS,
-        enableSoundEffects.toString()
-      );
-      safeSetItem(
-        LOCAL_STORAGE_KEYS.SETTINGS_ROUNDED_CORNERS,
-        roundedCorners.toString()
-      );
-      safeSetItem(
-        LOCAL_STORAGE_KEYS.SETTINGS_SHOW_TITLES,
-        showTitles.toString()
-      );
-      safeSetItem(
-        LOCAL_STORAGE_KEYS.SETTINGS_YELLOW_HOVER,
-        yellowHover.toString()
-      );
-      safeSetItem(
-        LOCAL_STORAGE_KEYS.SETTINGS_DYNAMIC_BACKDROP,
-        dynamicBackdrop.toString()
-      );
-      // Вызываем пользовательское событие для синхронизации настроек
-      const event = new CustomEvent("settingsChange", {
-        detail: {
-          showMovieRating,
-          enableSoundEffects,
-          roundedCorners,
-          showTitles,
-          yellowHover,
-          dynamicBackdrop,
-        },
-      });
-      document.dispatchEvent(event);
-    }
-  }, [
-    showMovieRating,
-    enableSoundEffects,
-    roundedCorners,
-    showTitles,
-    yellowHover,
-    dynamicBackdrop,
-    mounted,
-  ]);
+  // Удаляем эффект сохранения настроек - он переедет на страницу профиля
+  // useEffect(() => {
+  //   if (mounted) {
+  //     safeSetItem( ... );
+  //     // ... остальное ...
+  //     document.dispatchEvent(event);
+  //   }
+  // }, [
+  //   showMovieRating,
+  //   enableSoundEffects,
+  //   roundedCorners,
+  //   showTitles,
+  //   yellowHover,
+  //   dynamicBackdrop,
+  //   disableColorOverlay, // Добавили новую настройку
+  //   mounted,
+  // ]);
 
-  // Функции для управления поповером профиля
-  const handleShowProfilePopover = () => {
-    if (popoverTimeoutRef.current) {
-      clearTimeout(popoverTimeoutRef.current);
-      popoverTimeoutRef.current = null;
-    }
-    setShowProfilePopover(true);
-  };
-
-  const handleHideProfilePopover = () => {
-    popoverTimeoutRef.current = setTimeout(() => {
-      setShowProfilePopover(false);
-    }, 300); // Задержка в 300 мс перед скрытием
-  };
+  // Удаляем функции управления поповером профиля
+  // const handleShowProfilePopover = () => { ... };
+  // const handleHideProfilePopover = () => { ... };
 
   // Восстанавливаем состояние для времени
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
@@ -1719,585 +1653,41 @@ export default function Header() {
             {/* Профиль и настройки */}
             <div
               className="relative"
-              onMouseEnter={handleShowProfilePopover}
-              onMouseLeave={handleHideProfilePopover}
+              // УДАЛЯЕМ обработчики наведения
+              // onMouseEnter={handleShowProfilePopover}
+              // onMouseLeave={handleHideProfilePopover}
             >
               <Link
-                href="/profile"
+                href="/profile" // Ссылка ведет на страницу профиля
                 className="flex items-center text-gray-400 hover:text-yellow-400 transition-colors cursor-pointer"
                 title={username ? `Профиль: ${username}` : "Профиль"}
+                onClick={() => playSound("choose.mp3")} // Добавим звук клика
               >
                 <div className="w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center text-black font-medium text-sm">
-                  {nameInitial || "П"}
+                  {/* Отображение инициала */}
+                  <div
+                    id={`profile-content-${profileId}`}
+                    className={`transition-opacity duration-300 ${
+                      mounted ? "opacity-100" : "opacity-0"
+                    }`}
+                  >
+                    {nameInitial || <User className="w-4 h-4" />}{" "}
+                    {/* Иконка по умолчанию, если нет инициала */}
+                  </div>
+                  {/* Временный плейсхолдер пока не загрузился username */}
+                  {!mounted && (
+                    <div
+                      id={`profile-placeholder-${profileId}`}
+                      className="animate-pulse"
+                    >
+                      <User className="w-4 h-4 text-gray-500" />
+                    </div>
+                  )}
                 </div>
               </Link>
 
-              {/* Поповер для настроек профиля */}
-              {showProfilePopover && (
-                <div
-                  className="absolute top-full right-0 mt-4 w-[550px] bg-white rounded-xl shadow-2xl overflow-hidden z-50 transition-all duration-200 ease-in-out"
-                  onMouseEnter={handleShowProfilePopover}
-                  onMouseLeave={handleHideProfilePopover}
-                >
-                  <div className="flex">
-                    {/* Левая колонка с категориями настроек */}
-                    <div className="w-1/3 bg-gray-100 p-4 rounded-l-lg">
-                      <ul className="list-none m-0 p-0">
-                        <li className="mb-2">
-                          <button
-                            onClick={() => setActiveSettingsTab("interface")}
-                            className={`w-full text-left px-3 py-2 rounded ${
-                              activeSettingsTab === "interface"
-                                ? "bg-yellow-500 text-black font-medium"
-                                : "text-gray-700 hover:bg-gray-200 hover:text-yellow-500"
-                            }`}
-                          >
-                            Интерфейс
-                          </button>
-                        </li>
-                        <li className="mb-2">
-                          <button
-                            onClick={() => setActiveSettingsTab("sound")}
-                            className={`w-full text-left px-3 py-2 rounded ${
-                              activeSettingsTab === "sound"
-                                ? "bg-yellow-500 text-black font-medium"
-                                : "text-gray-700 hover:bg-gray-200 hover:text-yellow-500"
-                            }`}
-                          >
-                            Звук
-                          </button>
-                        </li>
-                        <li className="mb-2">
-                          <button
-                            onClick={() => setActiveSettingsTab("content")}
-                            className={`w-full text-left px-3 py-2 rounded ${
-                              activeSettingsTab === "content"
-                                ? "bg-yellow-500 text-black font-medium"
-                                : "text-gray-700 hover:bg-gray-200 hover:text-yellow-500"
-                            }`}
-                          >
-                            Контент
-                          </button>
-                        </li>
-                        <li className="mb-2">
-                          <button
-                            onClick={() => setActiveSettingsTab("account")}
-                            className={`w-full text-left px-3 py-2 rounded ${
-                              activeSettingsTab === "account"
-                                ? "bg-yellow-500 text-black font-medium"
-                                : "text-gray-700 hover:bg-gray-200 hover:text-yellow-500"
-                            }`}
-                          >
-                            Аккаунт
-                          </button>
-                        </li>
-                      </ul>
-                    </div>
-
-                    {/* Правая колонка с настройками */}
-                    <div className="w-2/3 p-6">
-                      {activeSettingsTab === "interface" && (
-                        <div>
-                          <h3 className="text-gray-900 font-bold text-lg mb-4">
-                            Интерфейс
-                          </h3>
-
-                          {/* Настройка рейтинга */}
-                          <div className="mb-4">
-                            <div className="flex items-center justify-between mb-2">
-                              <label
-                                htmlFor="movie-rating"
-                                className="text-gray-700 font-medium"
-                              >
-                                Рейтинг на обложках фильмов
-                              </label>
-                              <div className="relative">
-                                <input
-                                  type="checkbox"
-                                  id="movie-rating"
-                                  checked={showMovieRating}
-                                  onChange={(e) =>
-                                    setShowMovieRating(e.target.checked)
-                                  }
-                                  className="sr-only"
-                                />
-                                <div
-                                  className={`w-12 h-6 rounded-full ${
-                                    showMovieRating
-                                      ? "bg-yellow-500"
-                                      : "bg-gray-300"
-                                  } transition-colors duration-200`}
-                                  onClick={() => {
-                                    const newValue = !showMovieRating;
-                                    setShowMovieRating(newValue);
-                                    safeSetItem(
-                                      LOCAL_STORAGE_KEYS.SETTINGS_SHOW_MOVIE_RATING,
-                                      newValue.toString()
-                                    );
-
-                                    // Оповещаем о изменении настройки
-                                    const event = new CustomEvent(
-                                      "settingsChange",
-                                      {
-                                        detail: { showMovieRating: newValue },
-                                      }
-                                    );
-                                    document.dispatchEvent(event);
-                                  }}
-                                >
-                                  <div
-                                    className={`absolute w-4 h-4 bg-white rounded-full top-1 transition-transform duration-200 ${
-                                      showMovieRating
-                                        ? "translate-x-7"
-                                        : "translate-x-1"
-                                    }`}
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                            <p className="text-gray-500 text-sm">
-                              Отображать оценку фильма на обложках в разделе
-                              "Обзор"
-                            </p>
-                          </div>
-
-                          {/* Настройка отображения названий фильмов под постерами */}
-                          <div className="mb-4">
-                            <div className="flex items-center justify-between mb-2">
-                              <label
-                                htmlFor="show-titles"
-                                className="text-gray-700 font-medium"
-                              >
-                                Названия фильмов под постерами
-                              </label>
-                              <div className="relative">
-                                <input
-                                  type="checkbox"
-                                  id="show-titles"
-                                  checked={showTitles}
-                                  onChange={(e) =>
-                                    setShowTitles(e.target.checked)
-                                  }
-                                  className="sr-only"
-                                />
-                                <div
-                                  className={`w-12 h-6 rounded-full ${
-                                    showTitles ? "bg-yellow-500" : "bg-gray-300"
-                                  } transition-colors duration-200`}
-                                  onClick={() => {
-                                    const newValue = !showTitles;
-                                    setShowTitles(newValue);
-                                    safeSetItem(
-                                      LOCAL_STORAGE_KEYS.SETTINGS_SHOW_TITLES,
-                                      newValue.toString()
-                                    );
-
-                                    // Оповещаем о изменении настройки
-                                    const event = new CustomEvent(
-                                      "settingsChange",
-                                      {
-                                        detail: { showTitles: newValue },
-                                      }
-                                    );
-                                    document.dispatchEvent(event);
-                                  }}
-                                >
-                                  <div
-                                    className={`absolute w-4 h-4 bg-white rounded-full top-1 transition-transform duration-200 ${
-                                      showTitles
-                                        ? "translate-x-7"
-                                        : "translate-x-1"
-                                    }`}
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                            <p className="text-gray-500 text-sm">
-                              Отображать название и год фильма под постерами в
-                              разделе "Обзор"
-                            </p>
-                          </div>
-
-                          {/* Настройка цвета обводки при наведении */}
-                          <div className="mb-4">
-                            <div className="flex items-center justify-between mb-2">
-                              <label
-                                htmlFor="yellow-hover"
-                                className="text-gray-700 font-medium"
-                              >
-                                Желтая обводка постеров
-                              </label>
-                              <div className="relative">
-                                <input
-                                  type="checkbox"
-                                  id="yellow-hover"
-                                  checked={yellowHover}
-                                  onChange={(e) =>
-                                    setYellowHover(e.target.checked)
-                                  }
-                                  className="sr-only"
-                                />
-                                <div
-                                  className={`w-12 h-6 rounded-full ${
-                                    yellowHover
-                                      ? "bg-yellow-500"
-                                      : "bg-gray-300"
-                                  } transition-colors duration-200`}
-                                  onClick={() => {
-                                    const newValue = !yellowHover;
-                                    setYellowHover(newValue);
-                                    safeSetItem(
-                                      LOCAL_STORAGE_KEYS.SETTINGS_YELLOW_HOVER,
-                                      newValue.toString()
-                                    );
-
-                                    // Оповещаем о изменении настройки
-                                    const event = new CustomEvent(
-                                      "settingsChange",
-                                      {
-                                        detail: { yellowHover: newValue },
-                                      }
-                                    );
-                                    document.dispatchEvent(event);
-                                  }}
-                                >
-                                  <div
-                                    className={`absolute w-4 h-4 bg-white rounded-full top-1 transition-transform duration-200 ${
-                                      yellowHover
-                                        ? "translate-x-7"
-                                        : "translate-x-1"
-                                    }`}
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                            <p className="text-gray-500 text-sm">
-                              Использовать желтую обводку при наведении на
-                              постеры (вместо белой)
-                            </p>
-                          </div>
-
-                          {/* Настройка динамической смены фонового изображения */}
-                          <div className="mb-4">
-                            <div className="flex items-center justify-between mb-2">
-                              <label
-                                htmlFor="dynamic-backdrop"
-                                className="text-gray-700 font-medium"
-                              >
-                                Динамическая смена фона
-                              </label>
-                              <div className="relative">
-                                <input
-                                  type="checkbox"
-                                  id="dynamic-backdrop"
-                                  checked={dynamicBackdrop}
-                                  onChange={(e) =>
-                                    setDynamicBackdrop(e.target.checked)
-                                  }
-                                  className="sr-only"
-                                />
-                                <div
-                                  className={`w-12 h-6 rounded-full ${
-                                    dynamicBackdrop
-                                      ? "bg-yellow-500"
-                                      : "bg-gray-300"
-                                  } transition-colors duration-200`}
-                                  onClick={() => {
-                                    const newValue = !dynamicBackdrop;
-                                    setDynamicBackdrop(newValue);
-                                    safeSetItem(
-                                      LOCAL_STORAGE_KEYS.SETTINGS_DYNAMIC_BACKDROP,
-                                      newValue.toString()
-                                    );
-
-                                    // Оповещаем о изменении настройки
-                                    const event = new CustomEvent(
-                                      "settingsChange",
-                                      {
-                                        detail: { dynamicBackdrop: newValue },
-                                      }
-                                    );
-                                    document.dispatchEvent(event);
-                                  }}
-                                >
-                                  <div
-                                    className={`absolute w-4 h-4 bg-white rounded-full top-1 transition-transform duration-200 ${
-                                      dynamicBackdrop
-                                        ? "translate-x-7"
-                                        : "translate-x-1"
-                                    }`}
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                            <p className="text-gray-500 text-sm">
-                              Автоматически менять фоновое изображение фильма
-                              каждые 10 секунд
-                            </p>
-                          </div>
-
-                          {/* Настройка закругленных углов обложки */}
-                          <div className="mb-4">
-                            <div className="flex items-center justify-between mb-2">
-                              <label
-                                htmlFor="rounded-corners"
-                                className="text-gray-700 font-medium"
-                              >
-                                Закругленные углы обложек
-                              </label>
-                              <div className="relative">
-                                <input
-                                  type="checkbox"
-                                  id="rounded-corners"
-                                  checked={roundedCorners}
-                                  onChange={(e) =>
-                                    setRoundedCorners(e.target.checked)
-                                  }
-                                  className="sr-only"
-                                />
-                                <div
-                                  className={`w-12 h-6 rounded-full ${
-                                    roundedCorners
-                                      ? "bg-yellow-500"
-                                      : "bg-gray-300"
-                                  } transition-colors duration-200`}
-                                  onClick={() => {
-                                    const newValue = !roundedCorners;
-                                    setRoundedCorners(newValue);
-                                    safeSetItem(
-                                      LOCAL_STORAGE_KEYS.SETTINGS_ROUNDED_CORNERS,
-                                      newValue.toString()
-                                    );
-
-                                    // Оповещаем о изменении настройки
-                                    const event = new CustomEvent(
-                                      "settingsChange",
-                                      {
-                                        detail: { roundedCorners: newValue },
-                                      }
-                                    );
-                                    document.dispatchEvent(event);
-                                  }}
-                                >
-                                  <div
-                                    className={`absolute w-4 h-4 bg-white rounded-full top-1 transition-transform duration-200 ${
-                                      roundedCorners
-                                        ? "translate-x-7"
-                                        : "translate-x-1"
-                                    }`}
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                            <p className="text-gray-500 text-sm">
-                              Использовать закругленные углы для обложек фильмов
-                            </p>
-                          </div>
-
-                          {/* Настройка отключения цветных градиентов */}
-                          <div className="mb-4">
-                            <div className="flex items-center justify-between mb-2">
-                              <label
-                                htmlFor="disable-color-overlay"
-                                className="text-gray-700 font-medium"
-                              >
-                                Отключить цветные градиенты
-                              </label>
-                              <div className="relative">
-                                <input
-                                  type="checkbox"
-                                  id="disable-color-overlay"
-                                  checked={disableColorOverlay}
-                                  onChange={(e) =>
-                                    setDisableColorOverlay(e.target.checked)
-                                  }
-                                  className="sr-only"
-                                />
-                                <div
-                                  className={`w-12 h-6 rounded-full ${
-                                    disableColorOverlay
-                                      ? "bg-yellow-500"
-                                      : "bg-gray-300"
-                                  } transition-colors duration-200`}
-                                  onClick={() => {
-                                    const newValue = !disableColorOverlay;
-                                    setDisableColorOverlay(newValue);
-                                    safeSetItem(
-                                      LOCAL_STORAGE_KEYS.SETTINGS_DISABLE_COLOR_OVERLAY,
-                                      newValue.toString()
-                                    );
-
-                                    // Оповещаем о изменении настройки
-                                    const event = new CustomEvent(
-                                      "settingsChange",
-                                      {
-                                        detail: {
-                                          disableColorOverlay: newValue,
-                                        },
-                                      }
-                                    );
-                                    document.dispatchEvent(event);
-                                  }}
-                                >
-                                  <div
-                                    className={`absolute w-4 h-4 bg-white rounded-full top-1 transition-transform duration-200 ${
-                                      disableColorOverlay
-                                        ? "translate-x-7"
-                                        : "translate-x-1"
-                                    }`}
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                            <p className="text-gray-500 text-sm">
-                              Отключить цветные градиенты на страницах фильмов
-                            </p>
-                          </div>
-                        </div>
-                      )}
-
-                      {activeSettingsTab === "sound" && (
-                        <div>
-                          <h3 className="text-gray-900 font-bold text-lg mb-4">
-                            Звук
-                          </h3>
-                          <div className="mb-4">
-                            <div className="flex items-center justify-between mb-2">
-                              <label
-                                htmlFor="sound-effects"
-                                className="text-gray-700 font-medium"
-                              >
-                                Звук выбора фильма
-                              </label>
-                              <div className="relative">
-                                <input
-                                  type="checkbox"
-                                  id="sound-effects"
-                                  checked={enableSoundEffects}
-                                  onChange={(e) =>
-                                    setEnableSoundEffects(e.target.checked)
-                                  }
-                                  className="sr-only"
-                                />
-                                <div
-                                  className={`w-12 h-6 rounded-full ${
-                                    enableSoundEffects
-                                      ? "bg-yellow-500"
-                                      : "bg-gray-300"
-                                  } transition-colors duration-200`}
-                                  onClick={() => {
-                                    const newValue = !enableSoundEffects;
-                                    setEnableSoundEffects(newValue);
-                                    safeSetItem(
-                                      LOCAL_STORAGE_KEYS.SETTINGS_ENABLE_SOUND_EFFECTS,
-                                      newValue.toString()
-                                    );
-
-                                    // Оповещаем о изменении настройки
-                                    const event = new CustomEvent(
-                                      "settingsChange",
-                                      {
-                                        detail: {
-                                          enableSoundEffects: newValue,
-                                        },
-                                      }
-                                    );
-                                    document.dispatchEvent(event);
-                                  }}
-                                >
-                                  <div
-                                    className={`absolute w-4 h-4 bg-white rounded-full top-1 transition-transform duration-200 ${
-                                      enableSoundEffects
-                                        ? "translate-x-7"
-                                        : "translate-x-1"
-                                    }`}
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                            <p className="text-gray-500 text-sm">
-                              Воспроизводить звук при выборе фильма в галерее
-                            </p>
-                          </div>
-                        </div>
-                      )}
-
-                      {activeSettingsTab === "content" && (
-                        <div>
-                          <h3 className="text-gray-900 font-bold text-lg mb-4">
-                            Контент
-                          </h3>
-                          <p className="text-gray-600">
-                            Настройки отображения контента будут доступны в
-                            ближайшем обновлении.
-                          </p>
-                        </div>
-                      )}
-
-                      {activeSettingsTab === "account" && (
-                        <div>
-                          <h3 className="text-gray-900 font-bold text-lg mb-4">
-                            Аккаунт
-                          </h3>
-
-                          <div className="mb-4">
-                            <div className="flex items-center mb-2">
-                              <div className="w-12 h-12 rounded-full bg-yellow-500 flex items-center justify-center text-black font-bold text-lg mr-4">
-                                {nameInitial || "П"}
-                              </div>
-                              <div>
-                                <p className="text-gray-900 font-medium">
-                                  {username || "Гость"}
-                                </p>
-                                <p className="text-gray-500 text-sm">
-                                  Локальный профиль
-                                </p>
-                              </div>
-                            </div>
-
-                            <div className="flex flex-wrap gap-2 mt-4">
-                              <button
-                                className="bg-gray-100 hover:bg-gray-200 hover:text-yellow-500 text-gray-800 px-4 py-2 rounded-lg text-sm transition-colors"
-                                onClick={() => {
-                                  // Устанавливаем флаг, что редактирование имени запрошено из профиля
-                                  if (typeof window !== "undefined") {
-                                    localStorage.setItem(
-                                      "editNameRequest",
-                                      "true"
-                                    );
-                                  }
-                                  setShowNameModal(true);
-                                  setShowProfilePopover(false);
-                                }}
-                              >
-                                Изменить имя
-                              </button>
-
-                              <button
-                                className="bg-blue-50 hover:bg-blue-100 hover:text-yellow-700 text-blue-700 px-4 py-2 rounded-lg text-sm transition-colors"
-                                onClick={() => {
-                                  // Сбрасываем флаги модального окна приветствия
-                                  if (typeof window !== "undefined") {
-                                    localStorage.removeItem("hasVisited");
-                                    localStorage.removeItem(
-                                      "hasCompletedWelcome"
-                                    );
-                                    // Перезагружаем страницу для показа приветственного окна
-                                    window.location.reload();
-                                  }
-                                  setShowProfilePopover(false);
-                                }}
-                              >
-                                Показать приветствие
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
+              {/* УДАЛЯЕМ весь блок поповера */}
+              {/* {showProfilePopover && ( ... )} */}
             </div>
 
             {/* Время и дата */}
@@ -2345,13 +1735,21 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Модальное окно для ввода имени - показываем только при явном вызове через "Изменить имя" */}
+      {/* Модальное окно для ввода имени - оставляем, но его вызов нужно будет перенести или сделать доступным со страницы /profile */}
       {showNameModal && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[100]">
-          <div className="bg-gray-900 rounded-lg p-6 max-w-md w-full border border-gray-700">
-            <h2 className="text-xl text-white font-bold mb-4">
-              Изменить имя пользователя
-            </h2>
+          <div className="bg-gray-900 rounded-lg p-6 max-w-md w-full border border-gray-700 shadow-xl">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl text-white font-bold">
+                Изменить имя пользователя
+              </h2>
+              <button
+                onClick={() => setShowNameModal(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                <X size={20} />
+              </button>
+            </div>
             <p className="text-gray-300 mb-4">Как к вам обращаться?</p>
 
             <input
@@ -2381,19 +1779,27 @@ export default function Header() {
                     russianNames[
                       Math.floor(Math.random() * russianNames.length)
                     ];
-
+                  // Используем setUsername из контекста
                   setUsername(randomName);
-                  setNameInitial(randomName.charAt(0).toUpperCase());
+                  // setNameInitial(randomName.charAt(0).toUpperCase()); // nameInitial обновится через useEffect
                   setShowNameModal(false);
+                  // Убираем удаление флага editNameRequest, т.к. модалка может вызываться не только из профиля
+                  // localStorage.removeItem("editNameRequest");
+                  playSound("cancel.mp3"); // Звук отмены/пропуска
                 }}
                 className="px-4 py-2 text-gray-300 hover:text-yellow-400 mr-2"
               >
                 Пропустить
               </button>
               <button
-                onClick={() => saveUsername(tempUsername)}
+                onClick={() => {
+                  saveUsername(tempUsername);
+                  playSound("confirm.mp3"); // Звук подтверждения
+                  // Убираем удаление флага editNameRequest
+                  // localStorage.removeItem("editNameRequest");
+                }}
                 disabled={!tempUsername.trim()}
-                className={`px-4 py-2 rounded-lg ${
+                className={`px-4 py-2 rounded-lg transition-colors ${
                   tempUsername.trim()
                     ? "bg-yellow-500 hover:bg-yellow-600 text-black"
                     : "bg-gray-700 text-gray-400 cursor-not-allowed"
