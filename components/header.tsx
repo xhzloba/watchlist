@@ -1153,24 +1153,20 @@ export default function Header() {
                 )}
               </div>
               {/* ==================================== */}
-              {/* ===== ВОССТАНАВЛИВАЕМ Обзор ===== */}
+              {/* ===== Обзор - используем AINavigationLink ===== */}
               <div ref={discoverRef} className="relative">
                 <div className="flex items-center">
-                  {/* Обертка для AINavigationLink (или просто стилизованная ссылка) */}
-                  <div
-                    onClick={(e) => {
-                      e.preventDefault();
-                      router.push("/discover");
-                    }}
-                    className={`flex items-center gap-2 font-bebas-neue text-base uppercase tracking-wider transition-colors px-2 py-1.5 text-white hover:text-yellow-400 cursor-pointer`}
-                  >
-                    <Compass className="w-4 h-4" />
-                    <span>ОБЗОР</span>
-                  </div>
-                  {/* Кнопка поповера */}
+                  {/* Используем AINavigationLink для единообразия */}
+                  <AINavigationLink
+                    href="/discover"
+                    label="ОБЗОР"
+                    isActive={pathname === "/discover"}
+                    icon={<Compass className="w-4 h-4" />}
+                  />
+                  {/* Кнопка поповера остается отдельной */}
                   <button
                     onClick={(e) => {
-                      e.preventDefault();
+                      e.preventDefault(); // Оставляем здесь, т.к. это button
                       if (showDiscoverPopover) {
                         handleHidePopover();
                       } else {
