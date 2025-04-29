@@ -281,7 +281,7 @@ async function HomePageContent() {
             {/* Объединенные и перемешанные слайдеры актеров и жанров */}
             {allSliders.map((slider, index) =>
               slider.type === "actor" ? (
-                // Актерские ряды пока БЕЗ иконки
+                // Актерские ряды - С иконкой, ведущей на /actors/[id]
                 <MovieRow
                   key={`actor-${slider.actor.id}`}
                   title={slider.title}
@@ -291,6 +291,8 @@ async function HomePageContent() {
                   actorImage={slider.actor.imageUrl}
                   showDate
                   showYear
+                  // Передаем ссылку на страницу актера
+                  viewAllLink={`/actors/${slider.actor.id}`}
                 />
               ) : (
                 // Жанровые ряды - С иконкой (если ID не -1)

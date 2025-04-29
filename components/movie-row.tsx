@@ -37,6 +37,7 @@ interface MovieRowProps {
   titleIcon?: React.ReactNode;
   disableNavigation?: boolean;
   shadow?: boolean;
+  viewAllLink?: string;
 }
 
 // Простой хук для отслеживания ширины окна
@@ -82,6 +83,7 @@ export default function MovieRow({
   titleIcon,
   disableNavigation = false,
   shadow = false,
+  viewAllLink,
 }: MovieRowProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
@@ -125,24 +127,27 @@ export default function MovieRow({
     scrollRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" });
   };
 
-  // Обновляем функцию для перехода на страницу /discover с жанром
+  // Обновляем функцию для перехода
   const handleShowAll = () => {
-    // Проверяем, что передан ID (предполагаем, что это ID жанра)
+    // 1. Приоритет у viewAllLink
+    if (viewAllLink) {
+      router.push(viewAllLink);
+      playSound("page.mp3");
+      return; // Выходим, если сработал viewAllLink
+    }
+
+    // 2. Логика для keywordIds (жанры и ключевые слова)
     if (keywordIds && keywordIds.length === 1) {
       const genreId = keywordIds[0];
-      // Формируем URL для страницы Discover с параметром жанра
       const route = `/discover?with_genres=${genreId}`;
-      // Переходим на новую страницу
       router.push(route);
-      playSound("page.mp3"); // Воспроизводим звук перехода
+      playSound("page.mp3");
     } else if (keywordIds && keywordIds.length > 1) {
-      // Если передано несколько ID (старая логика для keywords?),
-      // пока оставим переход на keywords, но можно уточнить поведение.
       const route = `/keywords/${keywordIds.join(",")}`;
       router.push(route);
       playSound("page.mp3");
     }
-    // Если keywordIds не передан или пуст, ничего не делаем
+    // Если ничего не подошло, ничего не делаем
   };
 
   // Определяем размер постера/бэкдропа в зависимости от пропов и ширины окна
@@ -208,10 +213,11 @@ export default function MovieRow({
                 {title}
                 <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-yellow-500/40 to-transparent"></div>
               </h2>
-              {keywordIds && keywordIds.length > 0 && (
+              {/* Отображаем иконку, если есть keywordIds ИЛИ viewAllLink */}
+              {((keywordIds && keywordIds.length > 0) || viewAllLink) && (
                 <ChevronRightCircle
                   className="ml-2 w-6 h-6 text-yellow-500 cursor-pointer hover:text-yellow-400 transition-colors self-start mt-1 flex-shrink-0"
-                  onClick={handleShowAll}
+                  onClick={handleShowAll} // Клик вызывает обновленную функцию
                 />
               )}
             </div>
