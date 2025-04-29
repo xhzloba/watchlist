@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useUsername } from "@/contexts/username-context";
 import {
   X,
@@ -12,14 +12,15 @@ import {
   LogOut,
   Repeat,
   Edit,
+  Download,
+  Upload,
 } from "lucide-react";
 import Header from "@/components/header";
 import GradientBackground from "@/components/gradient-background";
 import { playSound } from "@/lib/sound-utils";
 import { STORAGE_KEYS } from "@/lib/constants"; // Импортируем константы ключей
 
-// Ключи localStorage для настроек (дублируем здесь, т.к. они убраны из хедера)
-// В идеале вынести в общий файл констант, если еще не сделано
+// Ключи localStorage для настроек
 const SETTINGS_KEYS = {
   SHOW_MOVIE_RATING: "settings_show_movie_rating",
   ENABLE_SOUND_EFFECTS: "settings_enable_sound_effects",
@@ -29,6 +30,10 @@ const SETTINGS_KEYS = {
   DYNAMIC_BACKDROP: "settings_dynamic_backdrop",
   DISABLE_COLOR_OVERLAY: "settings_disable_color_overlay",
 };
+
+// Определяем правильные ключи watchlist здесь для ясности
+const WATCHLIST_STORAGE_KEY = "watchlist";
+const SUBSCRIBED_ACTORS_STORAGE_KEY = "subscribed_actors";
 
 // Безопасные функции для localStorage (дублируем или импортируем из utils)
 function safeGetItem(key: string): string | null {
@@ -134,6 +139,11 @@ export default function ProfilePage() {
 
   // Вкладки
   const [activeTab, setActiveTab] = useState("account");
+  const [importExportMessage, setImportExportMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null); // Ref для input[type=file]
 
   // Инициализация состояний из localStorage при монтировании
   useEffect(() => {
@@ -226,6 +236,251 @@ export default function ProfilePage() {
     // localStorage обновится через useEffect
   };
 
+  // Функция Экспорта
+  const exportDataToJson = () => {
+    try {
+      const dataToExport: {
+        settings: Record<string, any>;
+        watchlistData: Record<string, any>;
+      } = {
+        settings: {},
+        watchlistData: {}, // Переименовал для ясности, что это данные, а не ключ
+      };
+
+      // Собираем настройки
+      Object.keys(SETTINGS_KEYS).forEach((key) => {
+        const storageKey = SETTINGS_KEYS[key as keyof typeof SETTINGS_KEYS];
+        const value = safeGetItem(storageKey);
+        if (value !== null) {
+          // Пытаемся распарсить JSON, если значение похоже на JSON (для будущих сложных настроек)
+          // Простые булевы значения оставляем как строки "true"/"false"
+          try {
+            if (
+              (value.startsWith("{") && value.endsWith("}")) ||
+              (value.startsWith("[") && value.endsWith("]"))
+            ) {
+              dataToExport.settings[storageKey] = JSON.parse(value);
+            } else {
+              dataToExport.settings[storageKey] = value; // Оставляем как строку (true/false)
+            }
+          } catch (e) {
+            dataToExport.settings[storageKey] = value; // Если парсинг не удался, сохраняем как есть
+          }
+        }
+      });
+
+      // Собираем данные watchlist
+      const watchlistValue = localStorage.getItem(WATCHLIST_STORAGE_KEY);
+      if (watchlistValue) {
+        try {
+          dataToExport.watchlistData[WATCHLIST_STORAGE_KEY] =
+            JSON.parse(watchlistValue);
+        } catch (e) {
+          console.error(
+            `Ошибка парсинга JSON для ключа ${WATCHLIST_STORAGE_KEY} при экспорте:`,
+            e
+          );
+        }
+      }
+
+      // Собираем данные subscribed_actors
+      const actorsValue = localStorage.getItem(SUBSCRIBED_ACTORS_STORAGE_KEY);
+      if (actorsValue) {
+        try {
+          dataToExport.watchlistData[SUBSCRIBED_ACTORS_STORAGE_KEY] =
+            JSON.parse(actorsValue);
+        } catch (e) {
+          console.error(
+            `Ошибка парсинга JSON для ключа ${SUBSCRIBED_ACTORS_STORAGE_KEY} при экспорте:`,
+            e
+          );
+        }
+      }
+
+      // Добавляем имя пользователя
+      const currentUsername = safeGetItem(STORAGE_KEYS.USERNAME);
+      if (currentUsername) {
+        dataToExport.settings[STORAGE_KEYS.USERNAME] = currentUsername;
+      }
+
+      const jsonString = JSON.stringify(dataToExport, null, 2); // null, 2 для красивого форматирования
+      const blob = new Blob([jsonString], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      const timestamp = new Date()
+        .toISOString()
+        .slice(0, 19)
+        .replace(/[:T]/g, "-");
+      link.download = `watchlist_settings_backup_${timestamp}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      setImportExportMessage({
+        type: "success",
+        text: "Данные успешно экспортированы!",
+      });
+      playSound("export_success.mp3");
+    } catch (error) {
+      console.error("Ошибка при экспорте данных:", error);
+      setImportExportMessage({
+        type: "error",
+        text: "Произошла ошибка при экспорте.",
+      });
+      playSound("error.mp3");
+    }
+    // Скрываем сообщение через некоторое время
+    setTimeout(() => setImportExportMessage(null), 5000);
+  };
+
+  // Функция Импорта
+  const importDataFromJson = (fileContent: string) => {
+    try {
+      const parsedData = JSON.parse(fileContent);
+
+      // Обновляем валидацию структуры
+      if (
+        !parsedData ||
+        typeof parsedData !== "object" ||
+        !parsedData.settings ||
+        !parsedData.watchlistData
+      ) {
+        throw new Error(
+          "Некорректный формат файла. Отсутствуют разделы settings или watchlistData."
+        );
+      }
+
+      // Импортируем настройки
+      if (
+        typeof parsedData.settings === "object" &&
+        parsedData.settings !== null
+      ) {
+        Object.keys(parsedData.settings).forEach((key) => {
+          // Проверяем, что ключ относится к известным настройкам или имени пользователя
+          const isSettingKey = Object.values(SETTINGS_KEYS).includes(key);
+          const isUsernameKey = key === STORAGE_KEYS.USERNAME;
+
+          if (isSettingKey || isUsernameKey) {
+            const value = parsedData.settings[key];
+            // Сохраняем как строку, т.к. localStorage хранит строки
+            const valueToStore =
+              typeof value === "object" ? JSON.stringify(value) : String(value);
+            safeSetItem(key, valueToStore);
+            console.log(
+              `Импортировано ${key}: ${valueToStore.substring(0, 50)}...`
+            );
+          }
+        });
+      }
+
+      // Импортируем watchlist и subscribed_actors
+      if (
+        typeof parsedData.watchlistData === "object" &&
+        parsedData.watchlistData !== null
+      ) {
+        // Импорт watchlist
+        if (parsedData.watchlistData.hasOwnProperty(WATCHLIST_STORAGE_KEY)) {
+          const watchlistItems =
+            parsedData.watchlistData[WATCHLIST_STORAGE_KEY];
+          if (Array.isArray(watchlistItems)) {
+            localStorage.setItem(
+              WATCHLIST_STORAGE_KEY,
+              JSON.stringify(watchlistItems)
+            );
+            console.log(
+              `Импортирован watchlist: ${watchlistItems.length} элементов`
+            );
+          } else {
+            console.warn(
+              `Ожидался массив для ключа ${WATCHLIST_STORAGE_KEY}, получен ${typeof watchlistItems}`
+            );
+          }
+        }
+
+        // Импорт subscribed_actors
+        if (
+          parsedData.watchlistData.hasOwnProperty(SUBSCRIBED_ACTORS_STORAGE_KEY)
+        ) {
+          const actorItems =
+            parsedData.watchlistData[SUBSCRIBED_ACTORS_STORAGE_KEY];
+          if (Array.isArray(actorItems)) {
+            localStorage.setItem(
+              SUBSCRIBED_ACTORS_STORAGE_KEY,
+              JSON.stringify(actorItems)
+            );
+            console.log(
+              `Импортированы subscribed_actors: ${actorItems.length} элементов`
+            );
+          } else {
+            console.warn(
+              `Ожидался массив для ключа ${SUBSCRIBED_ACTORS_STORAGE_KEY}, получен ${typeof actorItems}`
+            );
+          }
+        }
+      } else {
+        console.warn(
+          "Раздел watchlistData отсутствует или имеет неверный формат в импортируемом файле."
+        );
+      }
+
+      setImportExportMessage({
+        type: "success",
+        text: "Данные успешно импортированы! Страница будет перезагружена.",
+      });
+      playSound("import_success.mp3");
+
+      // Перезагружаем страницу, чтобы применить изменения
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000); // Небольшая задержка, чтобы пользователь увидел сообщение
+    } catch (error: any) {
+      console.error("Ошибка при импорте данных:", error);
+      setImportExportMessage({
+        type: "error",
+        text: `Ошибка импорта: ${
+          error.message || "Не удалось прочитать файл."
+        }`,
+      });
+      playSound("error.mp3");
+      // Скрываем сообщение через некоторое время
+      setTimeout(() => setImportExportMessage(null), 5000);
+    }
+  };
+
+  // Обработчик выбора файла
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = e.target?.result;
+      if (typeof content === "string") {
+        importDataFromJson(content);
+      } else {
+        setImportExportMessage({
+          type: "error",
+          text: "Не удалось прочитать содержимое файла.",
+        });
+        playSound("error.mp3");
+        setTimeout(() => setImportExportMessage(null), 5000);
+      }
+    };
+    reader.onerror = () => {
+      setImportExportMessage({
+        type: "error",
+        text: "Ошибка при чтении файла.",
+      });
+      playSound("error.mp3");
+      setTimeout(() => setImportExportMessage(null), 5000);
+    };
+    reader.readAsText(file);
+
+    // Сбрасываем значение input, чтобы можно было выбрать тот же файл снова
+    event.target.value = "";
+  };
+
   const renderTabContent = () => {
     switch (activeTab) {
       case "account":
@@ -257,9 +512,48 @@ export default function ProfilePage() {
 
             <div className="mb-6 p-5 bg-gradient-to-br from-white/5 to-white/10 rounded-lg border border-white/10 shadow-sm">
               <h4 className="text-white font-medium mb-4 border-b border-white/10 pb-2">
-                Действия
+                Управление данными
               </h4>
-              <div className="flex flex-wrap gap-3">
+              {/* Сообщение о результате импорта/экспорта */}
+              {importExportMessage && (
+                <div
+                  className={`p-3 rounded-md mb-4 text-sm ${
+                    importExportMessage.type === "success"
+                      ? "bg-green-500/20 text-green-300 border border-green-500/30"
+                      : "bg-red-500/20 text-red-300 border border-red-500/30"
+                  }`}
+                >
+                  {importExportMessage.text}
+                </div>
+              )}
+              <div className="flex flex-wrap gap-4">
+                {/* Кнопка Экспорт */}
+                <button
+                  onClick={exportDataToJson}
+                  className="bg-teal-600/30 hover:bg-teal-500/40 text-teal-200 px-4 py-2 rounded-lg text-sm transition-colors flex items-center gap-2 border border-teal-500/40 shadow-sm hover:shadow-md"
+                >
+                  <Download size={16} />
+                  Экспорт данных (JSON)
+                </button>
+
+                {/* Кнопка Импорт */}
+                <button
+                  onClick={() => fileInputRef.current?.click()} // Открываем диалог выбора файла
+                  className="bg-purple-600/30 hover:bg-purple-500/40 text-purple-200 px-4 py-2 rounded-lg text-sm transition-colors flex items-center gap-2 border border-purple-500/40 shadow-sm hover:shadow-md"
+                >
+                  <Upload size={16} />
+                  Импорт данных (JSON)
+                </button>
+                {/* Скрытый input для выбора файла */}
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  accept=".json"
+                  className="hidden"
+                />
+
+                {/* Кнопка "Показать приветствие снова" остается */}
                 <button
                   className="bg-blue-600/30 hover:bg-blue-500/40 text-blue-200 px-4 py-2 rounded-lg text-sm transition-colors flex items-center gap-1.5 border border-blue-500/40 shadow-sm hover:shadow-md"
                   onClick={() => {
@@ -272,14 +566,14 @@ export default function ProfilePage() {
                   }}
                 >
                   <Repeat size={16} />
-                  Показать приветствие снова
+                  Показать приветствие
                 </button>
-                {/* Можно добавить кнопку выхода, если будет аутентификация */}
-                {/* <button className="bg-red-500/20 hover:bg-red-500/40 text-red-300 px-4 py-2 rounded-lg text-sm transition-colors flex items-center gap-1.5 border border-red-500/30">
-                  <LogOut size={16} />
-                  Выйти (Пример)
-                </button> */}
               </div>
+              <p className="text-xs text-gray-500 mt-4">
+                Экспорт создает резервную копию ваших настроек интерфейса/звука
+                и списков избранного/просмотренного. Импорт позволяет
+                восстановить их из ранее сохраненного файла.
+              </p>
             </div>
           </div>
         );

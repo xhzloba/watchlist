@@ -6,4 +6,5 @@ export const STORAGE_KEYS = {
   HAS_MORE: "discover_has_more",
   FROM_DISCOVER: "from_discover",
   LAST_VIEW: "lastView",
+  USERNAME: "username",
 };
