@@ -9,6 +9,7 @@ import { WatchlistProvider } from "@/contexts/watchlist-context";
 import { ReleaseQualityProvider } from "@/components/movie-card-wrapper";
 import { ViewingHistoryProvider } from "@/contexts/viewing-history-context";
 import { UsernameProvider } from "@/contexts/username-context";
+import { Suspense } from "react";
 
 const inter = Inter({ subsets: ["latin", "cyrillic"] });
 const bebasNeue = Bebas_Neue({
@@ -37,7 +38,9 @@ export default function RootLayout({
               <ReleaseQualityProvider>
                 <ViewingHistoryProvider>
                   <UsernameProvider>
-                    <PageTransition>{children}</PageTransition>
+                    <Suspense fallback={<div>Загрузка страницы...</div>}>
+                      <PageTransition>{children}</PageTransition>
+                    </Suspense>
                   </UsernameProvider>
                 </ViewingHistoryProvider>
               </ReleaseQualityProvider>

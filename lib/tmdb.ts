@@ -61,7 +61,6 @@ export async function getNowPlayingMovies(): Promise<Movie[]> {
     }
   );
   const data = await response.json();
-  console.log("rrrr", data.results);
   return data.results;
 }
 
@@ -233,7 +232,6 @@ export async function searchMovies(query: string) {
     }
 
     const data = await res.json();
-    console.log("Результаты поиска:", data);
 
     // Добавляем поиск по оригинальному названию
     const results = data.results || [];
@@ -475,15 +473,12 @@ export async function getMovieCertification(movieId: string): Promise<string> {
  */
 export async function getMoviesByIds(movieIds: number[]): Promise<Movie[]> {
   try {
-    console.log("Запрашиваем фильмы с ID:", movieIds);
-
     // Создаем массив промисов для параллельного запроса информации о каждом фильме
     const requests = movieIds.map((id) =>
       fetch(
         `${API_BASE_URL}/movie/${id}?api_key=${API_KEY}&language=ru-RU&append_to_response=images,videos`
       )
         .then((res) => {
-          console.log(`Статус ответа для фильма ${id}:`, res.status);
           if (!res.ok) {
             console.error(
               `Ошибка получения фильма с ID ${id}. Статус: ${res.status}`
@@ -500,15 +495,6 @@ export async function getMoviesByIds(movieIds: number[]): Promise<Movie[]> {
 
     // Ждем выполнения всех запросов
     const results = await Promise.all(requests);
-
-    console.log(
-      "Результаты запроса фильмов по ID (количество):",
-      results.length
-    );
-    console.log(
-      "Успешно полученные результаты:",
-      results.filter((r) => r !== null).length
-    );
 
     // Проверяем наличие фильмов в результатах
     if (results.every((r) => r === null)) {
@@ -533,7 +519,6 @@ export async function getMoviesByIds(movieIds: number[]): Promise<Movie[]> {
         runtime: movie.runtime || 0,
       }));
 
-    console.log(`Успешно обработано ${movies.length} фильмов`);
     return movies;
   } catch (error) {
     console.error("Ошибка при получении фильмов по ID:", error);
@@ -571,7 +556,6 @@ export async function getMoviesByGenre(
     }
 
     const data = await response.json();
-    console.log("data", data);
     return data.results || [];
   } catch (error) {
     console.error(`Ошибка при получении фильмов жанра ${genreId}:`, error);
@@ -586,8 +570,6 @@ export async function getMoviesByGenre(
  */
 export async function getMoviesByActor(actorId: number): Promise<Movie[]> {
   try {
-    console.log(`Запрашиваем фильмы для актера с ID: ${actorId}`);
-
     // Сначала получаем фильмографию актера
     const response = await fetch(
       `${API_BASE_URL}/person/${actorId}/movie_credits?` +
@@ -608,11 +590,6 @@ export async function getMoviesByActor(actorId: number): Promise<Movie[]> {
     }
 
     const data = await response.json();
-    console.log(
-      `Получены данные актера ${actorId}. Количество фильмов: ${
-        data.cast?.length || 0
-      }`
-    );
 
     // Проверяем, что data.cast существует и это массив
     if (!data.cast || !Array.isArray(data.cast) || data.cast.length === 0) {
@@ -624,10 +601,6 @@ export async function getMoviesByActor(actorId: number): Promise<Movie[]> {
 
     // Включаем все фильмы, где актер был в актерском составе (cast)
     const movies = data.cast.filter((movie: any) => movie);
-
-    console.log(
-      `Всего ${movies.length} фильмов для актера ${actorId} (включая фильмы в пост-продакшене и без постеров)`
-    );
 
     // Сортируем по популярности
     const sortedMovies = movies
@@ -646,9 +619,6 @@ export async function getMoviesByActor(actorId: number): Promise<Movie[]> {
         status: movie.status || "", // Добавляем статус фильма если доступен
       }));
 
-    console.log(
-      `Итоговый список фильмов актера ${actorId} содержит ${sortedMovies.length} элементов`
-    );
     return sortedMovies;
   } catch (error) {
     console.error(`Ошибка при получении фильмов актера ${actorId}:`, error);
@@ -663,8 +633,6 @@ export async function getMoviesByActor(actorId: number): Promise<Movie[]> {
  */
 export async function getActorInfo(actorId: number) {
   try {
-    console.log(`Запрашиваем информацию об актере с ID: ${actorId}`);
-
     const response = await fetch(
       `${API_BASE_URL}/person/${actorId}?` +
         `api_key=${API_KEY}&` +
@@ -684,7 +652,6 @@ export async function getActorInfo(actorId: number) {
     }
 
     const data = await response.json();
-    console.log(`Получена информация об актере ${actorId}`);
 
     return data;
   } catch (error) {
@@ -703,8 +670,6 @@ export async function getActorInfo(actorId: number) {
  */
 export async function getActorExternalIds(actorId: number) {
   try {
-    console.log(`Запрашиваем внешние ID актера с ID: ${actorId}`);
-
     const response = await fetch(
       `${API_BASE_URL}/person/${actorId}/external_ids?` + `api_key=${API_KEY}`,
       {
@@ -722,7 +687,6 @@ export async function getActorExternalIds(actorId: number) {
     }
 
     const data = await response.json();
-    console.log(`Получены внешние ID актера ${actorId}`);
 
     return data;
   } catch (error) {
@@ -756,7 +720,7 @@ export async function getBestMoviesOf2025(): Promise<Movie[]> {
     }
 
     const data = await response.json();
-    console.log("Получены фильмы 2025 года по голосам:", data);
+
     return data.results || [];
   } catch (error) {
     console.error("Ошибка при получении фильмов 2025 года:", error);
@@ -789,7 +753,7 @@ export async function getBestMoviesOf2024(): Promise<Movie[]> {
     }
 
     const data = await response.json();
-    console.log("Получены фильмы 2025 года по голосам:", data);
+
     return data.results || [];
   } catch (error) {
     console.error("Ошибка при получении фильмов 2025 года:", error);
@@ -861,7 +825,7 @@ export async function getRussianMovies(): Promise<Movie[]> {
     }
 
     const data = await response.json();
-    console.log("Получены популярные фильмы из России:", data);
+
     return data.results || [];
   } catch (error) {
     console.error("Ошибка при получении популярных фильмов из России:", error);
@@ -881,8 +845,6 @@ export async function getPopularActors(page: number = 1): Promise<{
   page: number;
 }> {
   try {
-    console.log(`Запрашиваем популярных актеров (страница ${page})`);
-
     const response = await fetch(
       `${API_BASE_URL}/person/popular?` +
         `api_key=${API_KEY}&` +
@@ -903,11 +865,6 @@ export async function getPopularActors(page: number = 1): Promise<{
     }
 
     const data = await response.json();
-    console.log(
-      `Получены популярные актеры (страница ${page}). Количество: ${
-        data.results?.length || 0
-      }`
-    );
 
     // Обрабатываем результаты - добавляем URL изображений и прочие детали
     const actors = data.results.map((actor: any) => ({
@@ -940,8 +897,6 @@ export async function getPopularActors(page: number = 1): Promise<{
  */
 export async function getActorImages(actorId: number): Promise<any> {
   try {
-    console.log(`Запрашиваем изображения актера с ID: ${actorId}`);
-
     const response = await fetch(
       `${API_BASE_URL}/person/${actorId}/images?` + `api_key=${API_KEY}`,
       {
@@ -959,11 +914,6 @@ export async function getActorImages(actorId: number): Promise<any> {
     }
 
     const data = await response.json();
-    console.log(
-      `Получены изображения актера ${actorId}. Количество: ${
-        data.profiles?.length || 0
-      }`
-    );
 
     // Отфильтровываем изображения и убеждаемся, что каждое содержит file_path
     if (data.profiles && Array.isArray(data.profiles)) {
@@ -984,10 +934,6 @@ export async function getActorImages(actorId: number): Promise<any> {
  */
 export async function getActorAsProducer(personId: number): Promise<Movie[]> {
   try {
-    console.log(
-      `Запрашиваем фильмы, где человек с ID ${personId} был продюсером`
-    );
-
     // Запрашиваем список фильмов для команды производства
     const response = await fetch(
       `${API_BASE_URL}/person/${personId}/movie_credits?` +
@@ -1011,7 +957,6 @@ export async function getActorAsProducer(personId: number): Promise<Movie[]> {
 
     // Проверяем, что data.crew существует и это массив
     if (!data.crew || !Array.isArray(data.crew) || data.crew.length === 0) {
-      console.log(`Не найдены продюсерские работы для ${personId}`);
       return [];
     }
 
@@ -1020,10 +965,6 @@ export async function getActorAsProducer(personId: number): Promise<Movie[]> {
       const job = item.job?.toLowerCase() || "";
       return job.includes("produc") || job.includes("продюс");
     });
-
-    console.log(
-      `Найдено ${producerJobs.length} продюсерских работ для ${personId}`
-    );
 
     // Преобразуем в формат Movie
     const producerMovies = producerJobs
@@ -1072,8 +1013,6 @@ export async function searchActors(
       return { actors: [], total_pages: 0, total_results: 0, page };
     }
 
-    console.log(`Поиск актеров по запросу "${query}", страница ${page}`);
-
     const response = await fetch(
       `${API_BASE_URL}/search/person?` +
         `api_key=${API_KEY}&` +
@@ -1092,11 +1031,6 @@ export async function searchActors(
     }
 
     const data = await response.json();
-    console.log(
-      `Найдено актеров по запросу "${query}": ${
-        data.total_results || 0
-      }, страница ${page} из ${data.total_pages || 0}`
-    );
 
     // Обрабатываем результаты - добавляем URL изображений и прочие детали
     const actors = data.results.map((actor: any) => ({
@@ -1129,8 +1063,6 @@ export async function searchActors(
  */
 export async function getTVByActor(actorId: number): Promise<Movie[]> {
   try {
-    console.log(`Запрашиваем сериалы для актера с ID: ${actorId}`);
-
     // Получаем список сериалов с участием актера
     const response = await fetch(
       `${API_BASE_URL}/person/${actorId}/tv_credits?` +
@@ -1151,24 +1083,14 @@ export async function getTVByActor(actorId: number): Promise<Movie[]> {
     }
 
     const data = await response.json();
-    console.log(
-      `Получены данные о сериалах актера ${actorId}. Количество сериалов: ${
-        data.cast?.length || 0
-      }`
-    );
 
     // Проверяем, что data.cast существует и это массив
     if (!data.cast || !Array.isArray(data.cast) || data.cast.length === 0) {
-      console.log(
-        `Не найдены сериалы для актера ${actorId} или некорректный формат данных`
-      );
       return [];
     }
 
     // Включаем все сериалы, где актер был в актерском составе (cast)
     const tvShows = data.cast.filter((show: any) => show);
-
-    console.log(`Всего ${tvShows.length} сериалов для актера ${actorId}`);
 
     // Сортируем по популярности
     const sortedTVShows = tvShows
@@ -1188,9 +1110,6 @@ export async function getTVByActor(actorId: number): Promise<Movie[]> {
         media_type: "tv", // Добавляем тип медиа для отличия от фильмов
       }));
 
-    console.log(
-      `Итоговый список сериалов актера ${actorId} содержит ${sortedTVShows.length} элементов`
-    );
     return sortedTVShows;
   } catch (error) {
     console.error(`Ошибка при получении сериалов актера ${actorId}:`, error);

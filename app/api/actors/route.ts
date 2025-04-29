@@ -1,5 +1,9 @@
+import { NextResponse } from "next/server";
 import { getPopularActors, searchActors } from "@/lib/tmdb";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+
+// Помечаем маршрут как динамический, так как он использует searchParams
+export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   try {

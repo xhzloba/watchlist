@@ -41,8 +41,10 @@ interface MovieRowProps {
 
 // Простой хук для отслеживания ширины окна
 function useWindowWidth() {
+  // Инициализируем десктопной шириной (например, 1024) по умолчанию для SSR,
+  // чтобы избежать скачка на десктопе.
   const [width, setWidth] = useState(
-    typeof window !== "undefined" ? window.innerWidth : 0
+    typeof window !== "undefined" ? window.innerWidth : 1024
   );
 
   useEffect(() => {

@@ -19,6 +19,10 @@ import Header from "@/components/header";
 import GradientBackground from "@/components/gradient-background";
 import { playSound } from "@/lib/sound-utils";
 import { STORAGE_KEYS } from "@/lib/constants"; // Импортируем константы ключей
+import { Suspense } from "react"; // Импортируем Suspense
+
+// Говорим Next.js рендерить эту страницу всегда динамически
+export const dynamic = "force-dynamic";
 
 // Ключи localStorage для настроек
 const SETTINGS_KEYS = {
@@ -80,9 +84,6 @@ const SettingToggle: React.FC<SettingToggleProps> = ({
   // Добавляем промежуточный обработчик для логгирования
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newCheckedState = event.target.checked;
-    console.log(
-      `SettingToggle (${id}) onChange called. New state: ${newCheckedState}`
-    );
     onChange(newCheckedState); // Вызываем переданную функцию обновления состояния
   };
 
@@ -138,6 +139,7 @@ export default function ProfilePage() {
   const [disableColorOverlay, setDisableColorOverlay] = useState(false);
 
   // Вкладки
+  // Инициализируем по умолчанию, загрузка из localStorage будет в useEffect
   const [activeTab, setActiveTab] = useState("account");
   const [importExportMessage, setImportExportMessage] = useState<{
     type: "success" | "error";
@@ -148,6 +150,7 @@ export default function ProfilePage() {
   // Инициализация состояний из localStorage при монтировании
   useEffect(() => {
     setMounted(true);
+    // Загружаем состояния настроек
     setShowMovieRating(safeGetItem(SETTINGS_KEYS.SHOW_MOVIE_RATING) === "true");
     setEnableSoundEffects(
       safeGetItem(SETTINGS_KEYS.ENABLE_SOUND_EFFECTS) === "true"
@@ -159,7 +162,19 @@ export default function ProfilePage() {
     setDisableColorOverlay(
       safeGetItem(SETTINGS_KEYS.DISABLE_COLOR_OVERLAY) === "true"
     );
+    // Загружаем активную вкладку
+    const savedTab = safeGetItem("profile_active_tab");
+    if (savedTab) {
+      setActiveTab(savedTab);
+    }
   }, []);
+
+  // Сохранение активной вкладки в localStorage
+  useEffect(() => {
+    if (mounted) {
+      safeSetItem("profile_active_tab", activeTab);
+    }
+  }, [activeTab, mounted]);
 
   // Обновление инициала при изменении username
   useEffect(() => {
@@ -660,6 +675,130 @@ export default function ProfilePage() {
     }
   };
 
+  // Оборачиваем весь рендер в Suspense
+  return (
+    <Suspense fallback={<ProfilePageFallback />}>
+      <ProfilePageContent
+        username={username}
+        setUsername={setUsername}
+        isLoaded={isLoaded}
+        mounted={mounted}
+        setMounted={setMounted}
+        nameInitial={nameInitial}
+        setNameInitial={setNameInitial}
+        showNameModal={showNameModal}
+        setShowNameModal={setShowNameModal}
+        tempUsername={tempUsername}
+        setTempUsername={setTempUsername}
+        showMovieRating={showMovieRating}
+        setShowMovieRating={setShowMovieRating}
+        enableSoundEffects={enableSoundEffects}
+        setEnableSoundEffects={setEnableSoundEffects}
+        roundedCorners={roundedCorners}
+        setRoundedCorners={setRoundedCorners}
+        showTitles={showTitles}
+        setShowTitles={setShowTitles}
+        yellowHover={yellowHover}
+        setYellowHover={setYellowHover}
+        dynamicBackdrop={dynamicBackdrop}
+        setDynamicBackdrop={setDynamicBackdrop}
+        disableColorOverlay={disableColorOverlay}
+        setDisableColorOverlay={setDisableColorOverlay}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        importExportMessage={importExportMessage}
+        setImportExportMessage={setImportExportMessage}
+        fileInputRef={fileInputRef}
+        saveUsername={saveUsername}
+        resetSettings={resetSettings}
+        exportDataToJson={exportDataToJson}
+        importDataFromJson={importDataFromJson}
+        handleFileChange={handleFileChange}
+        renderTabContent={renderTabContent}
+      />
+    </Suspense>
+  );
+}
+
+// Простой компонент для Fallback во время загрузки
+function ProfilePageFallback() {
+  return (
+    <GradientBackground>
+      <Header />
+      <main className="px-6 pt-24 pb-16 text-white min-h-screen">
+        <div className="animate-pulse">
+          <div className="h-10 w-1/2 bg-gray-700 rounded mb-10"></div>
+          <div className="flex flex-col md:flex-row gap-12">
+            <aside className="w-full md:w-1/4 lg:w-1/5 flex-shrink-0">
+              <div className="bg-gradient-to-b from-white/5 to-transparent p-5 rounded-lg border border-white/10 sticky top-24 shadow-lg space-y-2">
+                <div className="h-10 bg-gray-600 rounded"></div>
+                <div className="h-10 bg-gray-600 rounded"></div>
+                <div className="h-10 bg-gray-600 rounded"></div>
+                <div className="h-10 bg-gray-600 rounded"></div>
+                <div className="pt-4 mt-4 border-t border-white/10">
+                  <div className="h-10 bg-gray-600 rounded"></div>
+                </div>
+              </div>
+            </aside>
+            <section className="w-full md:w-3/4 lg:w-4/5 bg-gradient-to-br from-white/5 to-transparent p-8 rounded-lg border border-white/10 shadow-xl">
+              <div className="h-8 w-1/3 bg-gray-700 rounded mb-6"></div>
+              <div className="h-24 bg-gray-700 rounded mb-6"></div>
+              <div className="h-40 bg-gray-700 rounded"></div>
+            </section>
+          </div>
+        </div>
+      </main>
+    </GradientBackground>
+  );
+}
+
+// Выносим основной контент страницы в отдельный компонент,
+// чтобы можно было использовать хуки внутри него
+function ProfilePageContent(props: any) {
+  const {
+    username,
+    setUsername,
+    isLoaded,
+    mounted,
+    setMounted,
+    nameInitial,
+    setNameInitial,
+    showNameModal,
+    setShowNameModal,
+    tempUsername,
+    setTempUsername,
+    showMovieRating,
+    setShowMovieRating,
+    enableSoundEffects,
+    setEnableSoundEffects,
+    roundedCorners,
+    setRoundedCorners,
+    showTitles,
+    setShowTitles,
+    yellowHover,
+    setYellowHover,
+    dynamicBackdrop,
+    setDynamicBackdrop,
+    disableColorOverlay,
+    setDisableColorOverlay,
+    activeTab,
+    setActiveTab,
+    importExportMessage,
+    setImportExportMessage,
+    fileInputRef,
+    saveUsername,
+    resetSettings,
+    exportDataToJson,
+    importDataFromJson,
+    handleFileChange,
+    renderTabContent,
+  } = props;
+
+  // Вся логика и рендеринг, которые были в ProfilePage, теперь здесь
+  // (useEffect и функции теперь нужно будет получать из props или перенести сюда)
+  // Для простоты, предположим, что вся логика остается в ProfilePage,
+  // а ProfilePageContent просто рендерит JSX
+
   return (
     <GradientBackground>
       <Header />
@@ -669,7 +808,6 @@ export default function ProfilePage() {
             <Settings className="text-yellow-400" size={32} />
             Настройки профиля
           </h1>
-
           <div className="flex flex-col md:flex-row gap-12">
             {/* Левая колонка с вкладками */}
             <aside className="w-full md:w-1/4 lg:w-1/5 flex-shrink-0">
@@ -677,9 +815,9 @@ export default function ProfilePage() {
                 <ul className="space-y-2">
                   <li>
                     <button
-                      onClick={() => setActiveTab("account")}
+                      onClick={() => props.setActiveTab("account")}
                       className={`w-full text-left px-4 py-3 rounded-md flex items-center gap-3 transition-all duration-200 ${
-                        activeTab === "account"
+                        props.activeTab === "account"
                           ? "bg-yellow-500 text-black font-semibold shadow-md scale-[1.02]"
                           : "text-gray-300 hover:bg-white/10 hover:text-white"
                       }`}
@@ -690,9 +828,9 @@ export default function ProfilePage() {
                   </li>
                   <li>
                     <button
-                      onClick={() => setActiveTab("interface")}
+                      onClick={() => props.setActiveTab("interface")}
                       className={`w-full text-left px-4 py-3 rounded-md flex items-center gap-3 transition-all duration-200 ${
-                        activeTab === "interface"
+                        props.activeTab === "interface"
                           ? "bg-yellow-500 text-black font-semibold shadow-md scale-[1.02]"
                           : "text-gray-300 hover:bg-white/10 hover:text-white"
                       }`}
@@ -703,9 +841,9 @@ export default function ProfilePage() {
                   </li>
                   <li>
                     <button
-                      onClick={() => setActiveTab("sound")}
+                      onClick={() => props.setActiveTab("sound")}
                       className={`w-full text-left px-4 py-3 rounded-md flex items-center gap-3 transition-all duration-200 ${
-                        activeTab === "sound"
+                        props.activeTab === "sound"
                           ? "bg-yellow-500 text-black font-semibold shadow-md scale-[1.02]"
                           : "text-gray-300 hover:bg-white/10 hover:text-white"
                       }`}
@@ -716,9 +854,9 @@ export default function ProfilePage() {
                   </li>
                   <li>
                     <button
-                      onClick={() => setActiveTab("content")}
+                      onClick={() => props.setActiveTab("content")}
                       className={`w-full text-left px-4 py-3 rounded-md flex items-center gap-3 transition-all duration-200 ${
-                        activeTab === "content"
+                        props.activeTab === "content"
                           ? "bg-yellow-500 text-black font-semibold shadow-md scale-[1.02]"
                           : "text-gray-300 hover:bg-white/10 hover:text-white"
                       }`}
@@ -730,7 +868,7 @@ export default function ProfilePage() {
                   {/* Кнопка сброса настроек */}
                   <li className="pt-4 mt-4 border-t border-white/10">
                     <button
-                      onClick={resetSettings}
+                      onClick={props.resetSettings}
                       className="w-full text-left px-4 py-3 rounded-md flex items-center gap-3 transition-all duration-200 text-red-400 hover:bg-red-500/20 hover:text-red-300 hover:scale-[1.02] active:scale-[0.98]"
                     >
                       <Repeat size={18} />
@@ -743,19 +881,19 @@ export default function ProfilePage() {
 
             {/* Правая колонка с контентом вкладки */}
             <section className="w-full md:w-3/4 lg:w-4/5 bg-gradient-to-br from-white/5 to-transparent p-8 rounded-lg border border-white/10 shadow-xl">
-              {renderTabContent()}
+              {props.renderTabContent()}
             </section>
           </div>
         </div>
       </main>
 
       {/* Модальное окно для ввода имени (перенесено сюда) */}
-      {showNameModal && (
+      {props.showNameModal && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
           <div className="bg-gray-900 rounded-xl p-6 max-w-md w-full border border-gray-700 shadow-xl relative">
             <button
               onClick={() => {
-                setShowNameModal(false);
+                props.setShowNameModal(false);
                 playSound("close_modal.mp3");
               }}
               className="absolute top-3 right-3 text-gray-400 hover:text-white transition-colors"
@@ -769,14 +907,14 @@ export default function ProfilePage() {
 
             <input
               type="text"
-              value={tempUsername}
-              onChange={(e) => setTempUsername(e.target.value)}
+              value={props.tempUsername}
+              onChange={(e) => props.setTempUsername(e.target.value)}
               placeholder="Введите ваше имя"
               className="w-full p-3 bg-gray-800 text-white rounded-lg mb-4 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
               autoFocus
               onKeyDown={(e) => {
-                if (e.key === "Enter" && tempUsername.trim()) {
-                  saveUsername(tempUsername);
+                if (e.key === "Enter" && props.tempUsername.trim()) {
+                  props.saveUsername(props.tempUsername);
                 }
               }}
             />
@@ -784,7 +922,7 @@ export default function ProfilePage() {
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => {
-                  setShowNameModal(false);
+                  props.setShowNameModal(false);
                   playSound("cancel.mp3");
                 }}
                 className="px-4 py-2 rounded-lg text-gray-300 bg-gray-700/50 hover:bg-gray-600/70 transition-colors"
@@ -792,10 +930,10 @@ export default function ProfilePage() {
                 Отмена
               </button>
               <button
-                onClick={() => saveUsername(tempUsername)}
-                disabled={!tempUsername.trim()}
+                onClick={() => props.saveUsername(props.tempUsername)}
+                disabled={!props.tempUsername.trim()}
                 className={`px-4 py-2 rounded-lg transition-colors font-medium ${
-                  tempUsername.trim()
+                  props.tempUsername.trim()
                     ? "bg-yellow-500 hover:bg-yellow-400 text-black"
                     : "bg-gray-700 text-gray-500 cursor-not-allowed"
                 }`}

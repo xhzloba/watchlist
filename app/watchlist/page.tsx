@@ -340,7 +340,6 @@ function WatchlistContent() {
       const storedWatchlist = localStorage.getItem("watchlist");
       if (storedWatchlist) {
         const parsedWatchlist = JSON.parse(storedWatchlist);
-        console.log("Загружен список избранного:", parsedWatchlist);
 
         // Сортируем по времени добавления, новые вначале
         const sortedWatchlist = parsedWatchlist.sort(
