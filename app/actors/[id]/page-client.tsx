@@ -48,7 +48,6 @@ if (typeof window !== "undefined") {
       !biographyContainer.classList.contains("biography-ready")
     ) {
       biographyContainer.classList.add("biography-ready");
-      console.log("Принудительно отображаем биографию по таймауту");
     }
   }, 2000);
 }
