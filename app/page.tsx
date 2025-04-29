@@ -28,11 +28,6 @@ const ViewingHistoryRow = dynamic(
   { ssr: false }
 );
 
-// Компонент-обертка для модального окна, с клиентской проверкой
-// ... existing code ...
-
-// Вынесем компонент домашней страницы в отдельную функцию
-// Это теперь серверный компонент
 async function HomePageContent() {
   try {
     // Получаем данные об актерах из нового файла
@@ -291,8 +286,6 @@ async function HomePageContent() {
             )}
           </div>
         </main>
-        {/* Модальное окно приветствия и ввода имени */}
-        // ... existing code ...
       </div>
     );
   } catch (error) {
