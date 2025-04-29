@@ -77,7 +77,6 @@ function DiscoverContent() {
 
       observer.current = new IntersectionObserver((entries) => {
         if (entries[0].isIntersecting && hasMore) {
-          console.log("Достигнут конец списка, загружаем еще фильмы");
           setPage((prevPage) => prevPage + 1);
         }
       });
