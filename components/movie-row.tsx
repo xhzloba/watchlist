@@ -87,7 +87,7 @@ export default function MovieRow({
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [roundedCorners, setRoundedCorners] = useState(false);
   const router = useRouter();
-  const windowWidth = useWindowWidth(); // Получаем ширину окна
+  const windowWidth = useWindowWidth();
 
   // Эффект для отслеживания настройки закругленных углов
   useEffect(() => {
@@ -125,21 +125,24 @@ export default function MovieRow({
     scrollRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" });
   };
 
+  // Обновляем функцию для перехода на страницу /discover с жанром
   const handleShowAll = () => {
-    if (keywordIds && keywordIds.length > 0) {
+    // Проверяем, что передан ID (предполагаем, что это ID жанра)
+    if (keywordIds && keywordIds.length === 1) {
+      const genreId = keywordIds[0];
+      // Формируем URL для страницы Discover с параметром жанра
+      const route = `/discover?with_genres=${genreId}`;
+      // Переходим на новую страницу
+      router.push(route);
+      playSound("page.mp3"); // Воспроизводим звук перехода
+    } else if (keywordIds && keywordIds.length > 1) {
+      // Если передано несколько ID (старая логика для keywords?),
+      // пока оставим переход на keywords, но можно уточнить поведение.
       const route = `/keywords/${keywordIds.join(",")}`;
-      if (title) {
-        router.push(
-          `${route}?description=${encodeURIComponent(
-            title === "Фильмы про самолёты и авиацию"
-              ? "Захватывающие истории о полётах, пилотах и авиакатастрофах"
-              : ""
-          )}`
-        );
-      } else {
-        router.push(route);
-      }
+      router.push(route);
+      playSound("page.mp3");
     }
+    // Если keywordIds не передан или пуст, ничего не делаем
   };
 
   // Определяем размер постера/бэкдропа в зависимости от пропов и ширины окна
@@ -201,13 +204,13 @@ export default function MovieRow({
                   className="w-10 h-10 rounded-full mr-3 object-cover border-2 border-yellow-500"
                 />
               )}
-              <h2 className="text-xl uppercase tracking-wide font-bebas-neue pb-2 pr-8 relative border-b border-transparent">
+              <h2 className="text-xl uppercase tracking-wide font-bebas-neue pb-2 pr-2 relative border-b border-transparent">
                 {title}
                 <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-yellow-500/40 to-transparent"></div>
               </h2>
               {keywordIds && keywordIds.length > 0 && (
                 <ChevronRightCircle
-                  className="ml-2 w-6 h-6 text-yellow-500 cursor-pointer hover:text-yellow-400 transition-colors self-start mt-1"
+                  className="ml-2 w-6 h-6 text-yellow-500 cursor-pointer hover:text-yellow-400 transition-colors self-start mt-1 flex-shrink-0"
                   onClick={handleShowAll}
                 />
               )}

@@ -83,66 +83,82 @@ async function HomePageContent() {
     // Создаем массив всех жанровых слайдеров для перемешивания
     const genreSliders = [
       {
+        id: -1, // Специальный ID для российских фильмов, если потребуется своя страница
         title: "ПОПУЛЯРНЫЕ ФИЛЬМЫ ИЗ РОССИИ",
         items: russianMovies.slice(0, 20),
       },
       {
+        id: 35,
         title: "ЛУЧШИЕ КОМЕДИИ",
         items: comedyMovies.slice(0, 20),
       },
       {
+        id: 27,
         title: "УЖАСЫ",
         items: horrorMovies.slice(0, 20),
       },
       {
+        id: 28,
         title: "БОЕВИКИ",
         items: actionMovies.slice(0, 20),
       },
       {
+        id: 9648,
         title: "ДЕТЕКТИВЫ",
         items: mysteryMovies.slice(0, 20),
       },
       {
+        id: 878,
         title: "ФАНТАСТИКА",
         items: scienceFictionMovies.slice(0, 20),
       },
       {
+        id: 10752,
         title: "ВОЕННЫЕ ФИЛЬМЫ",
         items: warMovies.slice(0, 20),
       },
       {
+        id: 12,
         title: "ПРИКЛЮЧЕНИЯ",
         items: adventureMovies.slice(0, 20),
       },
       {
+        id: 80,
         title: "КРИМИНАЛЬНЫЕ ФИЛЬМЫ",
         items: crimeMovies.slice(0, 20),
       },
       {
+        id: 14,
         title: "ФЭНТЕЗИ",
         items: fantasyMovies.slice(0, 20),
       },
       {
+        id: 10749,
         title: "МЕЛОДРАМЫ",
         items: romanceMovies.slice(0, 20),
       },
       {
+        id: 36,
         title: "ИСТОРИЧЕСКИЕ ФИЛЬМЫ",
         items: historyMovies.slice(0, 20),
       },
       {
+        id: 16,
         title: "МУЛЬТФИЛЬМЫ",
         items: animationMovies.slice(0, 20),
       },
       {
+        id: 18,
         title: "ДРАМЫ",
         items: dramaMovies.slice(0, 20),
       },
       {
+        id: 10751,
         title: "СЕМЕЙНЫЕ ФИЛЬМЫ",
         items: familyMovies.slice(0, 20),
       },
       {
+        id: 37,
         title: "ВЕСТЕРНЫ",
         items: westernMovies.slice(0, 20),
       },
@@ -174,6 +190,7 @@ async function HomePageContent() {
 
     type GenreSlider = {
       type: "genre";
+      genreId: number; // Добавляем ID жанра
       title: string;
       items: Movie[];
     };
@@ -189,6 +206,7 @@ async function HomePageContent() {
 
     const genreSliders2: GenreSlider[] = shuffledGenreSliders.map((slider) => ({
       type: "genre",
+      genreId: slider.id, // Передаем ID жанра
       title: slider.title,
       items: slider.items,
     }));
@@ -197,7 +215,6 @@ async function HomePageContent() {
     const allSliders: CombinedSlider[] = shuffleArray([
       ...actorSliders,
       ...genreSliders2,
-      // Добавляем российские фильмы как отдельный слайдер в перемешанный список
     ]);
 
     // Сортируем фильмы по показателю популярности в убывающем порядке
@@ -207,7 +224,7 @@ async function HomePageContent() {
         <Header />
         <main className="pt-32 pb-8">
           <div className="container-fluid mx-auto space-y-8">
-            {/* Фиксированные первые 3 слайдера */}
+            {/* Фиксированные первые 3 слайдера - БЕЗ иконки */}
             <MovieRow
               title="В тренде за неделю"
               items={trending.slice(0, 20)}
@@ -226,6 +243,7 @@ async function HomePageContent() {
               showLogo
               isTrailerSection
             />
+            {/* Этот ряд пока без иконки, т.к. неясен ID */}
             <MovieRow
               title="СЕЙЧАС СМОТРЯТ"
               items={nowPlaying.slice(0, 20)}
@@ -236,6 +254,7 @@ async function HomePageContent() {
             />
             {/* Полоса жанров */}
             <GenreStrip />
+            {/* Ряды 2025 и 2024 пока без иконки, т.к. неясен ID */}
             <MovieRow
               title="ЛУЧШИЕ ФИЛЬМЫ 2025 ГОДА ПО ОЦЕНКАМ"
               items={movies2025.slice(0, 20)}
@@ -254,7 +273,7 @@ async function HomePageContent() {
               showYear
               showLogo
             />
-            {/* История просмотров загружается динамически на клиенте */}
+            {/* История просмотров - БЕЗ иконки (динамический компонент) */}
             <div className="mt-8">
               <ViewingHistoryRow />
             </div>
@@ -262,6 +281,7 @@ async function HomePageContent() {
             {/* Объединенные и перемешанные слайдеры актеров и жанров */}
             {allSliders.map((slider, index) =>
               slider.type === "actor" ? (
+                // Актерские ряды пока БЕЗ иконки
                 <MovieRow
                   key={`actor-${slider.actor.id}`}
                   title={slider.title}
@@ -273,6 +293,7 @@ async function HomePageContent() {
                   showYear
                 />
               ) : (
+                // Жанровые ряды - С иконкой (если ID не -1)
                 <MovieRow
                   key={`genre-${index}`}
                   title={slider.title}
@@ -281,6 +302,10 @@ async function HomePageContent() {
                   posterSize="large"
                   showDate
                   showYear
+                  // Передаем ID жанра как keywordIds
+                  keywordIds={
+                    slider.genreId !== -1 ? [slider.genreId] : undefined
+                  }
                 />
               )
             )}
