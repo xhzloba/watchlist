@@ -218,8 +218,8 @@ async function ActorPageContent({ params }: { params: { id: string } }) {
 
   return (
     <main className="pt-24 pb-12">
-      <div className="container-fluid mx-auto px-4 sm:px-6">
-        <div className="flex flex-col md:flex-row gap-0 mb-12">
+      <div className="container-fluid mx-auto">
+        <div className="flex flex-col md:flex-row gap-0 mb-12 px-4 sm:px-6">
           {/* Аватар актера */}
           <div className="w-full md:w-1/5 lg:w-1/6 flex justify-center md:justify-start">
             <div className="relative w-48 h-48 md:w-52 md:h-52 lg:w-56 lg:h-56 aspect-square rounded-full overflow-hidden border-2 border-white/30 shadow-lg shadow-white/10">
@@ -436,7 +436,7 @@ async function ActorPageContent({ params }: { params: { id: string } }) {
         </div>
 
         {/* Слайдеры с фильмами */}
-        <div className="space-y-10 mt-12">
+        <div className="space-y-12 mt-12">
           {/* Известные работы - показываем самые популярные фильмы */}
           {mostPopularMovies.length >= 5 && (
             <MovieRow
@@ -453,12 +453,13 @@ async function ActorPageContent({ params }: { params: { id: string } }) {
           {/* Лучшие фильмы по рейтингу */}
           {topRatedMovies.length >= 5 && (
             <MovieRow
-              title={`ЛУЧШИЕ ФИЛЬМЫ С ${actorName.toUpperCase()}`}
+              title={`Лучшее с участием ${
+                actorInfo.gender === 1 ? "актрисы" : "актера"
+              } по рейтингу`}
               items={topRatedMovies}
               variant="poster"
               posterSize="large"
-              showDate
-              showYear
+              className="mb-8"
             />
           )}
 
@@ -501,107 +502,57 @@ async function ActorPageContent({ params }: { params: { id: string } }) {
           {/* Сериалы с участием актера */}
           {tvShows.length > 0 && (
             <MovieRow
-              title={`СЕРИАЛЫ С ${actorName.toUpperCase()}`}
-              items={tvShows
-                .sort((a, b) => {
-                  const yearA = a.first_air_date
-                    ? parseInt(a.first_air_date.split("-")[0])
-                    : 0;
-                  const yearB = b.first_air_date
-                    ? parseInt(b.first_air_date.split("-")[0])
-                    : 0;
-
-                  if (yearA === yearB) {
-                    // Если годы одинаковые, сортируем по месяцу и дню
-                    const dateA = a.first_air_date || "";
-                    const dateB = b.first_air_date || "";
-                    return dateB.localeCompare(dateA);
-                  }
-
-                  return yearB - yearA;
-                })
-                .map((show) => ({
-                  ...show,
-                  // Добавляем префикс к названию для сериалов без даты выхода (в разработке)
-                  title: !show.first_air_date
-                    ? `[В разработке] ${show.title}`
-                    : show.title,
-                }))}
+              title={`${actorName} в телесериалах`}
+              items={tvShows}
               variant="poster"
               posterSize="large"
-              showYear
-              disableNavigation={true}
+              className="mb-8"
             />
           )}
 
           {/* Фильмы по жанрам */}
-          {genreSliders.map(([genre, genreMovies]) => (
+          {genreSliders.map(([genreName, movies]) => (
             <MovieRow
-              key={`genre-${genre}`}
-              title={`${genre.toUpperCase()} С ${actorName.toUpperCase()}`}
-              items={
-                genre !== "Прочие фильмы"
-                  ? [...genreMovies].sort((a, b) => {
-                      const yearA = a.release_date
-                        ? parseInt(a.release_date.split("-")[0])
-                        : 0;
-                      const yearB = b.release_date
-                        ? parseInt(b.release_date.split("-")[0])
-                        : 0;
-
-                      if (yearA === yearB) {
-                        const dateA = a.release_date || "";
-                        const dateB = b.release_date || "";
-                        return dateB.localeCompare(dateA);
-                      }
-
-                      return yearB - yearA;
-                    })
-                  : genreMovies
-              }
+              key={genreName}
+              title={`${genreName} с участием ${actorName}`}
+              items={movies}
               variant="poster"
               posterSize="large"
-              showYear
+              className="mb-8"
             />
           ))}
 
           {/* Фильмы по десятилетиям - здесь уже есть сортировка по годам внутри группы */}
-          {decadeSliders.map(([decade, decadeMovies]) => (
+          {decadeSliders.map(([decade, movies]) => (
             <MovieRow
-              key={`decade-${decade}`}
-              title={`${decade.toUpperCase()} С ${actorName.toUpperCase()}`}
-              items={decadeMovies}
+              key={decade}
+              title={`${actorName} в ${decade}`}
+              items={movies}
               variant="poster"
               posterSize="large"
-              showYear
+              className="mb-8"
             />
           ))}
 
           {/* Фильмы с озвучкой */}
           {voiceActingMovies.length > 0 && (
             <MovieRow
-              title={`ОЗВУЧКА ${actorName.toUpperCase()}`}
-              items={voiceActingMovies.map((movie) => ({
-                ...movie,
-                title: `${movie.title} (${movie.character})`,
-              }))}
+              title={`${actorName} - Озвучка`}
+              items={voiceActingMovies}
               variant="poster"
               posterSize="large"
-              showYear
+              className="mb-8"
             />
           )}
 
           {/* Фильмы, где актер был продюсером */}
           {producerMovies.length > 0 && (
             <MovieRow
-              title={`ПРОДЮСЕР ${actorName.toUpperCase()}`}
-              items={producerMovies.map((movie) => ({
-                ...movie,
-                title: `${movie.title}${movie.job ? ` (${movie.job})` : ""}`,
-              }))}
+              title={`${actorName} как продюсер`}
+              items={producerMovies}
               variant="poster"
               posterSize="large"
-              showYear
+              className="mb-8"
             />
           )}
 
