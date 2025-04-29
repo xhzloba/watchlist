@@ -169,7 +169,6 @@ export default function ActorPageWrapper({
               profilePath = urlParts[urlParts.length - 1];
               // Если есть параметры URL (например, ?v=123), убираем их
               profilePath = profilePath.split("?")[0];
-              console.log("Извлечен путь к изображению актера:", profilePath);
             }
           }
         } catch (imgError) {
