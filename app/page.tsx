@@ -286,11 +286,12 @@ async function HomePageContent() {
             />
             <MovieRow
               title="ПОПУЛЯРНОЕ НА WATCHLIST"
-              items={popularMovies.slice(0, 20)}
+              items={popularMovies.slice(0, 20)} // Передаем результат без фильтрации
               variant="poster"
               posterSize="large"
               showDate
               showYear
+              viewAllLink="/popular" // <--- Добавляем ссылку "Показать все"
             />
             <MovieRow
               title="СЕЙЧАС СМОТРЯТ"
