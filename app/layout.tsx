@@ -48,7 +48,6 @@ export default function RootLayout({
                     <Suspense fallback={<HeaderFallback />}>
                       <Header />
                     </Suspense>
-
                     <PageTransition>{children}</PageTransition>
                   </UsernameProvider>
                 </ViewingHistoryProvider>

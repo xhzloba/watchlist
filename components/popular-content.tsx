@@ -312,7 +312,7 @@ export default function PopularContent() {
           href={`/movie/${movie.id}`}
           className={`movie-card movie-card-popular block relative overflow-hidden group ${
             roundedCorners ? "rounded-xl" : "rounded-md"
-          } border-2 ${
+          } border-[3px] ${
             isHovered
               ? yellowHover
                 ? "border-yellow-500"
