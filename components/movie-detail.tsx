@@ -3439,8 +3439,10 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
 
               <div className="relative">
                 {loadingRecommendations ? (
-                  <div className="px-6">
-                    <div className="flex overflow-x-auto gap-4 pb-4 snap-x cast-scroll-container">
+                  <div className="px-10">
+                    {" "}
+                    {/* Loading Skeleton */}
+                    <div className="flex overflow-x-auto gap-4 pb-4 snap-x ">
                       {Array(6)
                         .fill(0)
                         .map((_, index) => (
@@ -3456,17 +3458,22 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                     </div>
                   </div>
                 ) : (
-                  <MovieRow
-                    title=""
-                    items={recommendations}
-                    variant="backdrop"
-                    posterSize="normal"
-                    showDate
-                    showLogo
-                    showYear
-                    hideTitle
-                    onMovieClick={() => playSound("choose.mp3")}
-                  />
+                  <div className="-mx-10 px-10">
+                    {" "}
+                    {/* Обертка для overflow */}
+                    <MovieRow
+                      title=""
+                      items={recommendations}
+                      variant="backdrop"
+                      posterSize="normal"
+                      showDate
+                      showLogo
+                      showYear
+                      hideTitle
+                      onMovieClick={() => playSound("choose.mp3")}
+                      containerClassName="-mx-10 px-10" // Передаем класс контейнера
+                    />
+                  </div>
                 )}
               </div>
             </div>
@@ -3561,8 +3568,10 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
 
               <div className="relative">
                 {loadingSimilar ? (
-                  <div className="px-6">
-                    <div className="flex overflow-x-auto gap-4 pb-4 snap-x cast-scroll-container">
+                  <div className="px-10">
+                    {" "}
+                    {/* Loading Skeleton */}
+                    <div className="flex overflow-x-auto gap-4 pb-4 snap-x">
                       {Array(6)
                         .fill(0)
                         .map((_, index) => (
@@ -3578,17 +3587,22 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                     </div>
                   </div>
                 ) : (
-                  <MovieRow
-                    title=""
-                    items={similarMovies}
-                    variant="backdrop"
-                    posterSize="normal"
-                    showDate
-                    showLogo
-                    showYear
-                    hideTitle
-                    onMovieClick={() => playSound("choose.mp3")}
-                  />
+                  <div className="-mx-10 px-10">
+                    {" "}
+                    {/* Обертка для overflow */}
+                    <MovieRow
+                      title=""
+                      items={similarMovies}
+                      variant="backdrop"
+                      posterSize="normal"
+                      showDate
+                      showLogo
+                      showYear
+                      hideTitle
+                      onMovieClick={() => playSound("choose.mp3")}
+                      containerClassName="-mx-10 px-10" // Передаем класс контейнера
+                    />
+                  </div>
                 )}
               </div>
             </div>
@@ -3694,7 +3708,9 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                     </div>
                   </div>
                 ) : (
-                  <div>
+                  <div className="-mx-10 px-10">
+                    {" "}
+                    {/* Обертка для overflow */}
                     <MovieRow
                       title=""
                       items={collectionMovies}
@@ -3704,6 +3720,7 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                       showYear
                       hideTitle
                       onMovieClick={() => playSound("choose.mp3")}
+                      containerClassName="-mx-10 px-10" // Передаем класс контейнера
                     />
                   </div>
                 )}

@@ -38,6 +38,7 @@ interface MovieRowProps {
   disableNavigation?: boolean;
   shadow?: boolean;
   viewAllLink?: string;
+  containerClassName?: string;
 }
 
 // Простой хук для отслеживания ширины окна
@@ -84,6 +85,7 @@ export default function MovieRow({
   disableNavigation = false,
   shadow = false,
   viewAllLink,
+  containerClassName = "",
 }: MovieRowProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
@@ -230,7 +232,9 @@ export default function MovieRow({
           ref={scrollRef}
           className={`flex ${
             gap ? gap : ""
-          } overflow-x-auto scrollbar-hide scroll-smooth px-6 py-2 relative overflow-x-auto movie-row`}
+          } overflow-x-auto scrollbar-hide scroll-smooth py-2 relative movie-row ${
+            containerClassName ? containerClassName : "px-6"
+          }`}
         >
           {items.map((item, index) => (
             <div
