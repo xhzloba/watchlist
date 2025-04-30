@@ -274,7 +274,7 @@ export default function PopularContent() {
       l: "gap-y-4 md:gap-y-8",
       xl: "gap-y-8 md:gap-y-24",
     };
-    const fixedColGapClass = "gap-x-4";
+    const fixedColGapClass = "gap-x-2";
     return `grid ${sizeClasses[size]} ${rowGapClasses[gap]} ${fixedColGapClass}`;
   };
 
