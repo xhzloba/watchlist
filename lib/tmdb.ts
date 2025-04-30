@@ -1,3 +1,13 @@
+// Импорты из новой библиотеки
+import {
+  createTMDBProxyClient,
+  Movie as TMDBMovie,
+  TVShow,
+  ApiError,
+  PaginatedMediaResult,
+  PaginatedMovieResult,
+} from "tmdb-xhzloba";
+
 export interface Movie {
   id: number;
   title?: string;
@@ -8,6 +18,7 @@ export interface Movie {
   release_date?: string;
   release_quality?: string | { type?: string };
   first_air_date?: string;
+  releaseQuality?: string;
   media_type?: string;
   runtime?: number;
   vote_average?: number;
@@ -30,6 +41,79 @@ export interface Cast {
 const API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY;
 const API_BASE_URL = process.env.NEXT_PUBLIC_TMDB_API_BASE_URL;
 const IMAGE_BASE_URL = "https://imagetmdb.com/t/p";
+
+// --- НАЧАЛО: Инициализация клиента tmdb-xhzloba ---
+let tmdbClient: ReturnType<typeof createTMDBProxyClient>;
+
+function getClient() {
+  if (!tmdbClient) {
+    if (!API_KEY) {
+      throw new Error(
+        "TMDB API ключ не найден. Установите переменную окружения NEXT_PUBLIC_TMDB_API_KEY."
+      );
+    }
+    // Используем прокси по умолчанию, предоставляемый библиотекой, если не указан кастомный
+    // Если у тебя свой прокси, используй: createTMDBProxyClient(YOUR_PROXY_URL, API_KEY)
+    tmdbClient = createTMDBProxyClient(API_KEY);
+    console.log("Клиент tmdb-xhzloba инициализирован.");
+  }
+  return tmdbClient;
+}
+// --- КОНЕЦ: Инициализация клиента tmdb-xhzloba ---
+
+// --- НАЧАЛО: Новая функция для получения популярных медиа ---
+export async function getPopularMediaItems(
+  page: number = 1
+): Promise<PaginatedMediaResult> {
+  try {
+    const client = getClient();
+    const popularData = await client.media.getPopular(page);
+    console.log(`Загружена страница ${page} популярных медиа.`);
+    return popularData;
+  } catch (error) {
+    console.error("Ошибка при получении популярных медиа:", error);
+    if (error instanceof ApiError) {
+      // Можно добавить специфическую обработку ошибок API
+      throw new Error(
+        `Ошибка API TMDB (${error.statusCode}): ${error.message}`
+      );
+    }
+    throw error; // Перебрасываем остальные ошибки
+  }
+}
+// --- КОНЕЦ: Новая функция для получения популярных медиа ---
+
+// --- НАЧАЛО: Новая функция для получения ТОЛЬКО популярных фильмов ---
+export async function getPopularMoviesOnly(
+  page: number = 1
+): Promise<PaginatedMovieResult> {
+  try {
+    const client = getClient();
+    // Вызываем предполагаемый метод
+    const popularMoviesData = await client.media.getPopularMovies(page);
+    console.log(`Загружена страница ${page} ТОЛЬКО популярных фильмов.`);
+    return popularMoviesData;
+  } catch (error) {
+    console.error("Ошибка при получении ТОЛЬКО популярных фильмов:", error);
+    if (error instanceof ApiError) {
+      throw new Error(
+        `Ошибка API TMDB (${error.statusCode}): ${error.message}`
+      );
+    } else if (
+      error instanceof TypeError &&
+      error.message.includes("is not a function")
+    ) {
+      // Специально ловим ошибку, если метод не найден
+      console.error(
+        "*** Похоже, метод client.media.getPopularMovies() не существует! ***"
+      );
+      // Возвращаем пустой результат, чтобы страница не падала
+      return { items: [], page: page, totalPages: 0, totalResults: 0 };
+    }
+    throw error; // Перебрасываем остальные ошибки
+  }
+}
+// --- КОНЕЦ: Новая функция для получения ТОЛЬКО популярных фильмов ---
 
 export async function getTrendingMovies(): Promise<Movie[]> {
   const response = await fetch(

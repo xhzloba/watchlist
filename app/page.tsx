@@ -13,10 +13,13 @@ import {
   getBestMoviesOf2025,
   getBestMoviesOf2024,
   getRussianMovies,
-  type Movie,
+  getPopularMoviesOnly,
+  type Movie as LocalMovieType,
 } from "@/lib/tmdb";
 import { getAllActorsInfo, getAllActorsMovies } from "@/lib/actors";
 import dynamic from "next/dynamic";
+import { ensurePlainMovieObject } from "@/lib/movie-utils";
+
 // Динамический импорт компонента GenreStrip
 const GenreStrip = dynamic(() => import("@/components/genre-strip"), {
   ssr: true,
@@ -56,6 +59,7 @@ async function HomePageContent() {
       dramaMovies,
       familyMovies,
       westernMovies,
+      popularMoviesData,
     ] = await Promise.all([
       getTrendingMovies(),
       getNowPlayingMovies(),
@@ -78,89 +82,124 @@ async function HomePageContent() {
       getMoviesByGenre(18), // Драма
       getMoviesByGenre(10751), // Семейный
       getMoviesByGenre(37), // Вестерн
+      getPopularMoviesOnly(),
     ]);
 
-    // Создаем массив всех жанровых слайдеров для перемешивания
+    // Просто преобразуем результат, предполагая, что там только фильмы
+    const popularMovies: LocalMovieType[] = popularMoviesData.items.map(
+      ensurePlainMovieObject
+    );
+    console.log(
+      "Получено популярных фильмов (без фильтрации):",
+      popularMovies.length
+    ); // Добавим лог для проверки
+
+    // Преобразуем остальные массивы
+    const plainTrending = trending.map(ensurePlainMovieObject);
+    const plainLatestTrailers = latestTrailers.map(ensurePlainMovieObject);
+    const plainNowPlaying = nowPlaying.map(ensurePlainMovieObject);
+    const plainMovies2025 = movies2025.map(ensurePlainMovieObject);
+    const plainMovies2024 = movies2024.map(ensurePlainMovieObject);
+    const plainRussianMovies = russianMovies.map(ensurePlainMovieObject);
+    const plainComedyMovies = comedyMovies.map(ensurePlainMovieObject);
+    const plainHorrorMovies = horrorMovies.map(ensurePlainMovieObject);
+    const plainActionMovies = actionMovies.map(ensurePlainMovieObject);
+    const plainMysteryMovies = mysteryMovies.map(ensurePlainMovieObject);
+    const plainScienceFictionMovies = scienceFictionMovies.map(
+      ensurePlainMovieObject
+    );
+    const plainWarMovies = warMovies.map(ensurePlainMovieObject);
+    const plainAdventureMovies = adventureMovies.map(ensurePlainMovieObject);
+    const plainCrimeMovies = crimeMovies.map(ensurePlainMovieObject);
+    const plainFantasyMovies = fantasyMovies.map(ensurePlainMovieObject);
+    const plainRomanceMovies = romanceMovies.map(ensurePlainMovieObject);
+    const plainHistoryMovies = historyMovies.map(ensurePlainMovieObject);
+    const plainAnimationMovies = animationMovies.map(ensurePlainMovieObject);
+    const plainDramaMovies = dramaMovies.map(ensurePlainMovieObject);
+    const plainFamilyMovies = familyMovies.map(ensurePlainMovieObject);
+    const plainWesternMovies = westernMovies.map(ensurePlainMovieObject);
+
+    // Обновляем genreSliders с преобразованными items
     const genreSliders = [
       {
-        id: -1, // Специальный ID для российских фильмов, если потребуется своя страница
+        id: -1,
         title: "ПОПУЛЯРНЫЕ ФИЛЬМЫ ИЗ РОССИИ",
-        items: russianMovies.slice(0, 20),
+        items: plainRussianMovies.slice(0, 20),
       },
       {
         id: 35,
         title: "ЛУЧШИЕ КОМЕДИИ",
-        items: comedyMovies.slice(0, 20),
+        items: plainComedyMovies.slice(0, 20),
       },
       {
         id: 27,
         title: "УЖАСЫ",
-        items: horrorMovies.slice(0, 20),
+        items: plainHorrorMovies.slice(0, 20),
       },
       {
         id: 28,
         title: "БОЕВИКИ",
-        items: actionMovies.slice(0, 20),
+        items: plainActionMovies.slice(0, 20),
       },
       {
         id: 9648,
         title: "ДЕТЕКТИВЫ",
-        items: mysteryMovies.slice(0, 20),
+        items: plainMysteryMovies.slice(0, 20),
       },
       {
         id: 878,
         title: "ФАНТАСТИКА",
-        items: scienceFictionMovies.slice(0, 20),
+        items: plainScienceFictionMovies.slice(0, 20),
       },
       {
         id: 10752,
         title: "ВОЕННЫЕ ФИЛЬМЫ",
-        items: warMovies.slice(0, 20),
+        items: plainWarMovies.slice(0, 20),
       },
       {
         id: 12,
         title: "ПРИКЛЮЧЕНИЯ",
-        items: adventureMovies.slice(0, 20),
+        items: plainAdventureMovies.slice(0, 20),
       },
       {
         id: 80,
         title: "КРИМИНАЛЬНЫЕ ФИЛЬМЫ",
-        items: crimeMovies.slice(0, 20),
+        items: plainCrimeMovies.slice(0, 20),
       },
       {
         id: 14,
         title: "ФЭНТЕЗИ",
-        items: fantasyMovies.slice(0, 20),
+        items: plainFantasyMovies.slice(0, 20),
       },
       {
         id: 10749,
         title: "МЕЛОДРАМЫ",
-        items: romanceMovies.slice(0, 20),
+        items: plainRomanceMovies.slice(0, 20),
       },
       {
         id: 36,
         title: "ИСТОРИЧЕСКИЕ ФИЛЬМЫ",
-        items: historyMovies.slice(0, 20),
+        items: plainHistoryMovies.slice(0, 20),
       },
       {
         id: 16,
         title: "МУЛЬТФИЛЬМЫ",
-        items: animationMovies.slice(0, 20),
+        items: plainAnimationMovies.slice(0, 20),
       },
       {
         id: 18,
         title: "ДРАМЫ",
-        items: dramaMovies.slice(0, 20),
+        items: plainDramaMovies.slice(0, 20),
       },
       {
         id: 10751,
         title: "СЕМЕЙНЫЕ ФИЛЬМЫ",
-        items: familyMovies.slice(0, 20),
+        items: plainFamilyMovies.slice(0, 20),
       },
       {
         id: 37,
         title: "ВЕСТЕРНЫ",
-        items: westernMovies.slice(0, 20),
+        items: plainWesternMovies.slice(0, 20),
       },
     ];
 
@@ -185,28 +224,30 @@ async function HomePageContent() {
       type: "actor";
       actor: (typeof actorsWithInfo)[0];
       title: string;
-      items: Movie[];
+      items: LocalMovieType[];
     };
 
     type GenreSlider = {
       type: "genre";
-      genreId: number; // Добавляем ID жанра
+      genreId: number;
       title: string;
-      items: Movie[];
+      items: LocalMovieType[];
     };
 
     type CombinedSlider = ActorSlider | GenreSlider;
 
+    // Обновляем actorSliders с преобразованными items
     const actorSliders: ActorSlider[] = shuffledActors.map((actor) => ({
       type: "actor",
       actor,
       title: actor.title,
-      items: actorsMovies[actor.id].slice(0, 100),
+      items: actorsMovies[actor.id].slice(0, 100).map(ensurePlainMovieObject),
     }));
 
+    // Обновляем genreSliders2, беря items из shuffledGenreSliders
     const genreSliders2: GenreSlider[] = shuffledGenreSliders.map((slider) => ({
       type: "genre",
-      genreId: slider.id, // Передаем ID жанра
+      genreId: slider.id,
       title: slider.title,
       items: slider.items,
     }));
@@ -224,10 +265,10 @@ async function HomePageContent() {
         {/* <Header /> */}
         <main className="pt-32 pb-8">
           <div className="container-fluid mx-auto space-y-8">
-            {/* Фиксированные первые 3 слайдера - БЕЗ иконки */}
+            {/* Фиксированные первые 3 слайдера */}
             <MovieRow
               title="В тренде за неделю"
-              items={trending.slice(0, 20)}
+              items={plainTrending.slice(0, 20)}
               variant="poster"
               posterSize="large"
               showDate
@@ -235,7 +276,7 @@ async function HomePageContent() {
             />
             <MovieRow
               title="ПОСЛЕДНИЕ ДОБАВЛЕННЫЕ ТРЕЙЛЕРЫ"
-              items={latestTrailers.slice(0, 20)}
+              items={plainLatestTrailers.slice(0, 20)}
               variant="backdrop"
               backdropSize="large"
               showDate
@@ -243,10 +284,17 @@ async function HomePageContent() {
               showLogo
               isTrailerSection
             />
-            {/* Этот ряд пока без иконки, т.к. неясен ID */}
+            <MovieRow
+              title="ПОПУЛЯРНОЕ НА WATCHLIST"
+              items={popularMovies.slice(0, 20)}
+              variant="poster"
+              posterSize="large"
+              showDate
+              showYear
+            />
             <MovieRow
               title="СЕЙЧАС СМОТРЯТ"
-              items={nowPlaying.slice(0, 20)}
+              items={plainNowPlaying.slice(0, 20)}
               variant="poster"
               posterSize="large"
               showDate
@@ -254,10 +302,9 @@ async function HomePageContent() {
             />
             {/* Полоса жанров */}
             <GenreStrip />
-            {/* Ряды 2025 и 2024 пока без иконки, т.к. неясен ID */}
             <MovieRow
               title="ЛУЧШИЕ ФИЛЬМЫ 2025 ГОДА ПО ОЦЕНКАМ"
-              items={movies2025.slice(0, 20)}
+              items={plainMovies2025.slice(0, 20)}
               variant="backdrop"
               backdropSize="large"
               showDate
@@ -266,14 +313,14 @@ async function HomePageContent() {
             />
             <MovieRow
               title="ЛУЧШИЕ ФИЛЬМЫ 2024 ГОДА ПО ОЦЕНКАМ"
-              items={movies2024.slice(0, 20)}
+              items={plainMovies2024.slice(0, 20)}
               variant="backdrop"
               backdropSize="large"
               showDate
               showYear
               showLogo
             />
-            {/* История просмотров - БЕЗ иконки (динамический компонент) */}
+            {/* История просмотров */}
             <div className="mt-8">
               <ViewingHistoryRow />
             </div>
@@ -281,7 +328,7 @@ async function HomePageContent() {
             {/* Объединенные и перемешанные слайдеры актеров и жанров */}
             {allSliders.map((slider, index) =>
               slider.type === "actor" ? (
-                // Актерские ряды - С иконкой, ведущей на /actors/[id]
+                // Актерские ряды
                 <MovieRow
                   key={`actor-${slider.actor.id}`}
                   title={slider.title}
@@ -291,11 +338,10 @@ async function HomePageContent() {
                   actorImage={slider.actor.imageUrl}
                   showDate
                   showYear
-                  // Передаем ссылку на страницу актера
                   viewAllLink={`/actors/${slider.actor.id}`}
                 />
               ) : (
-                // Жанровые ряды - С иконкой (если ID не -1)
+                // Жанровые ряды
                 <MovieRow
                   key={`genre-${index}`}
                   title={slider.title}
@@ -304,7 +350,6 @@ async function HomePageContent() {
                   posterSize="large"
                   showDate
                   showYear
-                  // Передаем ID жанра как keywordIds
                   keywordIds={
                     slider.genreId !== -1 ? [slider.genreId] : undefined
                   }

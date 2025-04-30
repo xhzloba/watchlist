@@ -259,6 +259,7 @@ export default function MovieRow({
                     showYear={showYear}
                     showLogo={showLogo}
                     shadow={shadow}
+                    releaseQuality={item.releaseQuality}
                   />
                 </button>
               ) : disableNavigation ? (
@@ -276,6 +277,7 @@ export default function MovieRow({
                     showYear={showYear}
                     showLogo={showLogo}
                     shadow={shadow}
+                    releaseQuality={item.releaseQuality}
                   />
                 </div>
               ) : (
@@ -293,6 +295,7 @@ export default function MovieRow({
                     showYear={showYear}
                     showLogo={showLogo}
                     shadow={shadow}
+                    releaseQuality={item.releaseQuality}
                   />
                 </Link>
               )}
@@ -349,6 +352,7 @@ function MovieCard({
   showYear,
   showLogo,
   shadow,
+  releaseQuality,
 }: {
   item: Movie;
   variant: "poster" | "backdrop";
@@ -356,6 +360,7 @@ function MovieCard({
   showYear: boolean;
   showLogo?: boolean;
   shadow: boolean;
+  releaseQuality?: string;
 }) {
   const [roundedCorners, setRoundedCorners] = useState(false);
   const [yellowHover, setYellowHover] = useState(false);
@@ -507,6 +512,14 @@ function MovieCard({
                 {item.title || item.name}
               </div>
             )}
+          </div>
+        )}
+
+        {releaseQuality && (
+          <div className="absolute top-1.5 right-1.5 z-10">
+            <span className="px-3 py-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-[10px] font-bold rounded-lg shadow-lg">
+              {releaseQuality}
+            </span>
           </div>
         )}
       </div>
