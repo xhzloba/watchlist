@@ -3141,11 +3141,13 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                   {" "}
                   {/* Review List */}
                   <div className="group relative">
-                    <div className="flex overflow-x-auto gap-4 py-2 -mx-10 px-10 review-row scrollbar-hide scroll-smooth">
+                    <div className="flex overflow-x-auto gap-4 py-2 -mx-10 px-10 relative trailer-row scrollbar-hide scroll-smooth">
+                      {" "}
+                      {/* Added relative */}
                       {reviews.map((review) => (
                         <div
                           key={review.id}
-                          className="flex-none w-80 p-1 relative group/item" // Outer container with p-1
+                          className="flex-none w-72 p-1 relative group/item" // Outer container with p-1
                           onClick={() => setSelectedReview(review)}
                         >
                           <div className="bg-gray-800/50 rounded-lg p-3 cursor-pointer border-2 border-transparent hover:border-white hover:border-opacity-80 transition-colors duration-300 h-full flex flex-col">
@@ -3493,59 +3495,124 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                 </div>
               </div>
 
-              <div className="relative px-6">
+              <div className="relative">
                 {loadingTrailers ? (
-                  <div className="flex overflow-x-auto gap-4 pb-4 snap-x cast-scroll-container">
-                    {Array(4)
-                      .fill(0)
-                      .map((_, index) => (
-                        <div key={index} className="flex-none w-72 snap-start">
-                          <div className="bg-gray-800/40 animate-pulse aspect-video rounded mb-2"></div>
-                          <div className="bg-gray-800/40 animate-pulse h-4 w-56 rounded mb-1"></div>
-                          <div className="bg-gray-800/40 animate-pulse h-3 w-32 rounded"></div>
-                        </div>
-                      ))}
+                  <div className="px-10">
+                    {" "}
+                    {/* Loading Skeleton */}
+                    <div className="flex overflow-x-auto gap-4 py-2 ">
+                      {Array(4)
+                        .fill(0)
+                        .map((_, index) => (
+                          <div
+                            key={index}
+                            className="flex-none w-72 snap-start"
+                          >
+                            <div className="bg-gray-800/40 animate-pulse aspect-video rounded mb-2"></div>
+                            <div className="bg-gray-800/40 animate-pulse h-4 w-56 rounded mb-1"></div>
+                            <div className="bg-gray-800/40 animate-pulse h-3 w-32 rounded"></div>
+                          </div>
+                        ))}
+                    </div>
                   </div>
                 ) : (
-                  <div className="flex overflow-x-auto gap-4 pb-4 snap-x cast-scroll-container">
-                    {trailers.map((trailer, index) => (
-                      <div
-                        key={`${trailer.id || trailer.key}-${index}`}
-                        className="flex-none w-72 snap-start"
-                      >
-                        <div
-                          className="aspect-video bg-gray-800 rounded-lg overflow-hidden mb-2 group relative cursor-pointer"
-                          onClick={() => playTrailer(trailer)}
-                        >
-                          {/* Постоянное затемнение поверх превью */}
-                          <div className="absolute inset-0 bg-black/50"></div>
+                  <section className="relative">
+                    {" "}
+                    {/* Trailer List */}
+                    <div className="group relative">
+                      <div className="flex overflow-x-auto gap-4 py-2 -mx-10 px-10 relative trailer-row scrollbar-hide scroll-smooth">
+                        {" "}
+                        {/* Added relative */}
+                        {trailers.map((trailer, index) => (
+                          <div
+                            key={`${trailer.id || trailer.key}-${index}`}
+                            className="flex-none w-72 p-1 relative group/item" // Возвращаем p-1
+                          >
+                            <div className="h-full flex flex-col">
+                              {" "}
+                              {/* Inner container for flex layout */}
+                              <div
+                                className="aspect-video bg-gray-800 rounded-lg overflow-hidden group relative cursor-pointer mb-2 border-2 border-transparent group-hover/item:border-white transition-colors duration-200"
+                                onClick={() => playTrailer(trailer)}
+                              >
+                                {/* Постоянное затемнение поверх превью */}
+                                <div className="absolute inset-0 bg-black/50"></div>
 
-                          <img
-                            src={`https://img.youtube.com/vi/${trailer.key}/mqdefault.jpg`}
-                            alt={trailer.name}
-                            className="w-full h-full object-cover group-hover:opacity-90 transition-opacity"
-                            loading="lazy"
-                          />
+                                <img
+                                  src={`https://img.youtube.com/vi/${trailer.key}/mqdefault.jpg`}
+                                  alt={trailer.name}
+                                  className="w-full h-full object-cover group-hover:opacity-90 transition-opacity"
+                                  loading="lazy"
+                                />
 
-                          {/* Всегда видимая иконка Play по центру */}
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <Play
-                              className="w-16 h-16 text-white"
-                              fill="white"
-                              stroke="white"
-                            />
+                                {/* Всегда видимая иконка Play по центру */}
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                  <Play
+                                    className="w-16 h-16 text-white"
+                                    fill="white"
+                                    stroke="white"
+                                  />
+                                </div>
+                              </div>
+                              <p className="text-sm font-medium line-clamp-1 flex-grow">
+                                {trailer.name}
+                              </p>
+                              <p className="text-xs text-gray-400">
+                                {trailer.iso_639_1
+                                  ? `Язык: ${trailer.iso_639_1.toUpperCase()}`
+                                  : ""}
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                        <p className="text-sm font-medium line-clamp-1">
-                          {trailer.name}
-                        </p>
-                        <p className="text-xs text-gray-400">
-                          {trailer.iso_639_1
-                            ? `Язык: ${trailer.iso_639_1.toUpperCase()}`
-                            : ""}
-                        </p>
+                        ))}
                       </div>
-                    ))}
+
+                      {/* Navigation buttons */}
+                      <button
+                        onClick={() => {
+                          const container =
+                            document.querySelector(".trailer-row");
+                          if (container) {
+                            container.scrollBy({
+                              left: -300,
+                              behavior: "smooth",
+                            });
+                          }
+                        }}
+                        className="absolute top-1/2 -translate-y-1/2 left-2 z-10 p-2 rounded-full 
+                                 bg-yellow-400 hover:bg-yellow-500 text-black 
+                                 transition-all duration-300 disabled:opacity-0 disabled:cursor-not-allowed 
+                                 opacity-0 group-hover:opacity-100"
+                      >
+                        <ChevronLeft className="w-6 h-6" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          const container =
+                            document.querySelector(".trailer-row");
+                          if (container) {
+                            container.scrollBy({
+                              left: 300,
+                              behavior: "smooth",
+                            });
+                          }
+                        }}
+                        className="absolute top-1/2 -translate-y-1/2 right-2 z-10 p-2 rounded-full 
+                                 bg-yellow-400 hover:bg-yellow-500 text-black 
+                                 transition-all duration-300 disabled:opacity-0 disabled:cursor-not-allowed 
+                                 opacity-0 group-hover:opacity-100"
+                      >
+                        <ChevronRight className="w-6 h-6" />
+                      </button>
+                    </div>
+                  </section>
+                )}
+                {/* Добавляем сообщение об отсутствии трейлеров */}
+                {!loadingTrailers && trailers.length === 0 && (
+                  <div className="px-10">
+                    <p className="text-gray-400 text-center py-4">
+                      Трейлеры для этого фильма недоступны.
+                    </p>
                   </div>
                 )}
               </div>
