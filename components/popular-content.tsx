@@ -258,18 +258,22 @@ export default function PopularContent() {
   };
 
   // --- Рендеринг PopularContent ---
+  // Убираем эту проверку, так как шапка должна рендериться всегда
+  /*
   if (isLoading && page === 1) {
-    // Возвращаем лоадер для первой загрузки, а не null
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-[#121212] z-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-500"></div>
-      </div>
+        <div className="fixed inset-0 flex items-center justify-center bg-[#121212] z-50">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-500"></div>
+        </div>
     );
   }
+  */
 
-  if (error && movies.length === 0) {
+  // Сообщение об ошибке показываем так же, заменяя весь контент
+  if (error && movies.length === 0 && !isLoading) {
+    // Добавляем !isLoading, чтобы не показывать одновременно с лоадером сетки
     return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center px-4">
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] text-center px-4 pt-24">
         <h1 className="text-2xl font-semibold mb-4">
           Упс! Что-то пошло не так
         </h1>
@@ -284,8 +288,10 @@ export default function PopularContent() {
     );
   }
 
+  // Основной рендер компонента
   return (
     <div ref={scrollContainerRef} className="pt-24 pb-10 px-4 md:px-6 lg:px-8">
+      {/* Шапка с заголовком и контролами - рендерится всегда */}
       <div className="flex justify-between items-center mb-6 md:mb-8">
         <h1 className="text-2xl md:text-3xl font-bebas-neue tracking-wide text-yellow-400 uppercase">
           Популярное на Watchlist
@@ -338,33 +344,45 @@ export default function PopularContent() {
         </div>
       </div>
 
-      <div className={getGridClasses(posterSize, gapSize)}>
-        {movies.map((movie, index) => (
-          <MovieCard
-            key={`${movie.id}-${index}`}
-            movie={movie}
-            index={index}
-            isLastElement={index === movies.length - 1}
-          />
-        ))}
-      </div>
-
-      {isLoadingMore && (
-        <div className="flex justify-center items-center py-10">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-yellow-500"></div>
+      {/* Условный рендеринг: Лоадер ИЛИ Сетка */}
+      {isLoading && page === 1 ? (
+        // Показываем лоадер только в области сетки
+        <div className="flex justify-center items-center py-20">
+          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-yellow-500"></div>
         </div>
-      )}
-
-      {!hasMore && movies.length > 0 && (
-        <p className="text-center text-gray-500 py-10">
-          Это все популярные фильмы.
-        </p>
-      )}
-
-      {movies.length === 0 && !isLoading && !error && (
+      ) : movies.length === 0 && !error ? (
+        // Сообщение, если фильмы не найдены (и нет ошибки, и не идет загрузка)
         <p className="text-center text-gray-400 py-20">
           Популярные фильмы не найдены.
         </p>
+      ) : (
+        // Рендерим сетку с фильмами и лоадер пагинации
+        <>
+          <div className={getGridClasses(posterSize, gapSize)}>
+            {movies.map((movie, index) => (
+              <MovieCard
+                key={`${movie.id}-${index}`}
+                movie={movie}
+                index={index}
+                isLastElement={index === movies.length - 1}
+              />
+            ))}
+          </div>
+
+          {/* Индикатор загрузки для пагинации */}
+          {isLoadingMore && (
+            <div className="flex justify-center items-center py-10">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-yellow-500"></div>
+            </div>
+          )}
+
+          {/* Сообщение, если больше нет фильмов */}
+          {!hasMore && movies.length > 0 && (
+            <p className="text-center text-gray-500 py-10">
+              Это все популярные фильмы.
+            </p>
+          )}
+        </>
       )}
     </div>
   );
