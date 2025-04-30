@@ -289,42 +289,21 @@ export default function PopularContent() {
     isLastElement: boolean;
   }) => {
     const [isHovered, setIsHovered] = useState(false);
-    const [roundedCorners, setRoundedCorners] = useState(false);
-    const [yellowHover, setYellowHover] = useState(false);
-    const { showReleaseQuality } = useReleaseQualityVisibility();
-
-    useEffect(() => {
-      if (typeof window !== "undefined") {
-        const savedRoundedCorners = localStorage.getItem(
-          "settings_rounded_corners"
-        );
-        setRoundedCorners(savedRoundedCorners === "true");
-        const savedYellowHover = localStorage.getItem("settings_yellow_hover");
-        setYellowHover(savedYellowHover === "true");
-      }
-      const handleSettingsChange = (event: CustomEvent) => {
-        if (event.detail?.roundedCorners !== undefined)
-          setRoundedCorners(event.detail.roundedCorners);
-        if (event.detail?.yellowHover !== undefined)
-          setYellowHover(event.detail.yellowHover);
-      };
-      document.addEventListener(
-        "settingsChange",
-        handleSettingsChange as EventListener
-      );
-      return () => {
-        document.removeEventListener(
-          "settingsChange",
-          handleSettingsChange as EventListener
-        );
-      };
-    }, []);
+    // Используем хук для получения настроек
+    const {
+      showReleaseQuality,
+      roundedCorners,
+      showTitles,
+      yellowHover,
+      showMovieRating, // Получаем настройку отображения рейтинга
+    } = useReleaseQualityVisibility();
 
     const imageUrl = movie.poster_path
       ? getImageUrl(movie.poster_path, "w500")
       : "/placeholder.svg?height=300&width=200";
     const year = getYear(movie.release_date);
-    const rating = movie.vote_average ? movie.vote_average.toFixed(1) : "N/A";
+    const ratingValue = movie.vote_average;
+    const rating = ratingValue ? ratingValue.toFixed(1) : "N/A";
     const releaseQuality = movie.releaseQuality;
 
     return (
@@ -353,6 +332,21 @@ export default function PopularContent() {
             className="w-full h-auto object-cover transition-transform duration-300 group-hover:scale-105"
             loading={index < 10 ? "eager" : "lazy"}
           />
+          {/* Блок с рейтингом (как в discover) */}
+          {showMovieRating && ratingValue !== undefined && (
+            <div
+              className={`absolute top-2 left-2 z-10 ${
+                ratingValue >= 7.0
+                  ? "bg-green-600"
+                  : ratingValue >= 5.5
+                  ? "bg-gray-600"
+                  : "bg-red-600"
+              } text-white text-xs font-bold px-2 py-1 rounded-md`}
+            >
+              {rating}
+            </div>
+          )}
+          {/* Значок качества релиза (оставляем справа) */}
           {showReleaseQuality && releaseQuality && (
             <div className="absolute top-1.5 right-1.5 z-10">
               <span className="px-3 py-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-[10px] font-bold rounded-lg shadow-lg">
@@ -361,12 +355,12 @@ export default function PopularContent() {
             </div>
           )}
         </Link>
-        <h3 className="text-sm font-medium truncate px-1">
-          {movie.title || movie.name}
-        </h3>
-        <p className="text-xs text-gray-400 px-1">
-          {year} <span className="ml-1 mr-1">·</span> {rating} ★
-        </p>
+        {showTitles && (
+          <h3 className="text-sm font-medium truncate px-1">
+            {movie.title || movie.name}
+          </h3>
+        )}
+        {showTitles && <p className="text-xs text-gray-400 px-1">{year}</p>}
       </div>
     );
   };
