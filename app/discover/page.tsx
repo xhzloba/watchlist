@@ -11,6 +11,7 @@ import DynamicHeading from "./dynamic-heading";
 import { playSound } from "@/lib/sound-utils";
 import { throttle } from "lodash";
 import { useReleaseQualityVisibility } from "@/components/movie-card-wrapper";
+import { useUISettings } from "@/context/UISettingsContext";
 
 // Больше не используем localStorage для размера
 // const SETTINGS_POSTER_SIZE_KEY = "settings_poster_size";
@@ -628,130 +629,123 @@ function DiscoverContent() {
     index: number;
     isLastElement: boolean;
   }) => {
-    const { showMovieRating, roundedCorners, showTitles, yellowHover } =
-      useReleaseQualityVisibility();
+    const [isHovered, setIsHovered] = useState(false);
+    const { showCardGlow } = useUISettings();
+    const {
+      showMovieRating,
+      roundedCorners,
+      showTitles,
+      yellowHover,
+      showReleaseQuality,
+    } = useReleaseQualityVisibility();
     const releaseQuality = movie.release_quality || null;
+    const year =
+      movie.release_date?.split("-")[0] || movie.first_air_date?.split("-")[0];
+    const ratingValue = movie.vote_average;
+    const rating = ratingValue ? ratingValue.toFixed(1) : "N/A";
+    const imageUrl = movie.poster_path
+      ? getImageUrl(movie.poster_path, "w500")
+      : "/placeholder.svg";
 
     return (
-      <Link
-        key={`${movie.id}-${index}`}
-        href={`/movie/${movie.id}`}
-        className="movie-card group cursor-pointer"
-        ref={isLastElement ? lastMovieElementRef : null}
-        onClick={() => {
-          // Сначала воспроизводим звук для мгновенной обратной связи
-          playSound("choose.mp3");
-
-          // Выводим в консоль данные о качестве релиза
-          console.log("Фильм:", movie.title || movie.name);
-          console.log(
-            "Качество релиза (release_quality):",
-            movie.release_quality
-          );
-          console.log("Полные данные фильма:", movie);
-
-          // Сохраняем текущие фильмы и позицию прокрутки в sessionStorage
-          const currentScrollY = window.scrollY;
-          const currentPath = pathname + window.location.search;
-
-          // Гарантируем, что все необходимые данные сохранены
-          try {
-            // Сохраняем в sessionStorage (может быть очищен при навигации)
-            sessionStorage.setItem(STORAGE_KEYS.MOVIES, JSON.stringify(movies));
-            sessionStorage.setItem(STORAGE_KEYS.PAGE, page.toString());
-            sessionStorage.setItem(STORAGE_KEYS.HAS_MORE, hasMore.toString());
-            sessionStorage.setItem(
-              STORAGE_KEYS.SCROLL_POSITION,
-              currentScrollY.toString()
-            );
-            sessionStorage.setItem(STORAGE_KEYS.LAST_VIEW, currentPath);
-            sessionStorage.setItem(STORAGE_KEYS.FROM_DISCOVER, "true");
-
-            // Дополнительно сохраняем позицию скролла в localStorage для надежности
-            localStorage.setItem(
-              "backup_scroll_position",
-              currentScrollY.toString()
-            );
-            localStorage.setItem("backup_path", currentPath);
-            localStorage.setItem("backup_last_movie_id", movie.id.toString());
-            localStorage.setItem("backup_timestamp", Date.now().toString());
-
-            console.log(
-              `[SCROLL CLICK] Сохранена позиция при клике на фильм: ${currentScrollY}px, путь: ${currentPath}`
-            );
-          } catch (error) {
-            console.error(
-              "[SCROLL CLICK] Ошибка при сохранении состояния:",
-              error
-            );
-          }
-        }}
-      >
-        <div
-          className={`relative aspect-[2/3] ${
-            roundedCorners ? "rounded-xl" : "rounded-lg"
-          } overflow-hidden mb-2 border-[3px] border-transparent ${
-            yellowHover
-              ? "group-hover:border-yellow-500"
-              : "group-hover:border-white"
-          } transition-all duration-300 shadow-lg`}
-        >
-          <img
-            src={getImageUrl(movie.poster_path || "", "w500")}
-            alt={movie.title || movie.name || ""}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-            onError={(e) => {
-              e.currentTarget.src = "/placeholder.svg";
-            }}
-          />
-
-          {/* Показываем бейдж качества и рейтинга, если они доступны */}
-          {releaseQuality && (
-            <div className="absolute top-2 right-2 bg-white/70 text-black text-xs font-bold px-2 py-1 rounded-md backdrop-blur-sm shadow-sm">
-              {releaseQuality.type}
-            </div>
-          )}
-          {showMovieRating && movie.vote_average !== undefined && (
-            <div
-              className={`absolute top-2 left-2 ${
-                movie.vote_average >= 7.0
-                  ? "bg-green-600"
-                  : movie.vote_average >= 5.5
-                  ? "bg-gray-600"
-                  : "bg-red-600"
-              } text-white text-xs font-bold px-2 py-1 rounded-md`}
-            >
-              {movie.vote_average.toFixed(1)}
-            </div>
-          )}
-
-          {/* Альтернативный дизайн бейджа ТРЕНД с диагональным акцентом */}
-          {movie.popularity && movie.popularity >= 1000 && (
-            <div className="absolute bottom-0 right-0 z-10">
-              <div className="bg-gradient-to-tr from-red-600/90 to-red-600/30 backdrop-blur-sm text-white text-[9px] py-1 pl-3 pr-2 clip-path-polygon font-medium">
-                <div className="flex items-center gap-0.5">
-                  <span className="text-white">ТРЕНД</span>
-                  <span className="text-xs">🌶️</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-        </div>
-        {showTitles && (
-          <>
-            <h3 className="text-sm font-medium text-white truncate">
-              {movie.title || movie.name}
-            </h3>
-            {(movie.release_date || movie.first_air_date) && (
-              <p className="text-xs text-gray-400">
-                {(movie.release_date || movie.first_air_date)?.split("-")[0]}
-              </p>
-            )}
-          </>
+      <div className="relative group">
+        {showCardGlow && (
+          <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-2/3 h-5 bg-gradient-to-t from-transparent to-gray-200/60 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-20"></div>
         )}
-      </Link>
+        <Link
+          href={`/movie/${movie.id}`}
+          className={`movie-card block relative group ${
+            roundedCorners ? "rounded-xl" : "rounded-md"
+          } border-[3px] ${
+            isHovered
+              ? yellowHover
+                ? "border-yellow-500"
+                : "border-white"
+              : "border-transparent"
+          } transition-all duration-200 mb-2`}
+          ref={isLastElement ? lastMovieElementRef : null}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+          onClick={() => {
+            playSound("choose.mp3");
+            // Логика сохранения состояния и т.д. (оставляем как было)
+            const currentScrollY = window.scrollY;
+            const currentPath = pathname + window.location.search;
+            try {
+              sessionStorage.setItem(
+                STORAGE_KEYS.MOVIES,
+                JSON.stringify(movies)
+              );
+              sessionStorage.setItem(STORAGE_KEYS.PAGE, page.toString());
+              sessionStorage.setItem(STORAGE_KEYS.HAS_MORE, hasMore.toString());
+              sessionStorage.setItem(
+                STORAGE_KEYS.SCROLL_POSITION,
+                currentScrollY.toString()
+              );
+              sessionStorage.setItem(STORAGE_KEYS.LAST_VIEW, currentPath);
+              sessionStorage.setItem(STORAGE_KEYS.FROM_DISCOVER, "true");
+              localStorage.setItem(
+                "backup_scroll_position",
+                currentScrollY.toString()
+              );
+              localStorage.setItem("backup_path", currentPath);
+              localStorage.setItem("backup_last_movie_id", movie.id.toString());
+              localStorage.setItem("backup_timestamp", Date.now().toString());
+            } catch (error) {
+              console.error(
+                "[SCROLL CLICK] Ошибка при сохранении состояния:",
+                error
+              );
+            }
+          }}
+        >
+          <div
+            className={`relative aspect-[2/3] ${
+              roundedCorners ? "rounded-xl" : "rounded-md"
+            } overflow-hidden w-full h-full`}
+          >
+            <img
+              src={imageUrl}
+              alt={movie.title || movie.name || ""}
+              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              loading={index < 10 ? "eager" : "lazy"}
+              onError={(e) => {
+                e.currentTarget.src = "/placeholder.svg";
+              }}
+            />
+            {showMovieRating && ratingValue !== undefined && (
+              <div
+                className={`absolute top-2 left-2 z-10 ${
+                  ratingValue >= 7.0
+                    ? "bg-green-600"
+                    : ratingValue >= 5.5
+                    ? "bg-gray-600"
+                    : "bg-red-600"
+                } text-white text-xs font-bold px-2 py-1 rounded-md`}
+              >
+                {rating}
+              </div>
+            )}
+            {showReleaseQuality && releaseQuality && (
+              <div className="absolute top-1.5 right-1.5 z-10">
+                <span className="px-3 py-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-[10px] font-bold rounded-lg shadow-lg">
+                  {typeof releaseQuality === "object" && releaseQuality.type
+                    ? releaseQuality.type
+                    : "HDRip"}
+                </span>
+              </div>
+            )}
+          </div>
+        </Link>
+        {showTitles && (
+          <h3 className="text-sm font-medium truncate px-1 mt-1">
+            {movie.title || movie.name}
+          </h3>
+        )}
+        {showTitles && year && (
+          <p className="text-xs text-gray-400 px-1">{year}</p>
+        )}
+      </div>
     );
   };
 

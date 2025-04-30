@@ -14,22 +14,8 @@ import {
 import { playSound } from "@/lib/sound-utils";
 import { useReleaseQualityVisibility } from "@/components/movie-card-wrapper";
 import { STORAGE_KEYS } from "@/lib/constants";
-import {
-  ChevronLeft,
-  ChevronRight,
-  LayoutGrid,
-  SlidersHorizontal,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Skeleton } from "@/components/ui/skeleton";
 import { ensurePlainMovieObject } from "@/lib/movie-utils";
+import { useUISettings } from "@/context/UISettingsContext";
 
 // Типы для размера и отступов
 type PosterSize = "small" | "medium" | "large";
@@ -289,6 +275,7 @@ export default function PopularContent() {
     isLastElement: boolean;
   }) => {
     const [isHovered, setIsHovered] = useState(false);
+    const { showCardGlow } = useUISettings(); // Получаем настройку свечения из контекста
     // Используем хук для получения настроек
     const {
       showReleaseQuality,
@@ -307,7 +294,12 @@ export default function PopularContent() {
     const releaseQuality = movie.releaseQuality;
 
     return (
-      <div>
+      <div className="relative group">
+        {/* Glow Element moved here - Условный рендеринг */}
+        {showCardGlow && (
+          <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-2/3 h-5 bg-gradient-to-t from-transparent to-gray-200/60 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-20"></div>
+        )}
+
         <Link
           href={`/movie/${movie.id}`}
           className={`movie-card movie-card-popular block relative overflow-hidden group ${
@@ -325,6 +317,8 @@ export default function PopularContent() {
           onClick={() => playSound("choose.mp3")}
           style={{ aspectRatio: "2/3" }}
         >
+          {/* Glow Element removed from here */}
+
           <Image
             src={imageUrl}
             alt={movie.title || "Постер фильма"}

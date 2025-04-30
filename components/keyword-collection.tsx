@@ -67,6 +67,7 @@ export default function KeywordCollection({
         backdropStyle={useTrailerStyle}
         isTrailerSection={false}
         onMovieClick={() => playSound("choose.mp3")}
+        disableGlowEffect={true}
       />
     </div>
   );

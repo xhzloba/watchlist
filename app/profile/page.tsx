@@ -19,6 +19,8 @@ import GradientBackground from "@/components/gradient-background";
 import { playSound } from "@/lib/sound-utils";
 import { STORAGE_KEYS } from "@/lib/constants"; // Импортируем константы ключей
 import { Suspense } from "react"; // Импортируем Suspense
+import { useReleaseQualityVisibility } from "@/components/movie-card-wrapper"; // Исправляем путь
+import { useUISettings } from "@/context/UISettingsContext"; // Импортируем хук
 
 // Говорим Next.js рендерить эту страницу всегда динамически
 export const dynamic = "force-dynamic";
@@ -123,6 +125,7 @@ const SettingToggle: React.FC<SettingToggleProps> = ({
 
 export default function ProfilePage() {
   const { username, setUsername, isLoaded } = useUsername();
+  const { showCardGlow, toggleCardGlow } = useUISettings();
   const [mounted, setMounted] = useState(false);
   const [nameInitial, setNameInitial] = useState<string | null>(null);
   const [showNameModal, setShowNameModal] = useState(false);
@@ -639,6 +642,14 @@ export default function ProfilePage() {
               checked={disableColorOverlay}
               onChange={setDisableColorOverlay}
             />
+            {/* Добавляем переключатель для свечения */}
+            <SettingToggle
+              id="card-glow"
+              label="Эффект свечения карточек"
+              description="Добавляет легкое свечение сверху карточек при наведении в разделах 'Обзор' и 'Популярное'"
+              checked={showCardGlow}
+              onChange={toggleCardGlow}
+            />
             <hr className="border-white/10 my-6" />
           </div>
         );
@@ -714,6 +725,8 @@ export default function ProfilePage() {
         importDataFromJson={importDataFromJson}
         handleFileChange={handleFileChange}
         renderTabContent={renderTabContent}
+        showCardGlow={showCardGlow}
+        toggleCardGlow={toggleCardGlow}
       />
     </Suspense>
   );
@@ -790,6 +803,8 @@ function ProfilePageContent(props: any) {
     importDataFromJson,
     handleFileChange,
     renderTabContent,
+    showCardGlow,
+    toggleCardGlow,
   } = props;
 
   // Вся логика и рендеринг, которые были в ProfilePage, теперь здесь

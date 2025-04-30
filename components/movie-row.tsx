@@ -15,6 +15,7 @@ import type { Movie } from "@/lib/tmdb";
 import { getImageUrl, getYear, formatDate, getMovieLogos } from "@/lib/tmdb";
 import TrailerModal from "./trailer-modal";
 import { playSound } from "@/lib/sound-utils";
+import { useUISettings } from "@/context/UISettingsContext";
 
 interface MovieRowProps {
   title: string;
@@ -39,6 +40,7 @@ interface MovieRowProps {
   shadow?: boolean;
   viewAllLink?: string;
   containerClassName?: string;
+  disableGlowEffect?: boolean;
 }
 
 // Простой хук для отслеживания ширины окна
@@ -86,6 +88,7 @@ export default function MovieRow({
   shadow = false,
   viewAllLink,
   containerClassName = "",
+  disableGlowEffect = false,
 }: MovieRowProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
@@ -260,6 +263,7 @@ export default function MovieRow({
                     showLogo={showLogo}
                     shadow={shadow}
                     releaseQuality={item.releaseQuality}
+                    disableGlowEffect={disableGlowEffect}
                   />
                 </button>
               ) : disableNavigation ? (
@@ -278,6 +282,7 @@ export default function MovieRow({
                     showLogo={showLogo}
                     shadow={shadow}
                     releaseQuality={item.releaseQuality}
+                    disableGlowEffect={disableGlowEffect}
                   />
                 </div>
               ) : (
@@ -296,6 +301,7 @@ export default function MovieRow({
                     showLogo={showLogo}
                     shadow={shadow}
                     releaseQuality={item.releaseQuality}
+                    disableGlowEffect={disableGlowEffect}
                   />
                 </Link>
               )}
@@ -353,6 +359,7 @@ function MovieCard({
   showLogo,
   shadow,
   releaseQuality,
+  disableGlowEffect,
 }: {
   item: Movie;
   variant: "poster" | "backdrop";
@@ -361,12 +368,14 @@ function MovieCard({
   showLogo?: boolean;
   shadow: boolean;
   releaseQuality?: string;
+  disableGlowEffect: boolean;
 }) {
   const [roundedCorners, setRoundedCorners] = useState(false);
   const [yellowHover, setYellowHover] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [logoPath, setLogoPath] = useState<string | null>(null);
   const [loadingLogo, setLoadingLogo] = useState(false);
+  const { showCardGlow } = useUISettings();
 
   // Эффект для загрузки логотипа если showLogo=true и variant=backdrop
   useEffect(() => {
@@ -425,8 +434,20 @@ function MovieCard({
     };
   }, []);
 
+  const imagePath =
+    variant === "poster" ? item.poster_path : item.backdrop_path;
+  const imageUrl = getImageUrl(
+    imagePath || "", // Добавляем fallback на пустую строку
+    variant === "poster" ? "w500" : "w780"
+  );
+  const year = getYear(item.release_date || item.first_air_date);
+  const date = formatDate(item.release_date || item.first_air_date);
+
   return (
-    <div>
+    <div className="relative group">
+      {showCardGlow && !disableGlowEffect && (
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-2/3 h-5 bg-gradient-to-t from-transparent to-gray-200/60 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-20"></div>
+      )}
       <div
         className={`relative ${
           roundedCorners ? "rounded-xl" : "rounded-md"
@@ -450,12 +471,7 @@ function MovieCard({
         {(variant === "poster" && item.poster_path) ||
         (variant === "backdrop" && item.backdrop_path) ? (
           <Image
-            src={getImageUrl(
-              variant === "poster"
-                ? item.poster_path || ""
-                : item.backdrop_path || "",
-              variant === "poster" ? "w500" : "w780"
-            )}
+            src={imageUrl}
             alt={item.title || item.name || ""}
             fill
             className={`object-cover transition-transform duration-300 ${
@@ -532,8 +548,8 @@ function MovieCard({
             ? "В производстве"
             : "В разработке"
           : showDate
-          ? formatDate(item.release_date || item.first_air_date, showYear)
-          : getYear(item.release_date || item.first_air_date)}
+          ? date
+          : year}
       </p>
     </div>
   );

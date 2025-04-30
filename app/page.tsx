@@ -268,21 +268,23 @@ async function HomePageContent() {
             {/* Фиксированные первые 3 слайдера */}
             <MovieRow
               title="В тренде за неделю"
-              items={plainTrending.slice(0, 20)}
+              items={trending.slice(0, 20)}
               variant="poster"
               posterSize="large"
               showDate
               showYear
+              disableGlowEffect={true}
             />
             <MovieRow
               title="ПОСЛЕДНИЕ ДОБАВЛЕННЫЕ ТРЕЙЛЕРЫ"
-              items={plainLatestTrailers.slice(0, 20)}
+              items={latestTrailers.slice(0, 20)}
               variant="backdrop"
               backdropSize="large"
               showDate
               showYear
               showLogo
               isTrailerSection
+              disableGlowEffect={true}
             />
             <MovieRow
               title="ПОПУЛЯРНОЕ НА WATCHLIST"
@@ -292,34 +294,38 @@ async function HomePageContent() {
               showDate
               showYear
               viewAllLink="/popular" // <--- Добавляем ссылку "Показать все"
+              disableGlowEffect={true}
             />
             <MovieRow
               title="СЕЙЧАС СМОТРЯТ"
-              items={plainNowPlaying.slice(0, 20)}
+              items={nowPlaying.slice(0, 20)}
               variant="poster"
               posterSize="large"
               showDate
               showYear
+              disableGlowEffect={true}
             />
             {/* Полоса жанров */}
             <GenreStrip />
             <MovieRow
               title="ЛУЧШИЕ ФИЛЬМЫ 2025 ГОДА ПО ОЦЕНКАМ"
-              items={plainMovies2025.slice(0, 20)}
+              items={movies2025.slice(0, 20)}
               variant="backdrop"
               backdropSize="large"
               showDate
               showYear
               showLogo
+              disableGlowEffect={true}
             />
             <MovieRow
               title="ЛУЧШИЕ ФИЛЬМЫ 2024 ГОДА ПО ОЦЕНКАМ"
-              items={plainMovies2024.slice(0, 20)}
+              items={movies2024.slice(0, 20)}
               variant="backdrop"
               backdropSize="large"
               showDate
               showYear
               showLogo
+              disableGlowEffect={true}
             />
             {/* История просмотров */}
             <div className="mt-8">
@@ -340,6 +346,7 @@ async function HomePageContent() {
                   showDate
                   showYear
                   viewAllLink={`/actors/${slider.actor.id}`}
+                  disableGlowEffect={true}
                 />
               ) : (
                 // Жанровые ряды
@@ -354,6 +361,7 @@ async function HomePageContent() {
                   keywordIds={
                     slider.genreId !== -1 ? [slider.genreId] : undefined
                   }
+                  disableGlowEffect={true}
                 />
               )
             )}

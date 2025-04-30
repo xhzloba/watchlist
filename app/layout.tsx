@@ -9,6 +9,7 @@ import { WatchlistProvider } from "@/contexts/watchlist-context";
 import { ReleaseQualityProvider } from "@/components/movie-card-wrapper";
 import { ViewingHistoryProvider } from "@/contexts/viewing-history-context";
 import { UsernameProvider } from "@/contexts/username-context";
+import { UISettingsProvider } from "@/context/UISettingsContext";
 import { Suspense } from "react";
 import Header from "@/components/header";
 
@@ -45,10 +46,12 @@ export default function RootLayout({
               <ReleaseQualityProvider>
                 <ViewingHistoryProvider>
                   <UsernameProvider>
-                    <Suspense fallback={<HeaderFallback />}>
-                      <Header />
-                    </Suspense>
-                    <PageTransition>{children}</PageTransition>
+                    <UISettingsProvider>
+                      <Suspense fallback={<HeaderFallback />}>
+                        <Header />
+                      </Suspense>
+                      <PageTransition>{children}</PageTransition>
+                    </UISettingsProvider>
                   </UsernameProvider>
                 </ViewingHistoryProvider>
               </ReleaseQualityProvider>
