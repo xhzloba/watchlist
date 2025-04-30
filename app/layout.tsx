@@ -45,23 +45,11 @@ export default function RootLayout({
               <ReleaseQualityProvider>
                 <ViewingHistoryProvider>
                   <UsernameProvider>
-                    {/* Оборачиваем Header в Suspense */}
                     <Suspense fallback={<HeaderFallback />}>
                       <Header />
                     </Suspense>
-                    {/* Оборачиваем Suspense + children в div */}
-                    <div>
-                      <Suspense
-                        fallback={
-                          <div className="fixed inset-0 flex items-center justify-center bg-[#121212] z-50">
-                            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-500"></div>
-                          </div>
-                        }
-                      >
-                        {/* Убрали PageTransition */}
-                        {children}
-                      </Suspense>
-                    </div>
+
+                    <PageTransition>{children}</PageTransition>
                   </UsernameProvider>
                 </ViewingHistoryProvider>
               </ReleaseQualityProvider>

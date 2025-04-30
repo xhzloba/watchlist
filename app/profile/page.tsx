@@ -15,7 +15,6 @@ import {
   Download,
   Upload,
 } from "lucide-react";
-import Header from "@/components/header";
 import GradientBackground from "@/components/gradient-background";
 import { playSound } from "@/lib/sound-utils";
 import { STORAGE_KEYS } from "@/lib/constants"; // Импортируем константы ключей
@@ -724,7 +723,6 @@ export default function ProfilePage() {
 function ProfilePageFallback() {
   return (
     <GradientBackground>
-      <Header />
       <main className="px-6 pt-24 pb-16 text-white min-h-screen">
         <div className="animate-pulse">
           <div className="h-10 w-1/2 bg-gray-700 rounded mb-10"></div>
@@ -801,7 +799,6 @@ function ProfilePageContent(props: any) {
 
   return (
     <GradientBackground>
-      <Header />
       <main className="px-6 pt-24 pb-16 text-white min-h-screen">
         <div className="">
           <h1 className="text-4xl font-bold mb-10 flex items-center gap-3">
