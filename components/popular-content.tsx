@@ -143,16 +143,16 @@ export default function PopularContent() {
   const getGridClasses = (size: PosterSize, gap: GapSize): string => {
     const sizeClasses = {
       small:
-        "grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8",
+        "grid grid-cols-4 sm:grid-cols-5 md:grid-cols-7 lg:grid-cols-8 xl:grid-cols-9 2xl:grid-cols-10",
       medium:
-        "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7",
+        "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-8 2xl:grid-cols-9",
       large:
-        "grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6",
+        "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7",
     };
     const rowGapClasses = {
       m: "gap-y-3 md:gap-y-4",
-      l: "gap-y-4 md:gap-y-6",
-      xl: "gap-y-6 md:gap-y-8",
+      l: "gap-y-4 md:gap-y-8",
+      xl: "gap-y-8 md:gap-y-24",
     };
     const fixedColGapClass = "gap-x-4";
     return `grid ${sizeClasses[size]} ${rowGapClasses[gap]} ${fixedColGapClass}`;
