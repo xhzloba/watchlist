@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -8,11 +8,28 @@ import {
   getImageUrl,
   type Movie as LocalMovieType,
   getPopularMoviesOnly,
+  getYear,
+  Movie,
 } from "@/lib/tmdb";
-import { ensurePlainMovieObject } from "@/lib/movie-utils";
 import { playSound } from "@/lib/sound-utils";
 import { useReleaseQualityVisibility } from "@/components/movie-card-wrapper";
-import { getYear } from "@/lib/tmdb"; // Убедимся, что getYear импортирован
+import { STORAGE_KEYS } from "@/lib/constants";
+import {
+  ChevronLeft,
+  ChevronRight,
+  LayoutGrid,
+  SlidersHorizontal,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ensurePlainMovieObject } from "@/lib/movie-utils";
 
 // Типы для размера и отступов
 type PosterSize = "small" | "medium" | "large";
@@ -33,6 +50,74 @@ export default function PopularContent() {
   const [posterSize, setPosterSize] = useState<PosterSize>("medium");
   const [gapSize, setGapSize] = useState<GapSize>("m");
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+
+  // Рефы для логики восстановления/сохранения
+  const isScrollRestored = useRef(false);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // --- НАЧАЛО: Функция сохранения состояния ---
+  const saveState = useCallback(() => {
+    try {
+      const scrollPosition = window.scrollY;
+      // Используем ключи с суффиксом _popular
+      sessionStorage.setItem(
+        STORAGE_KEYS.MOVIES + "_popular",
+        JSON.stringify(movies)
+      );
+      sessionStorage.setItem(STORAGE_KEYS.PAGE + "_popular", page.toString());
+      sessionStorage.setItem(
+        STORAGE_KEYS.HAS_MORE + "_popular",
+        hasMore.toString()
+      );
+      sessionStorage.setItem(
+        STORAGE_KEYS.SCROLL_POSITION + "_popular",
+        scrollPosition.toString()
+      );
+      sessionStorage.setItem(
+        STORAGE_KEYS.LAST_VIEW + "_popular",
+        pathname + window.location.search
+      );
+
+      console.log("[Popular Save] Состояние сохранено:", {
+        moviesCount: movies.length,
+        page,
+        hasMore,
+        scrollY: scrollPosition,
+        path: pathname + window.location.search,
+        time: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error("Ошибка при сохранении состояния:", error);
+    }
+  }, [movies, page, hasMore, pathname, searchParams]); // Добавляем зависимости
+  // --- КОНЕЦ: Функция сохранения состояния ---
+
+  // --- НАЧАЛО: useEffect для сохранения состояния ---
+  useEffect(() => {
+    // Добавляем обработчик события beforeunload для сохранения состояния
+    window.addEventListener("beforeunload", saveState);
+
+    // Находим все ссылки на фильмы и добавляем обработчик КЛИКА
+    // Важно: Это сработает только ПОСЛЕ рендера карточек.
+    // Возможно, лучше передать saveState в MovieCard через пропс
+    // или использовать делегирование событий на родительском элементе.
+    // Пока оставим так для простоты, но это может быть ненадежно
+    // при динамической подгрузке.
+    const movieLinks = document.querySelectorAll(".movie-card-popular"); // Используем новый класс
+    movieLinks.forEach((link) => {
+      link.addEventListener("click", saveState);
+    });
+
+    return () => {
+      window.removeEventListener("beforeunload", saveState);
+      movieLinks.forEach((link) => {
+        link.removeEventListener("click", saveState);
+      });
+    };
+    // Перезапускаем эффект при изменении saveState (т.е. при изменении movies, page, hasMore и т.д.)
+    // и при изменении movies.length, чтобы перепривязать слушатели кликов к новым карточкам
+  }, [saveState, movies.length]);
+  // --- КОНЕЦ: useEffect для сохранения состояния ---
 
   // Логика для слайдера размера
   const sizeMap: PosterSize[] = ["small", "medium", "large"];
@@ -61,7 +146,6 @@ export default function PopularContent() {
     if (gap && ["m", "l", "xl"].includes(gap)) {
       setGapSize(gap as GapSize);
     }
-    setIsRestoringState(false);
   }, [searchParams]);
 
   // Ref для IntersectionObserver
@@ -82,42 +166,78 @@ export default function PopularContent() {
     [isLoadingMore, hasMore, isRestoringState]
   );
 
-  // Функция загрузки фильмов
-  const fetchPopularMovies = useCallback(
-    async (pageNum: number) => {
-      if (pageNum === 1) {
-        setIsLoading(true);
-      } else {
-        setIsLoadingMore(true);
-      }
-      setError(null);
-      try {
-        const data = await getPopularMoviesOnly(pageNum);
-        const newMovies = data.items.map(ensurePlainMovieObject);
-        setMovies((prevMovies) =>
-          pageNum === 1 ? newMovies : [...prevMovies, ...newMovies]
-        );
-        setHasMore(pageNum < data.totalPages);
-      } catch (err: any) {
-        console.error("[Popular Page] Ошибка загрузки фильмов:", err);
-        setError(
-          err.message || "Произошла ошибка при загрузке популярных фильмов."
-        );
-        setHasMore(false);
-      } finally {
-        if (pageNum === 1) setIsLoading(false);
-        else setIsLoadingMore(false);
-        if (isRestoringState) setIsRestoringState(false);
-      }
-    },
-    [isRestoringState]
-  );
+  // Функция загрузки фильмов (ОПРЕДЕЛЯЕМ ЗДЕСЬ)
+  const fetchPopularMovies = useCallback(async (pageNum: number) => {
+    // Устанавливаем isLoading/isLoadingMore как и раньше
+    if (pageNum === 1) {
+      setIsLoading(true);
+    } else {
+      setIsLoadingMore(true);
+    }
+    setError(null);
+    try {
+      console.log(`[Popular Fetch] Загрузка страницы ${pageNum}...`);
+      const result = await getPopularMoviesOnly(pageNum);
+      console.log(`[Popular Fetch] Получено ${result.items.length} элементов.`);
 
-  // Загрузка фильмов
+      // Use result.items and explicitly type map parameter as any
+      const newMovies = result.items.map(
+        (movie: any) => ensurePlainMovieObject(movie) as Movie
+      );
+
+      setMovies((prevMovies) =>
+        pageNum === 1 ? newMovies : [...prevMovies, ...newMovies]
+      );
+      setHasMore(result.page < result.totalPages);
+    } catch (err: any) {
+      console.error("[Popular Page] Ошибка загрузки фильмов:", err);
+      setError(
+        err.message || "Произошла ошибка при загрузке популярных фильмов."
+      );
+      setHasMore(false);
+    } finally {
+      // Всегда снимаем флаги загрузки после завершения запроса
+      if (pageNum === 1) setIsLoading(false);
+      else setIsLoadingMore(false);
+      // Флаг isRestoringState управляется в другом useEffect
+      // if(isRestoringState) {
+      //     setIsRestoringState(false);
+      // }
+    }
+  }, []);
+
+  // Загрузка фильмов ПОСЛЕ ЗАВЕРШЕНИЯ ВОССТАНОВЛЕНИЯ
   useEffect(() => {
-    if (isRestoringState) return;
-    fetchPopularMovies(page);
-  }, [page, fetchPopularMovies, isRestoringState]);
+    if (isRestoringState === false) {
+      // Восстановление завершено, проверяем, нужно ли грузить данные
+      // Если страница 1 и фильмы уже есть (восстановлены), не грузим
+      if (!(page === 1 && movies.length > 0)) {
+        console.log(
+          `[Popular Fetch Init] Восстановление завершено. Запускаем fetch для страницы ${page}`
+        );
+        fetchPopularMovies(page);
+      } else {
+        console.log(
+          `[Popular Fetch Init] Восстановление завершено. Фильмы для стр. 1 уже есть.`
+        );
+        // Если мы восстановили состояние, но isLoading остался true, сбросим его
+        if (isLoading) setIsLoading(false);
+      }
+    } else {
+      console.log("[Popular Fetch Init] Ожидание завершения восстановления...");
+    }
+    // Этот эффект срабатывает ТОЛЬКО при изменении isRestoringState
+  }, [isRestoringState, fetchPopularMovies]); // Убираем page, movies.length, isLoading из зависимостей
+
+  // Загрузка фильмов при ПАГИНАЦИИ
+  useEffect(() => {
+    // Запускаем только для страниц > 1 и после завершения восстановления
+    if (!isRestoringState && page > 1) {
+      console.log(`[Popular Pagination] Запускаем fetch для страницы ${page}`);
+      fetchPopularMovies(page);
+    }
+    // Этот эффект срабатывает ТОЛЬКО при изменении page (для страниц > 1)
+  }, [page, isRestoringState, fetchPopularMovies]);
 
   // Функции обновления URL
   const updateUrlParams = (newParams: Record<string, string>) => {
@@ -203,12 +323,15 @@ export default function PopularContent() {
     const imageUrl = movie.poster_path
       ? getImageUrl(movie.poster_path, "w500")
       : "/placeholder.svg?height=300&width=200";
+    const year = getYear(movie.release_date);
+    const rating = movie.vote_average ? movie.vote_average.toFixed(1) : "N/A";
+    const releaseQuality = movie.releaseQuality;
 
     return (
       <div>
         <Link
           href={`/movie/${movie.id}`}
-          className={`movie-card block relative overflow-hidden group ${
+          className={`movie-card movie-card-popular block relative overflow-hidden group ${
             roundedCorners ? "rounded-xl" : "rounded-md"
           } border-2 ${
             isHovered
@@ -230,13 +353,10 @@ export default function PopularContent() {
             className="w-full h-auto object-cover transition-transform duration-300 group-hover:scale-105"
             loading={index < 10 ? "eager" : "lazy"}
           />
-          {showReleaseQuality && movie.releaseQuality && (
+          {showReleaseQuality && releaseQuality && (
             <div className="absolute top-1.5 right-1.5 z-10">
               <span className="px-3 py-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-[10px] font-bold rounded-lg shadow-lg">
-                {movie.releaseQuality ||
-                  (typeof movie.release_quality === "object"
-                    ? movie.release_quality?.type
-                    : movie.release_quality)}
+                {releaseQuality}
               </span>
             </div>
           )}
@@ -245,29 +365,138 @@ export default function PopularContent() {
           {movie.title || movie.name}
         </h3>
         <p className="text-xs text-gray-400 px-1">
-          {movie.release_date
-            ? getYear(movie.release_date)
-            : movie.first_air_date
-            ? getYear(movie.first_air_date)
-            : movie.status === "Post Production"
-            ? "В производстве"
-            : "В разработке"}
+          {year} <span className="ml-1 mr-1">·</span> {rating} ★
         </p>
       </div>
     );
   };
 
+  // --- НАЧАЛО: Логика восстановления состояния ---
+  useEffect(() => {
+    // Флаг, что восстановление было успешно и можно прокручивать
+    let restoreSucceeded = false;
+    let scrollPos = 0;
+
+    try {
+      // Используем ключи с суффиксом _popular
+      const storedMovies = sessionStorage.getItem(
+        STORAGE_KEYS.MOVIES + "_popular"
+      );
+      const storedPage = sessionStorage.getItem(STORAGE_KEYS.PAGE + "_popular");
+      const storedScrollPosition = sessionStorage.getItem(
+        STORAGE_KEYS.SCROLL_POSITION + "_popular"
+      );
+      const storedHasMore = sessionStorage.getItem(
+        STORAGE_KEYS.HAS_MORE + "_popular"
+      );
+      // Добавляем проверку пути
+      const savedPath = sessionStorage.getItem(
+        STORAGE_KEYS.LAST_VIEW + "_popular"
+      );
+      const currentPath = pathname + window.location.search;
+
+      console.log("[Popular Restore] Проверка сохраненного состояния:", {
+        storedMovies: !!storedMovies,
+        storedPage,
+        storedScrollPosition,
+        storedHasMore,
+        savedPath,
+        currentPath,
+      });
+
+      // Условие: есть сохраненные данные И путь совпадает
+      if (
+        storedMovies &&
+        storedPage &&
+        storedScrollPosition &&
+        storedHasMore &&
+        savedPath === currentPath
+      ) {
+        console.log("[Popular Restore] Попытка восстановления состояния...");
+        const parsedMovies = JSON.parse(storedMovies);
+        const pageNum = parseInt(storedPage);
+        scrollPos = parseInt(storedScrollPosition || "0");
+
+        if (Array.isArray(parsedMovies)) {
+          setMovies(parsedMovies);
+          setPage(pageNum);
+          setHasMore(
+            sessionStorage.getItem(STORAGE_KEYS.HAS_MORE + "_popular") ===
+              "true"
+          );
+          setIsLoading(false);
+          setIsLoadingMore(false);
+          restoreSucceeded = true;
+          console.log(
+            "[Popular Restore] Состояние успешно восстановлено (фильмы, страница)."
+          );
+        } else {
+          console.warn(
+            "[Popular Restore] Сохраненные фильмы не являются массивом."
+          );
+          // Очищаем некорректные данные (используем ключ с суффиксом _popular)
+          sessionStorage.removeItem(STORAGE_KEYS.MOVIES + "_popular");
+        }
+      } else {
+        console.log(
+          "[Popular Restore] Нет сохраненного состояния или условия не выполнены."
+        );
+        // Очищаем ключи для этой страницы, если условия не выполнены
+        sessionStorage.removeItem(STORAGE_KEYS.MOVIES + "_popular");
+        sessionStorage.removeItem(STORAGE_KEYS.PAGE + "_popular");
+        sessionStorage.removeItem(STORAGE_KEYS.HAS_MORE + "_popular");
+        sessionStorage.removeItem(STORAGE_KEYS.SCROLL_POSITION + "_popular");
+        sessionStorage.removeItem(STORAGE_KEYS.LAST_VIEW + "_popular"); // Также чистим путь
+      }
+    } catch (e) {
+      console.error(
+        "[Popular Restore] Ошибка парсинга или установки состояния:",
+        e
+      );
+      // Очищаем потенциально битые данные (используем ключи с суффиксом _popular)
+      sessionStorage.removeItem(STORAGE_KEYS.MOVIES + "_popular");
+      sessionStorage.removeItem(STORAGE_KEYS.PAGE + "_popular"); // Добавил очистку страницы
+    } finally {
+      // В любом случае завершаем фазу восстановления
+      console.log(
+        "[Popular Restore] Завершение фазы восстановления, isRestoringState = false"
+      );
+      setIsRestoringState(false);
+
+      // Если восстановление было успешным, выполняем прокрутку
+      if (restoreSucceeded) {
+        isScrollRestored.current = true;
+        if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+        console.log(`[Popular Restore] Прокрутка к ${scrollPos}px`);
+        // Используем requestAnimationFrame для прокрутки после рендера
+        requestAnimationFrame(() => {
+          scrollTimeoutRef.current = setTimeout(() => {
+            window.scrollTo({ top: scrollPos, behavior: "auto" });
+            console.log(`[Popular Restore] Скролл выполнен.`);
+          }, 50); // Небольшая задержка
+        });
+      }
+    }
+
+    // Очистка таймера при размонтировании
+    return () => {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, [pathname]); // Зависимость только от pathname
+  // --- КОНЕЦ: Логика восстановления состояния ---
+
   // --- Рендеринг PopularContent ---
-  // Убираем эту проверку, так как шапка должна рендериться всегда
-  /*
-  if (isLoading && page === 1) {
+  // Лоадер теперь показывается только если НЕТ восстановленного состояния
+  // и идет загрузка ПЕРВОЙ страницы
+  if (isLoading && page === 1 && movies.length === 0) {
     return (
-        <div className="fixed inset-0 flex items-center justify-center bg-[#121212] z-50">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-500"></div>
-        </div>
+      <div className="fixed inset-0 flex items-center justify-center bg-[#121212] z-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-500"></div>
+      </div>
     );
   }
-  */
 
   // Сообщение об ошибке показываем так же, заменяя весь контент
   if (error && movies.length === 0 && !isLoading) {
