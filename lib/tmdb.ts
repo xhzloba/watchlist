@@ -181,16 +181,23 @@ export function formatDate(
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return "Дата выхода неизвестна";
 
-    const month = date.toLocaleString("ru-RU", { month: "long" });
-    const day = date.getDate();
-    const year = date.getFullYear();
-
-    // Вместо падежа, используем именительный падеж с родительным для месяца
+    // Используем toLocaleString с нужными опциями для правильного склонения
+    const options: Intl.DateTimeFormatOptions = {
+      day: "numeric",
+      month: "long",
+    };
     if (includeYear) {
-      return `${day} ${month} ${year}`;
-    } else {
-      return `${day} ${month}`;
+      options.year = "numeric";
     }
+
+    let formattedDate = date.toLocaleString("ru-RU", options);
+
+    // Удаляем " г." если оно есть в конце (для формата с годом)
+    if (includeYear && formattedDate.endsWith(" г.")) {
+      formattedDate = formattedDate.slice(0, -3);
+    }
+
+    return formattedDate;
   } catch (e) {
     return "Дата выхода неизвестна";
   }

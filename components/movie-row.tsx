@@ -441,7 +441,7 @@ function MovieCard({
     variant === "poster" ? "w500" : "w780"
   );
   const year = getYear(item.release_date || item.first_air_date);
-  const date = formatDate(item.release_date || item.first_air_date);
+  const date = formatDate(item.release_date || item.first_air_date, showYear);
 
   return (
     <div className="relative group">
@@ -542,15 +542,20 @@ function MovieCard({
       <h3 className="text-sm font-medium truncate">
         {item.title || item.name}
       </h3>
-      <p className="text-xs text-gray-400">
-        {!item.release_date && !item.first_air_date
-          ? item.status === "Post Production"
-            ? "В производстве"
-            : "В разработке"
-          : showDate
-          ? date
-          : year}
-      </p>
+      {((showDate || showYear) && (item.release_date || item.first_air_date)) ||
+      (!item.release_date && !item.first_air_date && item.status) ? (
+        <p className="text-xs text-gray-400">
+          {!item.release_date && !item.first_air_date
+            ? item.status === "Post Production"
+              ? "В производстве"
+              : "В разработке"
+            : showDate
+            ? date
+            : showYear
+            ? year
+            : ""}
+        </p>
+      ) : null}
     </div>
   );
 }

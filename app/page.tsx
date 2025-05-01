@@ -95,11 +95,6 @@ async function HomePageContent() {
     ); // Добавим лог для проверки
 
     // Преобразуем остальные массивы
-    const plainTrending = trending.map(ensurePlainMovieObject);
-    const plainLatestTrailers = latestTrailers.map(ensurePlainMovieObject);
-    const plainNowPlaying = nowPlaying.map(ensurePlainMovieObject);
-    const plainMovies2025 = movies2025.map(ensurePlainMovieObject);
-    const plainMovies2024 = movies2024.map(ensurePlainMovieObject);
     const plainRussianMovies = russianMovies.map(ensurePlainMovieObject);
     const plainComedyMovies = comedyMovies.map(ensurePlainMovieObject);
     const plainHorrorMovies = horrorMovies.map(ensurePlainMovieObject);
