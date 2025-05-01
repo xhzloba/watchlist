@@ -654,7 +654,7 @@ function DiscoverContent() {
         )}
         <Link
           href={`/movie/${movie.id}`}
-          className={`movie-card block relative group ${
+          className={`movie-card block relative group overflow-hidden ${
             roundedCorners ? "rounded-xl" : "rounded-md"
           } border-[3px] ${
             isHovered
@@ -699,11 +699,7 @@ function DiscoverContent() {
             }
           }}
         >
-          <div
-            className={`relative aspect-[2/3] ${
-              roundedCorners ? "rounded-xl" : "rounded-md"
-            } overflow-hidden w-full h-full`}
-          >
+          <div className={`relative aspect-[2/3] w-full h-full`}>
             <img
               src={imageUrl}
               alt={movie.title || movie.name || ""}

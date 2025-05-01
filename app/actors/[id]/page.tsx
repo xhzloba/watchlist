@@ -526,6 +526,8 @@ async function ActorPageContent({ params }: { params: { id: string } }) {
               items={movies}
               variant="poster"
               posterSize="large"
+              showDate
+              showYear
               disableGlowEffect={true}
               className="mb-8"
             />

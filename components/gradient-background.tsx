@@ -31,10 +31,10 @@ export default function GradientBackground({
 
   // Специальные цвета для страниц актеров
   const actorColors = {
-    topLeft: "#121a1d",
-    topRight: "#1d4f5d",
-    bottomLeft: "#163b4a",
-    bottomRight: "#1e5a69",
+    topLeft: "#1b1c1c",
+    topRight: "#202121",
+    bottomLeft: "#0e0f10",
+    bottomRight: "#0c0c0c",
   };
 
   // Устанавливаем флаг, что мы в браузере
