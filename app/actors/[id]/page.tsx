@@ -447,6 +447,7 @@ async function ActorPageContent({ params }: { params: { id: string } }) {
               showDate
               showYear
               showLogo
+              disableGlowEffect={true}
             />
           )}
 
@@ -459,6 +460,9 @@ async function ActorPageContent({ params }: { params: { id: string } }) {
               items={topRatedMovies}
               variant="poster"
               posterSize="large"
+              showDate
+              showYear
+              disableGlowEffect={true}
               className="mb-8"
             />
           )}
@@ -497,6 +501,7 @@ async function ActorPageContent({ params }: { params: { id: string } }) {
             variant="poster"
             posterSize="large"
             showYear
+            disableGlowEffect={true}
           />
 
           {/* Сериалы с участием актера */}
@@ -506,6 +511,9 @@ async function ActorPageContent({ params }: { params: { id: string } }) {
               items={tvShows}
               variant="poster"
               posterSize="large"
+              showDate
+              showYear
+              disableGlowEffect={true}
               className="mb-8"
             />
           )}
@@ -518,6 +526,7 @@ async function ActorPageContent({ params }: { params: { id: string } }) {
               items={movies}
               variant="poster"
               posterSize="large"
+              disableGlowEffect={true}
               className="mb-8"
             />
           ))}
@@ -530,6 +539,9 @@ async function ActorPageContent({ params }: { params: { id: string } }) {
               items={movies}
               variant="poster"
               posterSize="large"
+              showDate
+              showYear
+              disableGlowEffect={true}
               className="mb-8"
             />
           ))}
@@ -541,6 +553,7 @@ async function ActorPageContent({ params }: { params: { id: string } }) {
               items={voiceActingMovies}
               variant="poster"
               posterSize="large"
+              disableGlowEffect={true}
               className="mb-8"
             />
           )}
@@ -552,6 +565,7 @@ async function ActorPageContent({ params }: { params: { id: string } }) {
               items={producerMovies}
               variant="poster"
               posterSize="large"
+              disableGlowEffect={true}
               className="mb-8"
             />
           )}
