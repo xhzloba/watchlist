@@ -342,8 +342,8 @@ export default function PopularContent() {
           )}
           {/* Значок качества релиза (оставляем справа) */}
           {showReleaseQuality && releaseQuality && (
-            <div className="absolute top-1.5 right-1.5 z-10">
-              <span className="px-3 py-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-[10px] font-bold rounded-lg shadow-lg">
+            <div className="absolute top-2 right-2 z-10">
+              <span className="px-2 py-1 bg-blue-600 text-white text-xs font-bold rounded-md">
                 {releaseQuality}
               </span>
             </div>
@@ -507,7 +507,7 @@ export default function PopularContent() {
 
   // Основной рендер компонента
   return (
-    <div ref={scrollContainerRef} className="pt-24 pb-10 px-4 md:px-6 lg:px-8">
+    <div ref={scrollContainerRef} className="pt-24 pb-10 px-4 md:px-6 lg:px-6">
       {/* Шапка с заголовком и контролами - рендерится всегда */}
       <div className="flex justify-between items-center mb-6 md:mb-8">
         <h1 className="text-2xl md:text-3xl font-bebas-neue tracking-wide text-yellow-400 uppercase">
