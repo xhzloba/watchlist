@@ -3474,6 +3474,7 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                       hideTitle
                       onMovieClick={() => playSound("choose.mp3")}
                       containerClassName="-mx-10 px-10" // Передаем класс контейнера
+                      disableGlowEffect={true}
                     />
                   </div>
                 )}
@@ -3667,7 +3668,8 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                       showYear
                       hideTitle
                       onMovieClick={() => playSound("choose.mp3")}
-                      containerClassName="-mx-10 px-10" // Передаем класс контейнера
+                      containerClassName="-mx-10 px-10"
+                      disableGlowEffect={true} // Передаем класс контейнера
                     />
                   </div>
                 )}
