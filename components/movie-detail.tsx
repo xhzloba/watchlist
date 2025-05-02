@@ -2796,7 +2796,7 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                 )}
               </div>
 
-              <div className="flex items-center gap-4 mb-8">
+              <div className="flex items-center gap-2 md:gap-4 mb-8">
                 <div className="flex items-center gap-2">
                   <div className="w-full md:w-auto">
                     <WatchlistButtonWrapper
