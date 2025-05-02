@@ -3129,7 +3129,7 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                     className="absolute top-1/2 -translate-y-1/2 left-2 z-10 p-2 rounded-full 
                              bg-yellow-400 hover:bg-yellow-500 text-black 
                              transition-all duration-300 disabled:opacity-0 disabled:cursor-not-allowed 
-                             opacity-0 group-hover:opacity-100"
+                             opacity-0 md:group-hover:opacity-100"
                   >
                     <ChevronLeft className="w-6 h-6" />
                   </button>
@@ -3146,7 +3146,7 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                     className="absolute top-1/2 -translate-y-1/2 right-2 z-10 p-2 rounded-full 
                              bg-yellow-400 hover:bg-yellow-500 text-black 
                              transition-all duration-300 disabled:opacity-0 disabled:cursor-not-allowed 
-                             opacity-0 group-hover:opacity-100"
+                             opacity-0 md:group-hover:opacity-100"
                   >
                     <ChevronRight className="w-6 h-6" />
                   </button>
@@ -3302,7 +3302,7 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                       className="absolute top-1/2 -translate-y-1/2 left-2 z-10 p-2 rounded-full 
                                bg-yellow-400 hover:bg-yellow-500 text-black 
                                transition-all duration-300 disabled:opacity-0 disabled:cursor-not-allowed 
-                               opacity-0 group-hover:opacity-100"
+                               opacity-0 md:group-hover:opacity-100"
                     >
                       <ChevronLeft className="w-6 h-6" />
                     </button>
@@ -3319,7 +3319,7 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                       className="absolute top-1/2 -translate-y-1/2 right-2 z-10 p-2 rounded-full 
                                bg-yellow-400 hover:bg-yellow-500 text-black 
                                transition-all duration-300 disabled:opacity-0 disabled:cursor-not-allowed 
-                               opacity-0 group-hover:opacity-100"
+                               opacity-0 md:group-hover:opacity-100"
                     >
                       <ChevronRight className="w-6 h-6" />
                     </button>
@@ -3616,7 +3616,7 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                         className="absolute top-1/2 -translate-y-1/2 left-2 z-10 p-2 rounded-full 
                                  bg-yellow-400 hover:bg-yellow-500 text-black 
                                  transition-all duration-300 disabled:opacity-0 disabled:cursor-not-allowed 
-                                 opacity-0 group-hover:opacity-100"
+                                 opacity-0 md:group-hover:opacity-100"
                       >
                         <ChevronLeft className="w-6 h-6" />
                       </button>
@@ -3634,7 +3634,7 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                         className="absolute top-1/2 -translate-y-1/2 right-2 z-10 p-2 rounded-full 
                                  bg-yellow-400 hover:bg-yellow-500 text-black 
                                  transition-all duration-300 disabled:opacity-0 disabled:cursor-not-allowed 
-                                 opacity-0 group-hover:opacity-100"
+                                 opacity-0 md:group-hover:opacity-100"
                       >
                         <ChevronRight className="w-6 h-6" />
                       </button>
