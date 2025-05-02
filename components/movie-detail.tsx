@@ -2306,12 +2306,12 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
         {(currentBackdropPath || movie.backdrop_path) && (
           <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none hidden md:block">
             {" "}
-            {/* Добавлено hidden md:block */}
+            {/* z-0 чтобы быть ПОД хедером (z-60) */}
             {/* Контейнер с фоновым изображением в стиле Luma/Plex */}
             <div
-              className="absolute top-[50px] right-[0px] w-[80vw] h-[80vh]"
+              className="absolute top-0 right-[0px] w-[80vw] h-screen" // Устанавливаем top-0 и h-screen
               style={{
-                zIndex: -1,
+                // zIndex: -1, // Убираем z-index отсюда
                 opacity: 0.6,
                 maskImage: `linear-gradient(to left, rgba(0,0,0,0.9) 50%, rgba(0,0,0,0) 100%), 
                            linear-gradient(to top, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 40%),
