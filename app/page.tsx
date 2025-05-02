@@ -258,7 +258,7 @@ async function HomePageContent() {
       <div className="min-h-screen text-white">
         {/* Header больше не рендерится здесь */}
         {/* <Header /> */}
-        <main className="pt-32 pb-8">
+        <main className="pt-24 md:pt-32 pb-8">
           <div className="container-fluid mx-auto space-y-8">
             {/* Фиксированные первые 3 слайдера */}
             <MovieRow

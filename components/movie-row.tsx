@@ -178,7 +178,7 @@ export default function MovieRow({
   return (
     <section className="relative">
       {!hideTitle && (
-        <div className="px-6 mb-4">
+        <div className="px-2 md:px-6 mb-4">
           <div className="flex flex-col">
             <div className="flex items-center">
               {titleIcon && <div className="mr-3">{titleIcon}</div>}
@@ -211,7 +211,7 @@ export default function MovieRow({
           className={`flex ${
             gap ? gap : ""
           } overflow-x-auto scrollbar-hide scroll-smooth py-2 relative movie-row ${
-            containerClassName ? containerClassName : "px-6"
+            containerClassName ? containerClassName : "px-1 md:px-6"
           }`}
         >
           {items.map((item, index) => (
