@@ -2182,7 +2182,6 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
     );
   };
 
-  // Добавляем состояние для текущего фонового изображения
   const [currentBackdropIndex, setCurrentBackdropIndex] = useState(0);
   const [currentBackdropPath, setCurrentBackdropPath] = useState<string | null>(
     movie.backdrop_path
