@@ -16,7 +16,6 @@ import dynamic from "next/dynamic";
 // Импортируем хедер как клиентский компонент, предотвращая гидратацию на сервере
 const Header = dynamic(() => import("@/components/header"), {
   ssr: true, // Оставляем SSR, но отделяем от основной гидратации
-  loading: HeaderFallback,
 });
 
 const inter = Inter({ subsets: ["latin", "cyrillic"] });
