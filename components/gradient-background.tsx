@@ -42,7 +42,6 @@ export default function GradientBackground({
     setIsBrowser(true);
   }, []);
 
-  // Выбираем цвета в зависимости от страницы и состояния перехода
   const displayColors = isTransitioning
     ? colors
     : pathname.includes("/movie/")
