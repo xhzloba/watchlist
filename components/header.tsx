@@ -30,6 +30,7 @@ import { useUsername } from "@/contexts/username-context";
 import { useDebounce } from "@/hooks/use-debounce";
 import clsx from "clsx";
 import { playSound } from "@/lib/sound-utils";
+import { memo } from "react";
 
 // Создаем безопасные функции для работы с localStorage
 function safeGetItem(key: string): string | null {
@@ -523,7 +524,8 @@ const DynamicActorsAlphabetical = dynamic(
   }
 );
 
-export default function Header() {
+// Оборачиваем компонент Header в React.memo для предотвращения повторных рендеров
+const Header = memo(function HeaderComponent() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -1818,4 +1820,9 @@ export default function Header() {
       )}
     </header>
   );
-}
+});
+
+// Устанавливаем displayName для отладки
+Header.displayName = "Header";
+
+export default Header;
