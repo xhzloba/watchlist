@@ -429,7 +429,7 @@ function MovieCard({
         } overflow-hidden mb-2 ${
           variant === "poster" ? "aspect-[2/3]" : "aspect-video"
         } transition-all duration-200 border-[3px] border-transparent ${
-          yellowHover ? "md:hover:border-yellow-500" : "md:hover:border-white"
+          yellowHover ? "hover:border-yellow-500" : "hover:border-white"
         }`}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
