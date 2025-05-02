@@ -1838,11 +1838,11 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
       setLoadingLogo(true);
       try {
         const data = await getMovieLogos(movie.id);
-        // Выбираем предпочтительно лого без языка или английский
+        // Выбираем предпочтительно русский, затем английский логотип
         const preferredLogo =
-          data.logos?.find((logo: any) => logo.iso_639_1 === null) ||
-          data.logos?.find((logo: any) => logo.iso_639_1 === "en") ||
-          data.logos?.[0];
+          data.logos?.find((logo: any) => logo.iso_639_1 === "ru") ||
+          data.logos?.find((logo: any) => logo.iso_639_1 === "en");
+        // Удаляем fallback на первый попавшийся логотип: || data.logos?.[0];
 
         if (preferredLogo) {
           setLogoPath(preferredLogo.file_path);
