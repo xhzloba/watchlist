@@ -259,7 +259,7 @@ async function HomePageContent() {
         {/* Header больше не рендерится здесь */}
         {/* <Header /> */}
         <main className="pt-24 md:pt-32 pb-8">
-          <div className="container-fluid mx-auto space-y-8">
+          <div className="container-fluid mx-auto space-y-4">
             {/* Фиксированные первые 3 слайдера */}
             <MovieRow
               title="В тренде за неделю"

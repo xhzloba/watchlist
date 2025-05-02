@@ -178,7 +178,7 @@ export default function MovieRow({
   return (
     <section className="relative">
       {!hideTitle && (
-        <div className="px-2 md:px-6 mb-4">
+        <div className="px-2 md:px-6">
           <div className="flex flex-col">
             <div className="flex items-center">
               {titleIcon && <div className="mr-3">{titleIcon}</div>}
