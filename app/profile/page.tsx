@@ -504,25 +504,26 @@ export default function ProfilePage() {
         return (
           <div>
             <h3 className="text-white font-bold text-xl mb-6">Аккаунт</h3>
-            <div className="mb-6 p-5 bg-gradient-to-br from-white/5 to-white/10 rounded-lg border border-white/10 shadow-sm flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-yellow-500 flex items-center justify-center text-black font-bold text-3xl flex-shrink-0">
-                {nameInitial || <User size={32} />}
-              </div>
-              <div>
-                <p className="text-white font-medium text-xl">
-                  {username || "Гость"}
-                </p>
-                <p className="text-gray-400 text-sm">Локальный профиль</p>
+            <div className="mb-6 p-5 bg-gradient-to-br from-white/5 to-white/10 rounded-lg border border-white/10 shadow-sm flex flex-col md:flex-row items-start md:items-center gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-full bg-yellow-500 flex items-center justify-center text-black font-bold text-3xl flex-shrink-0">
+                  {nameInitial || <User className="w-8 h-8" />}
+                </div>
+                <div>
+                  <p className="text-white font-medium text-xl">
+                    {username || "Пользователь"}
+                  </p>
+                  <p className="text-gray-400 text-sm">Локальный профиль</p>
+                </div>
               </div>
               <button
-                className="ml-auto bg-yellow-500 hover:bg-yellow-400 text-black px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 shadow-md hover:shadow-lg"
                 onClick={() => {
-                  setTempUsername(username || ""); // Убедимся, что в инпуте текущее имя
                   setShowNameModal(true);
-                  playSound("open_modal.mp3");
+                  playSound("toggle_on.mp3");
                 }}
+                className="bg-yellow-500 hover:bg-yellow-400 text-black px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 shadow-md hover:shadow-lg mt-4 md:mt-0 md:ml-auto"
               >
-                <Edit size={16} />
+                <Edit className="w-4 h-4" />
                 Изменить имя
               </button>
             </div>
@@ -816,10 +817,13 @@ function ProfilePageContent(props: any) {
     <GradientBackground>
       <main className="px-6 pt-24 pb-16 text-white min-h-screen">
         <div className="">
-          <h1 className="text-4xl font-bold mb-10 flex items-center gap-3">
-            <Settings className="text-yellow-400" size={32} />
-            Настройки профиля
-          </h1>
+          <div className="mb-10 flex items-center gap-3">
+            <Settings className="text-yellow-400 flex-shrink-0" size={28} />
+            <h1 className="text-2xl md:text-3xl uppercase tracking-wide font-bebas-neue relative pb-2">
+              Настройки профиля
+              <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-yellow-500/40 to-transparent"></div>
+            </h1>
+          </div>
           <div className="flex flex-col md:flex-row gap-12">
             {/* Левая колонка с вкладками */}
             <aside className="w-full md:w-1/4 lg:w-1/5 flex-shrink-0">
