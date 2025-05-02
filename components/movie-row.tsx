@@ -16,7 +16,6 @@ import { getImageUrl, getYear, formatDate, getMovieLogos } from "@/lib/tmdb";
 import TrailerModal from "./trailer-modal";
 import { playSound } from "@/lib/sound-utils";
 import { useUISettings } from "@/context/UISettingsContext";
-import { useIsMobile } from "./ui/use-mobile";
 
 interface MovieRowProps {
   title: string;
@@ -72,7 +71,6 @@ export default function MovieRow({
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [roundedCorners, setRoundedCorners] = useState(false);
   const router = useRouter();
-  const isMobile = useIsMobile();
 
   // Эффект для отслеживания настройки закругленных углов
   useEffect(() => {
@@ -135,38 +133,37 @@ export default function MovieRow({
 
   // Определяем размер постера/бэкдропа в зависимости от пропов и флага isMobile
   const getPosterWidth = () => {
-    // Вместо принудительного использования мобильных размеров при начальном рендере,
-    // используем размер экрана для определения подходящих размеров даже на первом рендере
+    // Переходим на подход с CSS-классами для лучшей поддержки мобильных устройств на сервере
+    let baseClass = "";
+
     if (variant === "backdrop") {
-      // Если мобильное разрешение, принудительно ставим small
-      if (isMobile) {
-        return "w-[260px]"; // Класс для backdropSize="small"
-      }
-      // На десктопе используем проп backdropSize
+      // Используем специальные классы с CSS media queries внутри
       switch (backdropSize) {
         case "large":
-          return "w-[400px]";
+          baseClass = "w-[260px] md:w-[400px]"; // Мобильный и десктоп размеры
+          break;
         case "small":
-          return "w-[260px]";
-        default:
-          return "w-[320px]"; // normal
+          baseClass = "w-[260px]"; // Одинаковый для мобильного и десктопа
+          break;
+        default: // normal
+          baseClass = "w-[260px] md:w-[320px]"; // Мобильный и десктоп размеры
+      }
+    } else {
+      // variant === "poster"
+      // Используем специальные классы с CSS media queries внутри
+      switch (posterSize) {
+        case "large":
+          baseClass = "w-[160px] md:w-[230px]"; // Мобильный и десктоп размеры
+          break;
+        case "small":
+          baseClass = "w-[160px]"; // Одинаковый для мобильного и десктопа
+          break;
+        default: // normal
+          baseClass = "w-[160px] md:w-[200px]"; // Мобильный и десктоп размеры
       }
     }
 
-    // Логика для poster
-    if (isMobile) {
-      return "w-[160px]"; // Принудительно малый размер на мобильных
-    }
-
-    // На десктопе используем проп posterSize
-    switch (posterSize) {
-      case "large":
-        return "w-[230px]";
-      case "small":
-        return "w-[160px]";
-      default:
-        return "w-[200px]"; // normal
-    }
+    return baseClass;
   };
 
   if (items.length === 0) {
