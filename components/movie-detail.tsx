@@ -3066,7 +3066,8 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
             ) : cast && cast.length > 0 ? (
               <section className="relative">
                 <div className="group relative">
-                  <div className="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth -mx-10 px-10 py-2 relative actor-row">
+                  {/* === ИЗМЕНЯЕМ КЛАССЫ СЛАЙДЕРА АКТЕРОВ === */}
+                  <div className="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth -mx-4 md:-mx-10 px-4 md:px-10 py-2 relative actor-row">
                     {cast.map((person) => (
                       <div
                         key={`actor-${person.id}`}
@@ -3179,12 +3180,9 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                 </div>
               ) : reviews.length > 0 ? (
                 <section className="relative">
-                  {" "}
-                  {/* Review List */}
                   <div className="group relative">
-                    <div className="flex overflow-x-auto gap-4 py-2 -mx-10 px-10 relative trailer-row scrollbar-hide scroll-smooth">
-                      {" "}
-                      {/* Added relative */}
+                    {/* === ИЗМЕНЯЕМ КЛАССЫ СЛАЙДЕРА РЕЦЕНЗИЙ === */}
+                    <div className="flex overflow-x-auto gap-4 py-2 -mx-4 md:-mx-10 px-4 md:px-10 relative trailer-row scrollbar-hide scroll-smooth">
                       {reviews.map((review) => (
                         <div
                           key={review.id}
@@ -3501,7 +3499,7 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                     </div>
                   </div>
                 ) : (
-                  <div className="-mx-10 px-10">
+                  <div className="-mx-4 md:-mx-10 px-4 md:px-10">
                     {" "}
                     {/* Обертка для overflow */}
                     <MovieRow
@@ -3514,7 +3512,7 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                       showYear
                       hideTitle
                       onMovieClick={() => playSound("choose.mp3")}
-                      containerClassName="-mx-10 px-10" // Передаем класс контейнера
+                      containerClassName="" // Убираем дублирующиеся отступы отсюда
                       disableGlowEffect={true}
                     />
                   </div>
@@ -3559,12 +3557,8 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                   </div>
                 ) : (
                   <section className="relative">
-                    {" "}
-                    {/* Trailer List */}
                     <div className="group relative">
-                      <div className="flex overflow-x-auto gap-4 py-2 -mx-10 px-10 relative trailer-row scrollbar-hide scroll-smooth">
-                        {" "}
-                        {/* Added relative */}
+                      <div className="flex overflow-x-auto gap-4 py-2 -mx-4 md:-mx-10 px-4 md:px-10 relative trailer-row scrollbar-hide scroll-smooth">
                         {trailers.map((trailer, index) => (
                           <div
                             key={`${trailer.id || trailer.key}-${index}`}
@@ -3696,7 +3690,7 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                     </div>
                   </div>
                 ) : (
-                  <div className="-mx-10 px-10">
+                  <div className="-mx-4 md:-mx-10 px-4 md:px-10">
                     {" "}
                     {/* Обертка для overflow */}
                     <MovieRow
@@ -3709,7 +3703,7 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                       showYear
                       hideTitle
                       onMovieClick={() => playSound("choose.mp3")}
-                      containerClassName="-mx-10 px-10"
+                      containerClassName="" // Убираем дублирующиеся отступы отсюда
                       disableGlowEffect={true} // Передаем класс контейнера
                     />
                   </div>
@@ -3733,7 +3727,9 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                   </div>
                 </div>
 
-                <div className="relative px-6">
+                <div className="relative px-4 md:px-6">
+                  {" "}
+                  {/* Уменьшаем отступ на мобильных */}
                   <div className="flex overflow-x-auto gap-4 pb-4 snap-x cast-scroll-container">
                     {(movie as any).production_companies.map((company: any) => (
                       <div
@@ -3818,7 +3814,7 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                     </div>
                   </div>
                 ) : (
-                  <div className="-mx-10 px-10">
+                  <div className="-mx-4 md:-mx-10 px-4 md:px-10">
                     {" "}
                     {/* Обертка для overflow */}
                     <MovieRow
@@ -3830,7 +3826,7 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                       showYear
                       hideTitle
                       onMovieClick={() => playSound("choose.mp3")}
-                      containerClassName="-mx-10 px-10" // Передаем класс контейнера
+                      containerClassName="" // Убираем дублирующиеся отступы отсюда
                     />
                   </div>
                 )}
@@ -3857,7 +3853,9 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
 
               {/* Секция с изображениями фильма */}
               {(loadingImages || (movieImages && movieImages.length > 0)) && (
-                <div className="relative px-6 mb-8">
+                <div className="relative px-4 md:px-6 mb-8">
+                  {" "}
+                  {/* Уменьшаем отступ на мобильных */}
                   {loadingImages ? (
                     <div className="flex overflow-x-auto gap-4 pb-4 snap-x cast-scroll-container">
                       {Array(5)
@@ -3899,7 +3897,10 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
               {/* Секция с постерами фильма */}
               {(loadingPosters ||
                 (moviePosters && moviePosters.length > 0)) && (
-                <div className="relative px-6">
+                // === ИЗМЕНЯЕМ КЛАССЫ КОНТЕЙНЕРА ПОСТЕРОВ ===
+                <div className="relative px-4 md:px-6">
+                  {" "}
+                  {/* Уменьшаем отступ на мобильных */}
                   <h3 className="text-lg font-medium mb-4 text-white">
                     Постеры
                   </h3>
