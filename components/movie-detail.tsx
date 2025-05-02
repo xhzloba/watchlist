@@ -2521,9 +2521,9 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                 </div>
 
                 {/* === ГРУППА 2: Качество + Жанры === */}
-                <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                   {" "}
-                  {/* Вторая группа */}
+                  {/* Возвращаем items-center */}
                   {/* Качество (осталось здесь) */}
                   {movieQuality && (
                     <span className="px-1.5 py-0.5 bg-blue-600 rounded text-white text-xs font-medium whitespace-nowrap">
@@ -2533,7 +2533,9 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                   {/* Жанры */}
                   {movie.genres && movie.genres.length > 0 && (
                     // Обертка для жанров остается с flex-wrap
-                    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                      {" "}
+                      {/* Возвращаем items-center */}
                       {movie.genres?.map((genre, index) => (
                         <span
                           key={`${genre.id}-${index}`}
