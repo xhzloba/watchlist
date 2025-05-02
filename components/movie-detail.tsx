@@ -2302,9 +2302,11 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
           display: isComponentLoaded ? "block" : "block", // Всегда отображаем
         }}
       >
-        {/* Фоновое изображение фильма - расположено вверху справа с увеличенной высотой */}
+        {/* Фоновое изображение фильма - расположено вверху справа с увеличенной высотой (СКРЫТО НА МОБИЛЬНЫХ) */}
         {(currentBackdropPath || movie.backdrop_path) && (
-          <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+          <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none hidden md:block">
+            {" "}
+            {/* Добавлено hidden md:block */}
             {/* Контейнер с фоновым изображением в стиле Luma/Plex */}
             <div
               className="absolute top-[50px] right-[0px] w-[80vw] h-[80vh]"
@@ -2392,6 +2394,41 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
           </button>
 
           <div className="flex flex-col md:flex-row gap-8">
+            {/* === ФОНОВОЕ ИЗОБРАЖЕНИЕ ДЛЯ МОБИЛЬНЫХ === */}
+            {(currentBackdropPath || movie.backdrop_path) && (
+              <div className="block md:hidden -mx-4 md:-mx-10 mb-4">
+                {" "}
+                {/* Видимо на мобильных, скрыто на десктопе */}
+                <div
+                  className="relative w-full h-[40vh] overflow-hidden" // Задаем высоту для мобильных
+                  style={{
+                    maskImage: `linear-gradient(to top, rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 40%, rgba(0,0,0,1) 100%)`,
+                    WebkitMaskImage: `linear-gradient(to top, rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 40%, rgba(0,0,0,1) 100%)`,
+                  }}
+                >
+                  <NextImage
+                    key={currentBackdropPath || movie.backdrop_path}
+                    src={getImageUrl(
+                      currentBackdropPath || movie.backdrop_path,
+                      "w780" // Используем меньший размер для мобильных
+                    )}
+                    alt={movie.title || "Фон фильма"}
+                    fill
+                    priority
+                    className="object-cover"
+                    sizes="100vw"
+                    style={{
+                      filter: "contrast(1.1) brightness(0.8)",
+                      position: "absolute",
+                      height: "100%",
+                      width: "100%",
+                      inset: 0,
+                      transition: "opacity 1s ease-in-out",
+                    }}
+                  />
+                </div>
+              </div>
+            )}
             {/* Постер фильма - Скрываем на мобильных (md и ниже) */}
             <div className="hidden md:flex flex-none w-72 flex-col">
               <div
