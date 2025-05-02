@@ -41,6 +41,7 @@ import {
   getMovieVideos,
   getMovieImages,
   getMovieCertification,
+  getMovieLogos,
 } from "@/lib/tmdb";
 import { motion, AnimatePresence } from "framer-motion";
 import { useColorContext } from "@/contexts/color-context";
@@ -1826,6 +1827,39 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
     fetchCertification();
   }, [movie.id]);
 
+  // Добавляем состояние для логотипа фильма
+  const [logoPath, setLogoPath] = useState<string | null>(null);
+  const [loadingLogo, setLoadingLogo] = useState<boolean>(false);
+
+  // Добавляем эффект для загрузки логотипа
+  useEffect(() => {
+    async function fetchLogo() {
+      if (!movie.id) return;
+      setLoadingLogo(true);
+      try {
+        const data = await getMovieLogos(movie.id);
+        // Выбираем предпочтительно лого без языка или английский
+        const preferredLogo =
+          data.logos?.find((logo: any) => logo.iso_639_1 === null) ||
+          data.logos?.find((logo: any) => logo.iso_639_1 === "en") ||
+          data.logos?.[0];
+
+        if (preferredLogo) {
+          setLogoPath(preferredLogo.file_path);
+        } else {
+          setLogoPath(null); // Убедимся, что лого нет, если не нашли подходящий
+        }
+      } catch (error) {
+        console.error("Ошибка при загрузке логотипа:", error);
+        setLogoPath(null); // Устанавливаем null в случае ошибки
+      } finally {
+        setLoadingLogo(false);
+      }
+    }
+
+    fetchLogo();
+  }, [movie.id]);
+
   // Добавьте эту функцию после других функций-обработчиков,
   // но перед return компонента
   const handleRecommendationClick =
@@ -1995,7 +2029,8 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
   }, [isTranslationPopoverOpen]);
 
   // Добавляем состояние для отслеживания загрузки логотипа
-  const [loadingLogo, setLoadingLogo] = useState(true);
+  // Удаляем дублирующее объявление
+  // const [loadingLogo, setLoadingLogo] = useState(true);
 
   // Используем новый хук
   const { kinoboxId, isLoading: isLoadingKinobox } = useKinobox(movie);
@@ -2357,8 +2392,8 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
           </button>
 
           <div className="flex flex-col md:flex-row gap-8">
-            {/* Постер фильма */}
-            <div className="flex-none w-72 flex flex-col">
+            {/* Постер фильма - Скрываем на мобильных (md и ниже) */}
+            <div className="hidden md:flex flex-none w-72 flex-col">
               <div
                 className={`relative aspect-[2/3] ${
                   roundedCorners ? "rounded-xl" : "rounded-lg"
@@ -2395,8 +2430,8 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                 </div>
               </div>
 
-              {/* Индикатор "В медиатеке" или уведомление - фиксированная высота */}
-              <div className="h-[38px] mt-2 mb-2">
+              {/* Индикатор "В медиатеке" или уведомление - фиксированная высота - Скрываем на мобильных */}
+              <div className="hidden md:block h-[38px] mt-2 mb-2">
                 <AnimatePresence mode="wait">
                   {notification.visible ? (
                     <motion.div
@@ -2445,11 +2480,38 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
 
             {/* Details - убираем motion.div и анимацию */}
             <div className="flex-1">
-              <h1 className="text-3xl font-bold mb-1 text-white">
+              {/* Заголовок для десктопа (скрыт на мобильных) */}
+              <h1 className="hidden md:block text-3xl font-bold mb-1 text-white">
                 {movie.title}
                 {movie.release_date &&
                   ` (${movie.release_date?.split("-")[0]})`}
               </h1>
+
+              {/* Логотип или заголовок для мобильных */}
+              <div className="block md:hidden mb-3">
+                {loadingLogo ? (
+                  <div className="h-10 flex items-center">
+                    <div className="w-6 h-6 border-2 border-gray-600 border-t-yellow-400 rounded-full animate-spin"></div>
+                  </div>
+                ) : logoPath ? (
+                  <img
+                    src={getImageUrl(logoPath, "w300")} // Используем w300 для лого
+                    alt={`${movie.title} logo`}
+                    className="max-h-10 object-contain" // Ограничиваем высоту
+                    style={{
+                      filter: "drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.5))", // Небольшая тень для читаемости
+                    }}
+                  />
+                ) : (
+                  // Fallback на текстовый заголовок, если лого нет
+                  <h1 className="text-3xl font-bold text-white">
+                    {movie.title}
+                    {movie.release_date &&
+                      ` (${movie.release_date?.split("-")[0]})`}
+                  </h1>
+                )}
+              </div>
+
               <p className="text-gray-400 mb-3 text-sm">
                 {(movie as any).original_title &&
                 (movie as any).original_title !== movie.title ? (
@@ -2736,11 +2798,13 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
 
               <div className="flex items-center gap-4 mb-8">
                 <div className="flex items-center gap-2">
-                  <WatchlistButtonWrapper
-                    movie={movie}
-                    onWatchlistAction={handleWatchlistAction}
-                    className="text-sm px-4 py-2 pt-[10px]" // Добавляем padding-top
-                  />
+                  <div className="w-full md:w-auto">
+                    <WatchlistButtonWrapper
+                      movie={movie}
+                      onWatchlistAction={handleWatchlistAction}
+                      className="text-sm px-3 py-1 pt-[8px] md:px-4 md:py-2 md:pt-[10px] w-full justify-center" // Уменьшил padding для мобильных
+                    />
+                  </div>
                   {/* Кнопка для открытия поповера с вариантами переводов */}
                   <button
                     className={cn(
