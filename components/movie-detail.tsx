@@ -3133,11 +3133,11 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
               <section className="relative">
                 <div className="group relative">
                   {/* === ИЗМЕНЯЕМ КЛАССЫ СЛАЙДЕРА АКТЕРОВ === */}
-                  <div className="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth -mx-4 md:-mx-10 px-4 md:px-10 py-2 relative actor-row">
+                  <div className="flex gap-1 md:gap-4 overflow-x-auto scrollbar-hide scroll-smooth -mx-4 md:-mx-10 px-4 md:px-10 py-2 relative actor-row">
                     {cast.map((person) => (
                       <div
                         key={`actor-${person.id}`}
-                        className="flex-none w-[180px] relative group/item" // <--- Убрали p-1
+                        className="flex-none w-[130px] md:w-[180px] relative group/item" // Уменьшил ширину контейнера на мобильных
                       >
                         <Link
                           href={`/actors/${person.id}`}
@@ -3149,9 +3149,10 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                           <motion.div
                             whileHover={{ scale: 1.05 }}
                             transition={{ duration: 0.3, ease: "easeOut" }}
+                            className="flex flex-col items-center" // Центрируем содержимое карточки
                           >
                             <div
-                              className={`relative rounded-full overflow-hidden mb-3 w-[170px] h-[170px] transition-all duration-200 border-[3px] border-transparent hover:border-white`}
+                              className={`relative rounded-full overflow-hidden mb-1 md:mb-3 w-[130px] h-[130px] md:w-[170px] md:h-[170px] transition-all duration-200 border-[3px] border-transparent hover:border-white`}
                             >
                               {person.profile_path ? (
                                 <Image
@@ -3168,12 +3169,15 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                                 </div>
                               )}
                             </div>
-                            <h3 className="text-sm font-medium text-center truncate">
-                              {person.name}
-                            </h3>
-                            <p className="text-xs text-gray-400 text-center line-clamp-1">
-                              {person.character}
-                            </p>
+                            {/* Контейнер для текста с ограничением ширины */}
+                            <div className="w-[130px] md:w-[170px]">
+                              <h3 className="text-sm font-medium text-center truncate mt-1">
+                                {person.name}
+                              </h3>
+                              <p className="text-xs text-gray-400 text-center line-clamp-1">
+                                {person.character}
+                              </p>
+                            </div>
                           </motion.div>
                         </Link>
                       </div>
