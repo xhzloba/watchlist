@@ -419,21 +419,17 @@ function MovieCard({
   const date = formatDate(item.release_date || item.first_air_date, showYear);
 
   return (
-    <div className="relative group">
+    <div className="relative">
       {showCardGlow && !disableGlowEffect && (
-        <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-2/3 h-5 bg-gradient-to-t from-transparent to-gray-200/60 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-20"></div>
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-2/3 h-5 bg-gradient-to-t from-transparent to-gray-200/60 blur-xl opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-20"></div>
       )}
       <div
         className={`relative ${
           roundedCorners ? "rounded-xl" : "rounded-md"
         } overflow-hidden mb-2 ${
           variant === "poster" ? "aspect-[2/3]" : "aspect-video"
-        } transition-all duration-200 border-[3px] ${
-          isHovered
-            ? yellowHover
-              ? "border-yellow-500"
-              : "border-white"
-            : "border-transparent"
+        } transition-all duration-200 border-[3px] border-transparent ${
+          yellowHover ? "md:hover:border-yellow-500" : "md:hover:border-white"
         }`}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
@@ -450,7 +446,7 @@ function MovieCard({
             alt={item.title || item.name || ""}
             fill
             className={`object-cover transition-transform duration-300 ${
-              isHovered ? "scale-105" : ""
+              isHovered ? "md:scale-105" : ""
             }`}
           />
         ) : (
@@ -479,7 +475,7 @@ function MovieCard({
           </div>
         )}
         {variant === "backdrop" && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 hover:opacity-100 transition-opacity">
+          <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 md:hover:opacity-100 transition-opacity">
             <Play className="w-12 h-12 text-white" />
           </div>
         )}
