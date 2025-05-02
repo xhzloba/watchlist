@@ -1037,6 +1037,7 @@ export default function Header() {
         isScrolled ? "bg-zinc-900 shadow-lg" : "bg-black/0"
       }`}
       style={headerStyle}
+      suppressHydrationWarning
     >
       {/* Добавляем контейнер-обертку для flex на мобильных */}
       <div className="container-fluid mx-auto py-3 px-4 md:py-4 md:px-6">
@@ -1051,7 +1052,10 @@ export default function Header() {
             {/* Лого + десктоп-нав не должны сжиматься */}
             {/* Логотип */}
             {isMoviePage ? (
-              <div className="h-auto flex items-center md:mr-10">
+              <div
+                className="h-auto flex items-center md:mr-10"
+                suppressHydrationWarning
+              >
                 {" "}
                 {/* Убираем отступ справа на мобильных */}
                 {movieLogo ? (
@@ -1075,7 +1079,10 @@ export default function Header() {
             )}
             {/* Основная ДЕСКТОПНАЯ навигация - СКРЫТА на мобильных */}
             {/* Возвращаем SearchBar сюда */}
-            <nav className="hidden md:flex items-center gap-6 ml-10">
+            <nav
+              className="hidden md:flex items-center gap-6 ml-10"
+              suppressHydrationWarning
+            >
               {" "}
               {/* Добавил ml-10 для отступа от лого */}
               <AINavigationLink
