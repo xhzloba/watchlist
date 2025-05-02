@@ -1025,12 +1025,9 @@ export default function Header() {
 
   // Добавляем эффект для установки готовности навигации
   useEffect(() => {
-    // Используем requestAnimationFrame для синхронизации с циклом рендеринга
-    const timeout = requestAnimationFrame(() => {
-      setNavIsReady(true);
-    });
-
-    return () => cancelAnimationFrame(timeout);
+    // При начальной загрузке сразу устанавливаем навигацию как готовую
+    // чтобы пункты меню отображались сразу без fade-in эффекта
+    setNavIsReady(true);
   }, []);
 
   return (
@@ -1078,11 +1075,7 @@ export default function Header() {
             )}
             {/* Основная ДЕСКТОПНАЯ навигация - СКРЫТА на мобильных */}
             {/* Возвращаем SearchBar сюда */}
-            <nav
-              className={`hidden md:flex items-center gap-6 ml-10 transition-opacity duration-300 ${
-                navIsReady ? "opacity-100" : "opacity-0"
-              }`}
-            >
+            <nav className="hidden md:flex items-center gap-6 ml-10">
               {" "}
               {/* Добавил ml-10 для отступа от лого */}
               <AINavigationLink
