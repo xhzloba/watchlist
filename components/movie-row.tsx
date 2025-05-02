@@ -16,6 +16,7 @@ import { getImageUrl, getYear, formatDate, getMovieLogos } from "@/lib/tmdb";
 import TrailerModal from "./trailer-modal";
 import { playSound } from "@/lib/sound-utils";
 import { useUISettings } from "@/context/UISettingsContext";
+import { useIsMobile } from "./ui/use-mobile";
 
 interface MovieRowProps {
   title: string;
@@ -41,29 +42,6 @@ interface MovieRowProps {
   viewAllLink?: string;
   containerClassName?: string;
   disableGlowEffect?: boolean;
-}
-
-// Простой хук для отслеживания ширины окна
-function useWindowWidth() {
-  // Инициализируем десктопной шириной (например, 1024) по умолчанию для SSR,
-  // чтобы избежать скачка на десктопе.
-  const [width, setWidth] = useState(
-    typeof window !== "undefined" ? window.innerWidth : 1024
-  );
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const handleResize = () => setWidth(window.innerWidth);
-
-    // Устанавливаем начальную ширину на клиенте
-    setWidth(window.innerWidth);
-
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  return width;
 }
 
 export default function MovieRow({
@@ -94,7 +72,7 @@ export default function MovieRow({
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [roundedCorners, setRoundedCorners] = useState(false);
   const router = useRouter();
-  const windowWidth = useWindowWidth();
+  const isMobile = useIsMobile();
 
   // Эффект для отслеживания настройки закругленных углов
   useEffect(() => {
@@ -155,10 +133,8 @@ export default function MovieRow({
     // Если ничего не подошло, ничего не делаем
   };
 
-  // Определяем размер постера/бэкдропа в зависимости от пропов и ширины окна
+  // Определяем размер постера/бэкдропа в зависимости от пропов и флага isMobile
   const getPosterWidth = () => {
-    const isMobile = windowWidth < 768; // md breakpoint
-
     if (variant === "backdrop") {
       // Если мобильное разрешение, принудительно ставим small
       if (isMobile) {
@@ -175,7 +151,7 @@ export default function MovieRow({
       }
     }
 
-    // Логика для poster (остается прежней)
+    // Логика для poster
     if (isMobile) {
       return "w-[160px]"; // Принудительно малый размер на мобильных
     }

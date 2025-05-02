@@ -9,6 +9,7 @@ import MovieCardWrapper, {
   useReleaseQualityVisibility,
 } from "./movie-card-wrapper";
 import { playSound } from "@/lib/sound-utils";
+import { useIsMobile } from "./ui/use-mobile";
 
 interface MovieCardProps {
   id: number;
@@ -45,6 +46,8 @@ export default function MovieCard({
   const [inWatchlist, setInWatchlist] = useState(false);
   // Получаем настройки закругления из контекста
   const { roundedCorners } = useReleaseQualityVisibility();
+  // Проверяем, находимся ли мы на мобильном устройстве
+  const isMobile = useIsMobile();
 
   // Функция для проверки статуса
   const checkWatchlistStatus = useCallback(() => {
@@ -112,7 +115,11 @@ export default function MovieCard({
             </svg>
           </div>
         )}
-        <div className={`relative aspect-[2/3] w-full`}>
+        <div
+          className={`relative aspect-[2/3] w-full ${
+            isMobile ? "max-w-[160px]" : ""
+          }`}
+        >
           <Image
             src={getImageUrl(posterPath, "w500")}
             alt={title}
