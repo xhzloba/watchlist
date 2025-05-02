@@ -331,42 +331,37 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
     startColor: string | null,
     endColor: string | null,
     progress: number
-  ) => {
-    if (!startColor || !endColor) return startColor;
+  ): string => {
+    // Возвращаем всегда строку (или базовый цвет)
+    const fallbackColor = startColor || "rgba(128, 128, 128, 0.7)"; // Запасной цвет
+    if (!startColor || !endColor) return fallbackColor;
 
     try {
       // Парсинг начального цвета
-      let startR, startG, startB, startA;
+      let startR_str: string | undefined,
+        startG_str: string | undefined,
+        startB_str: string | undefined,
+        startA_str: string | undefined = "1";
       if (startColor.startsWith("var(")) {
-        // Если это CSS переменная, получаем её вычисленное значение
         const computedStyle = getComputedStyle(document.documentElement);
         const varName = startColor.substring(4, startColor.length - 1);
-        const computedColor = computedStyle.getPropertyValue(varName);
-        // Парсим вычисленный цвет
+        const computedColor = computedStyle.getPropertyValue(varName).trim();
         const rgbMatch = computedColor.match(
           /rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([0-9.]+))?\)/
         );
         if (rgbMatch) {
-          [, startR, startG, startB, startA = "1"] = rgbMatch;
+          [, startR_str, startG_str, startB_str, startA_str = "1"] = rgbMatch;
         } else {
-          // Если не удалось распарсить, используем серый цвет
-          startR = 128;
-          startG = 128;
-          startB = 128;
-          startA = 0.7;
+          return fallbackColor; // Если не удалось распарсить CSS переменную
         }
       } else {
-        // Парсим RGBA цвет напрямую
         const rgbMatch = startColor.match(
           /rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([0-9.]+))?\)/
         );
         if (rgbMatch) {
-          [, startR, startG, startB, startA = "1"] = rgbMatch;
+          [, startR_str, startG_str, startB_str, startA_str = "1"] = rgbMatch;
         } else {
-          startR = 128;
-          startG = 128;
-          startB = 128;
-          startA = 0.7;
+          return fallbackColor; // Если не удалось распарсить цвет
         }
       }
 
@@ -374,27 +369,45 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
       const endMatch = endColor.match(
         /rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([0-9.]+))?\)/
       );
-      if (!endMatch) return startColor;
+      if (!endMatch) return fallbackColor;
 
-      const [, endR, endG, endB, endA = "1"] = endMatch;
+      const [, endR_str, endG_str, endB_str, endA_str = "1"] = endMatch;
+
+      // Проверяем что все строки распарсились
+      if (
+        !startR_str ||
+        !startG_str ||
+        !startB_str ||
+        !startA_str ||
+        !endR_str ||
+        !endG_str ||
+        !endB_str ||
+        !endA_str
+      ) {
+        return fallbackColor;
+      }
 
       // Интерполяция компонентов цвета
       const r = Math.round(
-        parseFloat(startR) + (parseFloat(endR) - parseFloat(startR)) * progress
+        parseFloat(startR_str) +
+          (parseFloat(endR_str) - parseFloat(startR_str)) * progress
       );
       const g = Math.round(
-        parseFloat(startG) + (parseFloat(endG) - parseFloat(startG)) * progress
+        parseFloat(startG_str) +
+          (parseFloat(endG_str) - parseFloat(startG_str)) * progress
       );
       const b = Math.round(
-        parseFloat(startB) + (parseFloat(endB) - parseFloat(startB)) * progress
+        parseFloat(startB_str) +
+          (parseFloat(endB_str) - parseFloat(startB_str)) * progress
       );
       const a =
-        parseFloat(startA) + (parseFloat(endA) - parseFloat(startA)) * progress;
+        parseFloat(startA_str) +
+        (parseFloat(endA_str) - parseFloat(startA_str)) * progress;
 
       return `rgba(${r}, ${g}, ${b}, ${a.toFixed(2)})`;
     } catch (e) {
       console.error("Ошибка интерполяции цвета:", e);
-      return startColor;
+      return fallbackColor;
     }
   };
 
@@ -405,8 +418,13 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
       return;
     }
 
-    if (!targetColorsRef.current.topLeft) {
-      // Если нет целевых цветов - прекращаем анимацию
+    // Проверяем, существуют ли целевые цвета
+    if (
+      !targetColorsRef.current.topLeft ||
+      !targetColorsRef.current.topRight ||
+      !targetColorsRef.current.bottomLeft ||
+      !targetColorsRef.current.bottomRight
+    ) {
       animationRef.current = null;
       return;
     }
@@ -416,12 +434,8 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
     }
 
     const elapsed = timestamp - animationRef.current.startTime;
-    // Увеличиваем длительность анимации для более плавного эффекта
     const duration = 3000; // 3 секунды
     let progress = Math.min(elapsed / duration, 1);
-
-    // Используем кубическую функцию плавности для более постепенного начала
-    // easeInOutCubic даёт очень плавное начало
     progress =
       progress < 0.5
         ? 4 * progress * progress * progress
@@ -431,35 +445,44 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
     const newColors = {
       topLeft: interpolateColor(
         animationRef.current.startColors.topLeft,
-        targetColorsRef.current.topLeft,
+        targetColorsRef.current.topLeft, // Убедились, что не null выше
         progress
       ),
       topRight: interpolateColor(
         animationRef.current.startColors.topRight,
-        targetColorsRef.current.topRight,
+        targetColorsRef.current.topRight, // Убедились, что не null выше
         progress
       ),
       bottomLeft: interpolateColor(
         animationRef.current.startColors.bottomLeft,
-        targetColorsRef.current.bottomLeft,
+        targetColorsRef.current.bottomLeft, // Убедились, что не null выше
         progress
       ),
       bottomRight: interpolateColor(
         animationRef.current.startColors.bottomRight,
-        targetColorsRef.current.bottomRight,
+        targetColorsRef.current.bottomRight, // Убедились, что не null выше
         progress
       ),
     };
 
     // Обновляем состояние цветов
-    setColorVariations(newColors);
+    setColorVariations(newColors); // newColors теперь всегда { topLeft: string, ...}
 
     // Продолжаем анимацию, пока progress < 1
     if (progress < 1) {
       requestAnimationFrame(animateColors);
     } else {
       // Когда анимация завершена, обновляем контекст
-      setMovieColors(targetColorsRef.current);
+      // Убеждаемся, что targetColorsRef.current содержит строки перед вызовом
+      if (
+        targetColorsRef.current.topLeft &&
+        targetColorsRef.current.topRight &&
+        targetColorsRef.current.bottomLeft &&
+        targetColorsRef.current.bottomRight
+      ) {
+        // Убрали явное приведение типа, так как проверка выше гарантирует, что все поля - строки
+        setMovieColors(targetColorsRef.current);
+      }
       animationRef.current = null;
     }
   };
@@ -1180,12 +1203,13 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
 
   // Оптимизируем стартовую функцию анимации
   const startColorAnimation = (targetColors: {
+    // targetColors теперь всегда строки
     topLeft: string;
     topRight: string;
     bottomLeft: string;
     bottomRight: string;
   }) => {
-    // Сохраняем целевые цвета
+    // Сохраняем целевые цвета (теперь можно без приведения типа)
     targetColorsRef.current = targetColors;
 
     // Если анимация уже запущена, сохраняем её текущее состояние
@@ -1314,12 +1338,12 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
     // Добавляем фильм в историю просмотров только один раз при загрузке страницы фильма
     addToHistory({
       id: movie.id,
-      title: movie.title,
-      poster_path: movie.poster_path,
-      backdrop_path: movie.backdrop_path,
-      release_date: movie.release_date,
-      vote_average: movie.vote_average,
-      overview: movie.overview,
+      title: movie.title || "Фильм без названия", // Используем fallback
+      poster_path: movie.poster_path || "", // Используем fallback
+      backdrop_path: movie.backdrop_path || "", // Используем fallback
+      release_date: movie.release_date || "", // Используем fallback
+      vote_average: movie.vote_average || 0, // Используем fallback
+      overview: movie.overview || "", // Используем fallback
     });
   }, [movie.id, addToHistory]); // Указываем только ID фильма и функцию, а не весь объект movie
 
@@ -2074,12 +2098,12 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
       // Добавляем фильм в историю просмотров
       addToHistory({
         id: movie.id,
-        title: movie.title || "Фильм без названия",
-        poster_path: movie.poster_path || "",
-        backdrop_path: movie.backdrop_path || "",
-        release_date: movie.release_date || "",
-        vote_average: movie.vote_average || 0,
-        overview: movie.overview || "",
+        title: movie.title || "Фильм без названия", // Используем fallback
+        poster_path: movie.poster_path || "", // Используем fallback
+        backdrop_path: movie.backdrop_path || "", // Используем fallback
+        release_date: movie.release_date || "", // Используем fallback
+        vote_average: movie.vote_average || 0, // Используем fallback
+        overview: movie.overview || "", // Используем fallback
       });
     } else {
       showPosterNotification("Просмотр фильмов временно недоступен", "info");
@@ -2307,13 +2331,13 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
         {/* Содержимое контейнера должно быть поверх фонового градиента */}
         {/* relative z-10 container mx-auto px-4 pt-32 pb-8 */}
         <motion.div
-          className="relative z-10 w-full mx-auto px-10 pt-32 pb-8"
+          className="relative z-10 w-full mx-auto px-4 md:px-10 pt-20 md:pt-32 pb-8" // Изменен padding: px-4 md:px-10, pt-20 md:pt-32
           initial={false}
         >
           {/* Добавляем кнопку "Назад" в основной контент, если нужно */}
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-2 text-white hover:text-yellow-400 transition-colors mb-4"
+            className="hidden md:flex items-center gap-2 text-white hover:text-yellow-400 transition-colors mb-4" // Добавлено hidden md:flex
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -2440,23 +2464,29 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                 )}
               </p>
 
-              <div className="flex items-center gap-4 text-sm text-gray-300 mb-6">
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`text-xs font-semibold px-1.5 py-0.5 rounded ${getCertificationStyle(
-                      certification
-                    )}`}
-                  >
-                    {certification && certification !== "N/A"
-                      ? certification.includes("+") // Проверяем, есть ли уже "+" в строке
-                        ? certification // Если есть, оставляем как есть
-                        : `${certification}+` // Если нет, добавляем
-                      : movie.adult
-                      ? "18+"
-                      : "PG"}
-                  </span>
-
-                  {/* Добавляем флаги стран производства (не более 2) */}
+              {/* === ОСНОВНОЙ КОНТЕЙНЕР ДЕТАЛЕЙ (flex-wrap) === */}
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-300 mb-6">
+                {/* === ГРУППА 1: Рейтинг + Страны + Длительность === */}
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                  {" "}
+                  {/* Первая группа теперь с flex-wrap и gap-y-1 */}
+                  {/* Рейтинг */}
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`text-xs font-semibold px-1.5 py-0.5 rounded ${getCertificationStyle(
+                        certification
+                      )}`}
+                    >
+                      {certification && certification !== "N/A"
+                        ? certification.includes("+")
+                          ? certification
+                          : `${certification}+`
+                        : (movie as any).adult
+                        ? "18+"
+                        : "PG"}
+                    </span>
+                  </div>
+                  {/* Страны */}
                   {(movie as any).production_countries &&
                     (movie as any).production_countries.length > 0 && (
                       <div className="flex items-center gap-2">
@@ -2483,26 +2513,37 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                           ))}
                       </div>
                     )}
-
-                  <span>
-                    {Math.floor(movie.runtime / 60)}ч {movie.runtime % 60}мин
-                    {movieQuality && (
-                      <span className="ml-2 px-1.5 py-0.5 bg-blue-600 rounded text-white text-xs font-medium">
-                        {movieQuality}
-                      </span>
-                    )}
+                  {/* Длительность (перенесена сюда) */}
+                  <span className="whitespace-nowrap">
+                    {Math.floor((movie.runtime || 0) / 60)}ч{" "}
+                    {(movie.runtime || 0) % 60}мин
                   </span>
+                </div>
 
-                  <div className="flex items-center gap-2">
-                    {movie.genres?.map((genre, index) => (
-                      <span
-                        key={`${genre.id}-${index}`}
-                        className="text-sm text-gray-300"
-                      >
-                        {genre.name}
-                      </span>
-                    ))}
-                  </div>
+                {/* === ГРУППА 2: Качество + Жанры === */}
+                <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                  {" "}
+                  {/* Вторая группа */}
+                  {/* Качество (осталось здесь) */}
+                  {movieQuality && (
+                    <span className="px-1.5 py-0.5 bg-blue-600 rounded text-white text-xs font-medium whitespace-nowrap">
+                      {movieQuality}
+                    </span>
+                  )}
+                  {/* Жанры */}
+                  {movie.genres && movie.genres.length > 0 && (
+                    // Обертка для жанров остается с flex-wrap
+                    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                      {movie.genres?.map((genre, index) => (
+                        <span
+                          key={`${genre.id}-${index}`}
+                          className="text-sm text-gray-300 whitespace-nowrap"
+                        >
+                          {genre.name}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
