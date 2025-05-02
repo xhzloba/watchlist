@@ -546,6 +546,7 @@ export default function Header() {
   const [mounted, setMounted] = useState(false);
   const profileId = useId();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // Состояние для мобильного меню
+  const [navIsReady, setNavIsReady] = useState(false); // Новое состояние для контроля видимости навигации
 
   const [movieLogo, setMovieLogo] = useState<string | null>(null);
   const [movieTitle, setMovieTitle] = useState<string | null>(null);
@@ -1022,6 +1023,16 @@ export default function Header() {
     closeMobileMenu();
   }, [pathname, searchParams]);
 
+  // Добавляем эффект для установки готовности навигации
+  useEffect(() => {
+    // Используем requestAnimationFrame для синхронизации с циклом рендеринга
+    const timeout = requestAnimationFrame(() => {
+      setNavIsReady(true);
+    });
+
+    return () => cancelAnimationFrame(timeout);
+  }, []);
+
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-[60] transition-all duration-300 ${
@@ -1067,7 +1078,11 @@ export default function Header() {
             )}
             {/* Основная ДЕСКТОПНАЯ навигация - СКРЫТА на мобильных */}
             {/* Возвращаем SearchBar сюда */}
-            <nav className="hidden md:flex items-center gap-6 ml-10">
+            <nav
+              className={`hidden md:flex items-center gap-6 ml-10 transition-opacity duration-300 ${
+                navIsReady ? "opacity-100" : "opacity-0"
+              }`}
+            >
               {" "}
               {/* Добавил ml-10 для отступа от лого */}
               <AINavigationLink
