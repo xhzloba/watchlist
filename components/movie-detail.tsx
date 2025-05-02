@@ -3501,23 +3501,19 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                     </div>
                   </div>
                 ) : (
-                  <div className="-mx-4 md:-mx-10 px-4 md:px-10">
-                    {" "}
-                    {/* Обертка для overflow */}
-                    <MovieRow
-                      title=""
-                      items={recommendations}
-                      variant="backdrop"
-                      posterSize="normal"
-                      showDate
-                      showLogo
-                      showYear
-                      hideTitle
-                      onMovieClick={() => playSound("choose.mp3")}
-                      containerClassName="" // Убираем дублирующиеся отступы отсюда
-                      disableGlowEffect={true}
-                    />
-                  </div>
+                  <MovieRow
+                    title=""
+                    items={recommendations}
+                    variant="backdrop"
+                    posterSize="normal"
+                    showDate
+                    showLogo
+                    showYear
+                    hideTitle
+                    onMovieClick={() => playSound("choose.mp3")}
+                    containerClassName="-mx-4 md:-mx-10 px-4 md:px-10" // Добавляем необходимые классы отступов
+                    disableGlowEffect={true}
+                  />
                 )}
               </div>
             </div>
@@ -3692,23 +3688,19 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                     </div>
                   </div>
                 ) : (
-                  <div className="-mx-4 md:-mx-10 px-4 md:px-10">
-                    {" "}
-                    {/* Обертка для overflow */}
-                    <MovieRow
-                      title=""
-                      items={similarMovies}
-                      variant="backdrop"
-                      posterSize="normal"
-                      showDate
-                      showLogo
-                      showYear
-                      hideTitle
-                      onMovieClick={() => playSound("choose.mp3")}
-                      containerClassName="" // Убираем дублирующиеся отступы отсюда
-                      disableGlowEffect={true} // Передаем класс контейнера
-                    />
-                  </div>
+                  <MovieRow
+                    title=""
+                    items={similarMovies}
+                    variant="backdrop"
+                    posterSize="normal"
+                    showDate
+                    showLogo
+                    showYear
+                    hideTitle
+                    onMovieClick={() => playSound("choose.mp3")}
+                    containerClassName="-mx-4 md:-mx-10 px-4 md:px-10" // Добавляем необходимые классы отступов
+                    disableGlowEffect={true}
+                  />
                 )}
               </div>
             </div>
