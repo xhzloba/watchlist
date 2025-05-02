@@ -2284,6 +2284,48 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
     };
   }, []);
 
+  // Добавляем состояние и эффект для затемнения фона на мобильных при скролле
+  const [scrollOpacity, setScrollOpacity] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      // Затемняем на первых 30% высоты вьюпорта
+      const opacity = Math.min(1, window.scrollY / (window.innerHeight * 0.3));
+      setScrollOpacity(opacity);
+    };
+
+    // Добавляем слушатель только если ширина окна меньше md (768px)
+    const mediaQuery = window.matchMedia("(max-width: 767px)");
+
+    const addListener = () => {
+      if (mediaQuery.matches) {
+        window.addEventListener("scroll", handleScroll);
+        handleScroll(); // Устанавливаем начальное значение
+      }
+    };
+
+    const removeListener = () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+
+    // Проверяем медиа-запрос и добавляем/удаляем слушатель
+    addListener();
+    mediaQuery.addEventListener("change", (e) => {
+      if (e.matches) {
+        addListener();
+      } else {
+        removeListener();
+        setScrollOpacity(0); // Сбрасываем прозрачность на десктопе
+      }
+    });
+
+    // Очистка слушателя при размонтировании
+    return () => {
+      removeListener();
+      mediaQuery.removeEventListener("change", addListener);
+    };
+  }, []);
+
   return (
     <>
       {/* Убираем полноэкранный индикатор загрузки, чтобы он не перекрывал хедер */}
@@ -2367,7 +2409,7 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
         {/* Содержимое контейнера должно быть поверх фонового градиента */}
         {/* relative z-10 container mx-auto px-4 pt-32 pb-8 */}
         <motion.div
-          className="relative z-10 w-full mx-auto px-4 md:px-10 pt-20 md:pt-32 pb-8" // Изменен padding: px-4 md:px-10, pt-20 md:pt-32
+          className="relative z-10 w-full mx-auto px-4 md:px-10 pt-[50vh] md:pt-32 pb-8" // Изменен padding-top для мобильных: pt-[50vh]
           initial={false}
         >
           {/* Добавляем кнопку "Назад" в основной контент, если нужно */}
@@ -2395,14 +2437,15 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
           <div className="flex flex-col md:flex-row gap-8">
             {/* === ФОНОВОЕ ИЗОБРАЖЕНИЕ ДЛЯ МОБИЛЬНЫХ === */}
             {(currentBackdropPath || movie.backdrop_path) && (
-              <div className="block md:hidden -mx-4 md:-mx-10 mb-4">
+              <div className="block md:hidden fixed inset-x-0 top-0 z-0 pointer-events-none">
                 {" "}
-                {/* Видимо на мобильных, скрыто на десктопе */}
+                {/* Изменено: fixed, inset-x-0, top-0, z-0, убраны отступы */}
                 <div
-                  className="relative w-full h-[40vh] overflow-hidden" // Задаем высоту для мобильных
+                  className="relative w-full h-[60vh] overflow-hidden" // Изменено: увеличена высота до 60vh
                   style={{
-                    maskImage: `linear-gradient(to top, rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 40%, rgba(0,0,0,1) 100%)`,
-                    WebkitMaskImage: `linear-gradient(to top, rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 40%, rgba(0,0,0,1) 100%)`,
+                    // Изменено: маска для затемнения снизу
+                    maskImage: `linear-gradient(to bottom, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 95%)`,
+                    WebkitMaskImage: `linear-gradient(to bottom, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 95%)`,
                   }}
                 >
                   <NextImage
@@ -2425,6 +2468,11 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                       transition: "opacity 1s ease-in-out",
                     }}
                   />
+                  {/* Затемняющий оверлей для мобильных при скролле */}
+                  <div
+                    className="absolute inset-0 bg-black z-1 transition-opacity duration-300 ease-in-out pointer-events-none"
+                    style={{ opacity: scrollOpacity }}
+                  ></div>
                 </div>
               </div>
             )}
@@ -2548,7 +2596,7 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                 )}
               </div>
 
-              <p className="text-gray-400 mb-3 text-sm">
+              <p className="text-gray-400 mb-3 text-sm relative">
                 {(movie as any).original_title &&
                 (movie as any).original_title !== movie.title ? (
                   <>
@@ -2563,7 +2611,7 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
               </p>
 
               {/* === ОСНОВНОЙ КОНТЕЙНЕР ДЕТАЛЕЙ (flex-wrap) === */}
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-300 mb-6">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-300 mb-6 relative">
                 {/* === ГРУППА 1: Рейтинг + Страны + Длительность === */}
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
                   {" "}
@@ -2647,7 +2695,7 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 mb-4">
+              <div className="flex items-center gap-2 mb-4 relative">
                 {/* Если фильм выпущен и есть какие-то рейтинги - показываем их */}
                 {movie.status === "Released" &&
                   (movie.vote_average || imdbRating || kpRating ? (
@@ -3104,7 +3152,7 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                 </div>
               </div>
 
-              <div className="mb-8">
+              <div className="mb-8 relative">
                 {/* Сначала показываем слоган, если он есть */}
                 {(movie as any).tagline && (
                   <p className="text-gray-400 italic mb-2">
