@@ -517,9 +517,10 @@ export default function PopularContent() {
     <div ref={scrollContainerRef} className="pt-24 pb-10 px-4 md:px-6 lg:px-6">
       {/* Шапка с заголовком и контролами - рендерится всегда */}
       <div className="flex justify-between items-center mb-6 md:mb-8">
-        <h1 className="text-2xl md:text-3xl font-bebas-neue tracking-wide text-yellow-400 uppercase">
+        <h2 className="text-xl uppercase tracking-wide font-bebas-neue pb-2 pr-2 relative border-b border-transparent">
           Популярное на Watchlist
-        </h1>
+          <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-yellow-500/40 to-transparent"></div>
+        </h2>
         <div className="flex items-center space-x-4 md:space-x-6">
           {/* Вертикальный промежуток */}
           <div className="hidden md:flex items-center gap-2 flex-shrink-0">
