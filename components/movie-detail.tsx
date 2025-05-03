@@ -2286,12 +2286,24 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
 
   // Добавляем состояние и эффект для затемнения фона на мобильных при скролле
   const [scrollOpacity, setScrollOpacity] = useState(0);
+  const animationFrameIdRef = useRef<number | null>(null); // Ref для ID requestAnimationFrame
 
   useEffect(() => {
     const handleScroll = () => {
-      // Затемняем на первых 30% высоты вьюпорта
-      const opacity = Math.min(1, window.scrollY / (window.innerHeight * 0.3));
-      setScrollOpacity(opacity);
+      // Отменяем предыдущий запланированный кадр, если есть
+      if (animationFrameIdRef.current) {
+        cancelAnimationFrame(animationFrameIdRef.current);
+      }
+
+      // Планируем обновление прозрачности на следующий кадр анимации
+      animationFrameIdRef.current = requestAnimationFrame(() => {
+        // Затемняем на первых 30% высоты вьюпорта
+        const opacity = Math.min(
+          1,
+          window.scrollY / (window.innerHeight * 0.3)
+        );
+        setScrollOpacity(opacity);
+      });
     };
 
     // Добавляем слушатель только если ширина окна меньше md (768px)
@@ -2319,10 +2331,14 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
       }
     });
 
-    // Очистка слушателя при размонтировании
+    // Очистка слушателя и requestAnimationFrame при размонтировании
     return () => {
       removeListener();
       mediaQuery.removeEventListener("change", addListener);
+      // Отменяем последний запланированный кадр при очистке
+      if (animationFrameIdRef.current) {
+        cancelAnimationFrame(animationFrameIdRef.current);
+      }
     };
   }, []);
 
