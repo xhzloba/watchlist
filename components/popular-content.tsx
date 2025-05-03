@@ -171,9 +171,16 @@ export default function PopularContent() {
         (movie: any) => ensurePlainMovieObject(movie) as Movie
       );
 
-      setMovies((prevMovies) =>
-        pageNum === 1 ? newMovies : [...prevMovies, ...newMovies]
-      );
+      setMovies((prevMovies) => {
+        const combinedMovies =
+          pageNum === 1 ? newMovies : [...prevMovies, ...newMovies];
+        // Фильтруем дубликаты по ID
+        const uniqueMovies = Array.from(
+          new Map(combinedMovies.map((movie) => [movie.id, movie])).values()
+        );
+        return uniqueMovies;
+      });
+
       setHasMore(result.page < result.totalPages);
     } catch (err: any) {
       console.error("[Popular Page] Ошибка загрузки фильмов:", err);
