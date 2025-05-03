@@ -504,7 +504,7 @@ function MovieCard({
 
         {releaseQuality && (
           <div className="absolute top-1.5 right-1.5 z-10">
-            <span className="px-3 py-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-[10px] font-bold rounded-lg shadow-lg">
+            <span className="px-2 py-1 bg-gray-200 text-black text-xs font-bold rounded-md">
               {releaseQuality}
             </span>
           </div>

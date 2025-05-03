@@ -139,11 +139,10 @@ const MovieCardWrapper = memo(function MovieCardWrapper({
 
       {/* Бейдж качества релиза */}
       {initialized && showReleaseQuality && releaseQuality && (
-        <div
-          className="absolute top-2 right-2 bg-white/70 text-black text-xs font-bold px-2 py-1 rounded-md backdrop-blur-sm shadow-sm"
-          style={{ willChange: "transform" }}
-        >
-          {releaseQuality.type}
+        <div className="absolute top-2 right-2 z-10">
+          <span className="px-2 py-1 bg-gray-200 text-black text-xs font-bold rounded-md">
+            {releaseQuality.type}
+          </span>
         </div>
       )}
 
