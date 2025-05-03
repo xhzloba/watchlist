@@ -343,7 +343,7 @@ export default function PopularContent() {
           {/* Значок качества релиза (оставляем справа) */}
           {showReleaseQuality && releaseQuality && (
             <div className="absolute top-2 right-2 z-10">
-              <span className="px-2 py-1 bg-blue-600 text-white text-xs font-bold rounded-md">
+              <span className="px-2 py-1 bg-gray-200 text-black text-xs font-bold rounded-md">
                 {releaseQuality}
               </span>
             </div>
