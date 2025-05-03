@@ -248,11 +248,16 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
   }, [movie?.title]);
 
   // Хранение целевых цветов для плавной анимации
-  const targetColorsRef = useRef({
-    topLeft: null,
-    topRight: null,
-    bottomLeft: null,
-    bottomRight: null,
+  const targetColorsRef = useRef<{
+    topLeft: string;
+    topRight: string;
+    bottomLeft: string;
+    bottomRight: string;
+  }>({
+    topLeft: "rgba(23, 23, 23, 0.32)",
+    topRight: "rgba(28, 28, 28, 0.1)",
+    bottomLeft: "rgba(39, 39, 39, 0.89)",
+    bottomRight: "rgba(65, 65, 65, 0.7)",
   });
 
   const [isExpanded, setIsExpanded] = useState(false);
@@ -1633,9 +1638,11 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
     addToHistory({
       id: movie.id,
       title: movie.title || "Фильм без названия",
-      poster_path: movie.poster_path,
-      backdrop_path: movie.backdrop_path,
+      poster_path: movie.poster_path || "", // Добавляем || ""
+      backdrop_path: movie.backdrop_path || "", // Добавляем || ""
       release_date: movie.release_date || "",
+      vote_average: movie.vote_average || 0,
+      overview: movie.overview || "",
     });
   };
 
@@ -2383,7 +2390,7 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
               <NextImage
                 key={currentBackdropPath || movie.backdrop_path}
                 src={getImageUrl(
-                  currentBackdropPath || movie.backdrop_path,
+                  currentBackdropPath || movie.backdrop_path || "", // Добавляем || ""
                   "original"
                 )}
                 alt={movie.title || "Фон фильма"}
@@ -2467,7 +2474,7 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                   <NextImage
                     key={currentBackdropPath || movie.backdrop_path}
                     src={getImageUrl(
-                      currentBackdropPath || movie.backdrop_path,
+                      currentBackdropPath || movie.backdrop_path || "", // Добавляем || ""
                       "w1280" // Используем больший размер для мобильных
                     )}
                     alt={movie.title || "Фон фильма"}
@@ -2507,7 +2514,7 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                   decoding="async"
                   data-nimg="fill"
                   className="object-cover transition-all duration-300"
-                  src={getImageUrl(movie.poster_path, "w500")}
+                  src={getImageUrl(movie.poster_path || "", "w500")} // Добавляем || ""
                   style={{
                     position: "absolute",
                     height: "100%",
@@ -2716,12 +2723,14 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 mb-4 relative">
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-4 relative">
+                {" "}
+                {/* Добавляем justify-center md:justify-start */}
                 {/* Если фильм выпущен и есть какие-то рейтинги - показываем их */}
                 {movie.status === "Released" &&
                   (movie.vote_average || imdbRating || kpRating ? (
                     <>
-                      {movie.vote_average > 0 && (
+                      {(movie.vote_average ?? 0) > 0 && ( // Исправляем ?.
                         <div className="flex items-center gap-1 mr-2">
                           {/* Используем те же пороги что и для помидора: ≥75% (7.5) зеленый, ≥60% (6.0) желтый, <60% красный */}
                           {Math.round((movie.vote_average || 0) * 10) >= 75 ? (
@@ -2742,7 +2751,7 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                         </div>
                       )}
 
-                      {movie.vote_count > 0 && (
+                      {(movie.vote_count ?? 0) > 0 && ( // Исправляем ?.
                         <div className="flex items-center gap-1 mr-2">
                           <span className="text-red-500">🍓</span>
                           <span className="text-sm text-gray-300">
@@ -2755,7 +2764,7 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                         </div>
                       )}
 
-                      {movie.vote_average > 0 && (
+                      {(movie.vote_average ?? 0) > 0 && ( // Исправляем ?.
                         <div className="flex items-center gap-1 mr-2">
                           <div className="flex items-center gap-1.5">
                             {/* Для процентного рейтинга используем обычный помидор в цветных кружках */}
@@ -2844,7 +2853,6 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                       Дата выхода не объявлена
                     </span>
                   ))}
-
                 {/* Если фильм в пост-продакшне или запланирован - отображаем дату выпуска */}
                 {(movie.status === "Post Production" ||
                   movie.status === "Planned" ||
