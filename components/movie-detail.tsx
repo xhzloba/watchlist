@@ -2586,14 +2586,15 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
             </div>
 
             {/* Details - убираем motion.div и анимацию */}
-            <div className="flex-1">
+            <div className="flex-1 flex flex-col items-center md:items-start">
+              {" "}
+              {/* Добавляем flex flex-col items-center md:items-start */}
               {/* Заголовок для десктопа (скрыт на мобильных) */}
               <h1 className="hidden md:block text-3xl font-bold mb-1 text-white">
                 {movie.title}
                 {movie.release_date &&
                   ` (${movie.release_date?.split("-")[0]})`}
               </h1>
-
               {/* Логотип или заголовок для мобильных */}
               <div className="block md:hidden mb-3 flex flex-col items-center">
                 {" "}
@@ -2620,7 +2621,6 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                   </h1>
                 )}
               </div>
-
               <p className="text-gray-400 mb-3 text-sm relative text-center md:text-left">
                 {" "}
                 {/* Центрируем на мобильных, выравниваем влево на десктопе */}
@@ -2636,7 +2636,6 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                   <>режиссёр: {getDirector()}</>
                 )}
               </p>
-
               {/* === ОСНОВНОЙ КОНТЕЙНЕР ДЕТАЛЕЙ (flex-wrap) === */}
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-4 gap-y-2 text-sm text-gray-300 mb-6 relative">
                 {" "}
@@ -2722,7 +2721,6 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                   )}
                 </div>
               </div>
-
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-4 relative">
                 {" "}
                 {/* Добавляем justify-center md:justify-start */}
@@ -2908,7 +2906,6 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                   </div>
                 )}
               </div>
-
               <div className="flex items-center gap-2 md:gap-4 mb-8">
                 <div className="flex items-center gap-2">
                   <div className="w-full md:w-auto">
@@ -3180,7 +3177,6 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                   </button>
                 </div>
               </div>
-
               <div className="mb-8 relative">
                 {/* Сначала показываем слоган, если он есть */}
                 {(movie as any).tagline && (
