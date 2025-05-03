@@ -2452,7 +2452,7 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                     key={currentBackdropPath || movie.backdrop_path}
                     src={getImageUrl(
                       currentBackdropPath || movie.backdrop_path,
-                      "w780" // Используем меньший размер для мобильных
+                      "w1280" // Используем больший размер для мобильных
                     )}
                     alt={movie.title || "Фон фильма"}
                     fill
@@ -2579,7 +2579,7 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                   </div>
                 ) : logoPath ? (
                   <img
-                    src={getImageUrl(logoPath, "w300")} // Используем w300 для лого
+                    src={getImageUrl(logoPath, "w500")} // Используем w500 для лого
                     alt={`${movie.title} logo`}
                     className="max-h-10 object-contain" // Ограничиваем высоту
                     style={{
