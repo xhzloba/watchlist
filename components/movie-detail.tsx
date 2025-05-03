@@ -2588,7 +2588,9 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
               </h1>
 
               {/* Логотип или заголовок для мобильных */}
-              <div className="block md:hidden mb-3">
+              <div className="block md:hidden mb-3 flex flex-col items-center">
+                {" "}
+                {/* Добавлено flex flex-col items-center */}
                 {loadingLogo ? (
                   <div className="h-10 flex items-center">
                     <div className="w-6 h-6 border-2 border-gray-600 border-t-yellow-400 rounded-full animate-spin"></div>
@@ -2612,7 +2614,9 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                 )}
               </div>
 
-              <p className="text-gray-400 mb-3 text-sm relative">
+              <p className="text-gray-400 mb-3 text-sm relative text-center md:text-left">
+                {" "}
+                {/* Центрируем на мобильных, выравниваем влево на десктопе */}
                 {(movie as any).original_title &&
                 (movie as any).original_title !== movie.title ? (
                   <>
@@ -2627,7 +2631,9 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
               </p>
 
               {/* === ОСНОВНОЙ КОНТЕЙНЕР ДЕТАЛЕЙ (flex-wrap) === */}
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-300 mb-6 relative">
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-4 gap-y-2 text-sm text-gray-300 mb-6 relative">
+                {" "}
+                {/* Центрируем на моб, выравниваем влево на десктопе */}
                 {/* === ГРУППА 1: Рейтинг + Страны + Длительность === */}
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
                   {" "}
@@ -2681,7 +2687,6 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                     {(movie.runtime || 0) % 60}мин
                   </span>
                 </div>
-
                 {/* === ГРУППА 2: Качество + Жанры === */}
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                   {" "}
