@@ -12,9 +12,15 @@ import { playSound } from "@/lib/sound-utils";
 import { throttle } from "lodash";
 import { useReleaseQualityVisibility } from "@/components/movie-card-wrapper";
 import { useUISettings } from "@/context/UISettingsContext";
+import MovieGrid from "@/components/movie-grid";
+import DiscoverFilterBar from "@/components/discover/DiscoverFilterBar";
+import FilterPopoverContent from "@/components/discover/FilterPopoverContent";
+import CategoryPopoverContent from "@/components/discover/CategoryPopoverContent";
+import clsx from "clsx";
 
-// Больше не используем localStorage для размера
-// const SETTINGS_POSTER_SIZE_KEY = "settings_poster_size";
+// Определяем ключи для localStorage
+const DISCOVER_SETTINGS_POSTER_SIZE_KEY = "discover_poster_size";
+const DISCOVER_SETTINGS_GAP_SIZE_KEY = "discover_gap_size";
 
 // Определяем тип PosterSize
 type PosterSize = "small" | "medium" | "large";
@@ -43,27 +49,333 @@ function DiscoverContent() {
   const searchParams = useSearchParams();
   const lastParams = useRef("");
 
-  // Получаем и устанавливаем параметры из URL при первой загрузке
-  // и при изменении searchParams
+  // Состояния для размера постеров и промежутка
+  // Инициализируем с дефолтными значениями, useEffect обновит их
+  const [posterSize, setPosterSize] = useState<PosterSize>("medium");
+  const [gapSize, setGapSize] = useState<GapSize>("m");
+
+  // --- Popover States and Refs (Moved from DiscoverFilterBar) ---
+  // Filter Popover
+  const [isFilterPopoverOpen, setIsFilterPopoverOpen] = useState(false);
+  const [isFilterClosing, setIsFilterClosing] = useState(false);
+  const filterPopoverRef = useRef<HTMLDivElement>(null);
+  const filterTriggerRef = useRef<HTMLButtonElement>(null); // Ref for the trigger button
+  const filterTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // Category Popover
+  const [isCategoryPopoverOpen, setIsCategoryPopoverOpen] = useState(false);
+  const [isCategoryClosing, setIsCategoryClosing] = useState(false);
+  const categoryPopoverRef = useRef<HTMLDivElement>(null);
+  const categoryTriggerRef = useRef<HTMLButtonElement>(null); // Ref for the trigger button
+  const categoryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // Popover Position State
+  const [popoverPosition, setPopoverPosition] = useState<{
+    top: number;
+    left?: number;
+    right?: number;
+  } | null>(null);
+
+  // --- Popover Control Functions ---
+  const openFilterPopover = useCallback(() => {
+    if (filterTimeoutRef.current) clearTimeout(filterTimeoutRef.current);
+    // Calculate position based on trigger
+    if (filterTriggerRef.current) {
+      const rect = filterTriggerRef.current.getBoundingClientRect();
+      setPopoverPosition({
+        top: rect.bottom + window.scrollY + 8,
+        right: window.innerWidth - rect.right,
+      });
+    }
+    setIsFilterClosing(false);
+    setIsFilterPopoverOpen(true);
+    setIsCategoryPopoverOpen(false); // Close other popover
+  }, []);
+
+  const closeFilterPopover = useCallback(() => {
+    setIsFilterClosing(true);
+    filterTimeoutRef.current = setTimeout(() => {
+      setIsFilterPopoverOpen(false);
+      setIsFilterClosing(false);
+      setPopoverPosition(null); // Reset position
+    }, 300);
+  }, []);
+
+  const openCategoryPopover = useCallback(() => {
+    if (categoryTimeoutRef.current) clearTimeout(categoryTimeoutRef.current);
+    // Calculate position based on trigger
+    if (categoryTriggerRef.current) {
+      const rect = categoryTriggerRef.current.getBoundingClientRect();
+      setPopoverPosition({
+        top: rect.bottom + window.scrollY + 8,
+        left: rect.left,
+      });
+    }
+    setIsCategoryClosing(false);
+    setIsCategoryPopoverOpen(true);
+    setIsFilterPopoverOpen(false); // Close other popover
+  }, []);
+
+  const closeCategoryPopover = useCallback(() => {
+    setIsCategoryClosing(true);
+    categoryTimeoutRef.current = setTimeout(() => {
+      setIsCategoryPopoverOpen(false);
+      setIsCategoryClosing(false);
+      setPopoverPosition(null); // Reset position
+    }, 300);
+  }, []);
+
+  // --- Click Outside Handler ---
   useEffect(() => {
-    // Получаем размер постеров из URL
-    const size = searchParams.get("size");
-    if (size && ["small", "medium", "large"].includes(size)) {
-      setPosterSize(size as PosterSize);
+    const handleClickOutside = (event: MouseEvent) => {
+      // Close filter popover
+      if (
+        isFilterPopoverOpen &&
+        filterPopoverRef.current &&
+        !filterPopoverRef.current.contains(event.target as Node) &&
+        filterTriggerRef.current &&
+        !filterTriggerRef.current.contains(event.target as Node)
+      ) {
+        closeFilterPopover();
+      }
+      // Close category popover
+      if (
+        isCategoryPopoverOpen &&
+        categoryPopoverRef.current &&
+        !categoryPopoverRef.current.contains(event.target as Node) &&
+        categoryTriggerRef.current &&
+        !categoryTriggerRef.current.contains(event.target as Node)
+      ) {
+        closeCategoryPopover();
+      }
+    };
+
+    if (isFilterPopoverOpen || isCategoryPopoverOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
     }
 
-    // Получаем размер промежутка из URL
-    const gap = searchParams.get("gap");
-    if (gap && ["m", "l", "xl"].includes(gap)) {
-      setGapSize(gap as GapSize);
-    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      if (filterTimeoutRef.current) clearTimeout(filterTimeoutRef.current);
+      if (categoryTimeoutRef.current) clearTimeout(categoryTimeoutRef.current);
+    };
+  }, [
+    isFilterPopoverOpen,
+    isCategoryPopoverOpen,
+    closeFilterPopover,
+    closeCategoryPopover,
+  ]);
+
+  // --- Filter Popover Handlers (Need state access) ---
+  // State for selected filters (needed for FilterPopoverContent)
+  const [selectedGenres, setSelectedGenres] = useState<number[]>([]);
+  const [selectedYear, setSelectedYear] = useState<string>("");
+  const [selectedCountry, setSelectedCountry] = useState<string>("");
+
+  // Initialize filter state from URL (only needed if filters applied outside popover initially)
+  useEffect(() => {
+    const genresParam = searchParams.get("with_genres");
+    setSelectedGenres(
+      genresParam ? genresParam.split(",").map((id) => parseInt(id, 10)) : []
+    );
+    const yearParam = searchParams.get("year");
+    setSelectedYear(yearParam || "");
+    const countryParam = searchParams.get("with_origin_country");
+    setSelectedCountry(countryParam || "");
   }, [searchParams]);
 
-  // Инициализируем состояние значением из URL
-  const [posterSize, setPosterSize] = useState<PosterSize>("medium");
+  // Handlers for filter changes within the popover
+  const handleGenreToggle = (genreId: number) => {
+    setSelectedGenres((prev) =>
+      prev.includes(genreId)
+        ? prev.filter((id) => id !== genreId)
+        : [...prev, genreId]
+    );
+  };
+  const handleYearSelect = (year: string) => {
+    setSelectedYear((prev) => (prev === year ? "" : year));
+  };
+  const handleCountrySelect = (countryCode: string) => {
+    console.log("[DEBUG] handleCountrySelect called with:", countryCode);
+    setSelectedCountry((prev) => {
+      const newValue = prev === countryCode ? "" : countryCode;
+      console.log(
+        "[DEBUG] selectedCountry changing from",
+        prev,
+        "to",
+        newValue
+      );
+      return newValue;
+    });
+  };
 
-  // Инициализируем состояние размера промежутка
-  const [gapSize, setGapSize] = useState<GapSize>("m");
+  // Helper function to update URL and clear cache when clearing a filter
+  const clearFilterAndNavigate = (paramToClear: string) => {
+    const newParams = new URLSearchParams(searchParams.toString());
+    const currentSelectedGenres =
+      paramToClear === "with_genres" ? [] : selectedGenres;
+    const currentSelectedYear = paramToClear === "year" ? "" : selectedYear;
+    const currentSelectedCountry =
+      paramToClear === "with_origin_country" ? "" : selectedCountry;
+
+    newParams.delete(paramToClear);
+
+    // Check if other filters remain active after clearing this one
+    const genreParam = newParams.get("with_genres");
+    const yearParam = newParams.get("year");
+    const countryParam = newParams.get("with_origin_country");
+    const otherFiltersActive = genreParam || yearParam || countryParam;
+
+    // If no other filters are active after clearing, remove sort_by as well
+    if (!otherFiltersActive) {
+      newParams.delete("sort_by");
+    }
+
+    // Reset page and clear session cache
+    newParams.delete("page");
+    Object.values(STORAGE_KEYS).forEach((key) => {
+      if (key !== STORAGE_KEYS.FROM_DISCOVER) sessionStorage.removeItem(key);
+    });
+    newParams.set("t", Date.now().toString()); // Bust cache
+
+    console.log(
+      `[DEBUG] Clearing filter '${paramToClear}', navigating with params:`,
+      newParams.toString()
+    );
+    router.push(`/discover?${newParams.toString()}`, { scroll: false });
+
+    // No need to close popover here, let the user continue filtering if they want
+    // closeFilterPopover();
+  };
+
+  const handleClearGenres = () => {
+    setSelectedGenres([]);
+    clearFilterAndNavigate("with_genres");
+  };
+  const handleClearYear = () => {
+    setSelectedYear("");
+    clearFilterAndNavigate("year");
+  };
+  const handleClearCountry = () => {
+    setSelectedCountry("");
+    clearFilterAndNavigate("with_origin_country");
+  };
+
+  const applyFiltersFromPopover = () => {
+    console.log("[DEBUG] applyFiltersFromPopover called. Filter state:", {
+      genres: selectedGenres,
+      year: selectedYear,
+      country: selectedCountry,
+    });
+
+    // Start with fresh URLSearchParams, ignoring previous category params like 'trending' or specific 'year'
+    const newParams = new URLSearchParams();
+
+    // Apply filters selected in the popover
+    if (selectedGenres.length > 0) {
+      newParams.set("with_genres", selectedGenres.join(","));
+    }
+    if (selectedYear) {
+      // This year comes from the popover state
+      newParams.set("year", selectedYear);
+    }
+    if (selectedCountry) {
+      newParams.set("with_origin_country", selectedCountry);
+    }
+
+    // Add default sorting if any filter is applied
+    if (selectedGenres.length > 0 || selectedYear || selectedCountry) {
+      newParams.set("sort_by", "popularity.desc");
+    } // Otherwise, no sort param is needed (defaults to TMDB default)
+
+    // Copy essential non-filter params from current URL (size, gap)
+    const essentialKeys = ["size", "gap"];
+    searchParams.forEach((value, key) => {
+      if (essentialKeys.includes(key)) {
+        newParams.set(key, value);
+      }
+    });
+
+    // Add cache buster
+    newParams.set("t", Date.now().toString());
+
+    console.log(
+      "[DEBUG] Applying filters (resetting category) with URL params:",
+      newParams.toString()
+    );
+
+    // Reset page and clear session cache (important!)
+    Object.values(STORAGE_KEYS).forEach((key) => {
+      if (key !== STORAGE_KEYS.FROM_DISCOVER) sessionStorage.removeItem(key);
+    });
+    // Note: We don't set page=1 here, navigation to new params implies starting from page 1
+
+    router.push(`/discover?${newParams.toString()}`, { scroll: false });
+    closeFilterPopover(); // Close popover after applying
+  };
+
+  // Инициализация posterSize и gapSize при монтировании
+  useEffect(() => {
+    let initialSize: PosterSize = "medium"; // Default
+    let initialGap: GapSize = "m"; // Default
+
+    try {
+      // 1. Проверяем localStorage
+      const storedSize = localStorage.getItem(
+        DISCOVER_SETTINGS_POSTER_SIZE_KEY
+      );
+      const storedGap = localStorage.getItem(DISCOVER_SETTINGS_GAP_SIZE_KEY);
+
+      if (storedSize && ["small", "medium", "large"].includes(storedSize)) {
+        initialSize = storedSize as PosterSize;
+      } else {
+        // 2. Если в localStorage нет, проверяем URL
+        const sizeParam = searchParams.get("size");
+        if (sizeParam && ["small", "medium", "large"].includes(sizeParam)) {
+          initialSize = sizeParam as PosterSize;
+          // Сохраняем значение из URL в localStorage для будущих сессий
+          localStorage.setItem(DISCOVER_SETTINGS_POSTER_SIZE_KEY, initialSize);
+        }
+      }
+
+      if (storedGap && ["m", "l", "xl"].includes(storedGap)) {
+        initialGap = storedGap as GapSize;
+      } else {
+        // 2. Если в localStorage нет, проверяем URL
+        const gapParam = searchParams.get("gap");
+        if (gapParam && ["m", "l", "xl"].includes(gapParam)) {
+          initialGap = gapParam as GapSize;
+          // Сохраняем значение из URL в localStorage
+          localStorage.setItem(DISCOVER_SETTINGS_GAP_SIZE_KEY, initialGap);
+        }
+      }
+    } catch (error) {
+      console.error("Error reading settings from localStorage:", error);
+      // В случае ошибки используем URL или дефолтные значения (логика выше уже это покрывает)
+    }
+
+    setPosterSize(initialSize);
+    setGapSize(initialGap);
+
+    // Обновляем URL, если он не соответствует установленным значениям (из localStorage или дефолтным)
+    // Это нужно, чтобы URL всегда отражал текущие настройки
+    const currentParams = new URLSearchParams(searchParams.toString());
+    let urlNeedsUpdate = false;
+    if (currentParams.get("size") !== initialSize) {
+      currentParams.set("size", initialSize);
+      urlNeedsUpdate = true;
+    }
+    if (currentParams.get("gap") !== initialGap) {
+      currentParams.set("gap", initialGap);
+      urlNeedsUpdate = true;
+    }
+
+    if (urlNeedsUpdate) {
+      router.replace(`${pathname}?${currentParams.toString()}`, {
+        scroll: false,
+      });
+    }
+  }, []); // Запускаем только один раз при монтировании
 
   // Ref для элемента-наблюдателя в конце списка
   const observer = useRef<IntersectionObserver | null>(null);
@@ -392,145 +704,36 @@ function DiscoverContent() {
     }
   }, [pathname, searchParams]);
 
-  // Модифицируем useEffect для отслеживания ВСЕХ параметров фильтрации
-  useEffect(() => {
-    // Если это восстановление скролла, пропускаем перезагрузку фильмов
-    if (isScrollRestored.current) {
-      console.log(
-        "[SCROLL DEBUG] Пропускаем перезагрузку фильмов при восстановлении скролла"
-      );
-      isScrollRestored.current = false;
-      return;
-    }
-
-    // Параметры из URL, которые влияют на список фильмов
-    const trending = searchParams.get("trending");
-    const sortBy = searchParams.get("sort_by");
-    const withGenres = searchParams.get("with_genres");
-    const year = searchParams.get("year");
-    const country = searchParams.get("with_origin_country");
-    // НЕ включаем 'size' и 't' в отслеживаемые параметры
-
-    // Собираем все значимые параметры в строку для сравнения
-    const currentFilterParams = JSON.stringify({
-      trending,
-      sortBy,
-      withGenres,
-      year,
-      country,
-    });
-
-    console.log("Значимые параметры URL изменились:", {
-      trending,
-      sortBy,
-      withGenres,
-      year,
-      country,
-    });
-
-    // Если параметры фильтрации изменились, сбрасываем состояние и загружаем заново
-    if (currentFilterParams !== lastParams.current) {
-      console.log(
-        "Обнаружены изменения в параметрах фильтрации, перезагружаем фильмы"
-      );
-      lastParams.current = currentFilterParams;
-
-      // Очищаем сохраненное состояние, чтобы избежать восстановления старых данных
-      Object.values(STORAGE_KEYS).forEach((key) => {
-        sessionStorage.removeItem(key);
-      });
-
-      // Сбрасываем состояние для новой загрузки
-      setPage(1);
-      setMovies([]);
-      setIsLoading(true);
-      setHasMore(true);
-      setError(null);
-      setIsRestoringState(false); // Убедимся, что не пытаемся восстановить состояние
-    }
-  }, [pathname, searchParams]); // Зависим от pathname и searchParams
-
-  // Очистка таймеров при размонтировании
-  useEffect(() => {
-    return () => {
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  // Функция для обновления размера постеров и URL
-  const handleSizeChange = (newSize: PosterSize) => {
-    // Обновляем состояние
-    setPosterSize(newSize);
-
-    // Обновляем URL - создаем новый объект URLSearchParams
-    const params = new URLSearchParams();
-
-    // Копируем все существующие параметры
-    for (const [key, value] of Array.from(searchParams.entries())) {
-      if (key !== "size") {
-        params.set(key, value);
-      }
-    }
-
-    // Добавляем size параметр
-    params.set("size", String(newSize));
-
-    // Используем router.replace для обновления URL без перезагрузки
-    // и без добавления новой записи в историю браузера
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-  };
-
-  // Функция для обновления размера промежутка и URL
-  const handleGapChange = (newGap: GapSize) => {
-    // Обновляем состояние
-    setGapSize(newGap);
-
-    // Обновляем URL - создаем новый объект URLSearchParams
-    const params = new URLSearchParams();
-
-    // Копируем все существующие параметры
-    for (const [key, value] of Array.from(searchParams.entries())) {
-      if (key !== "gap") {
-        params.set(key, value);
-      }
-    }
-
-    // Добавляем gap параметр
-    params.set("gap", String(newGap));
-
-    // Используем router.replace для обновления URL без перезагрузки
-    // и без добавления новой записи в историю браузера
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-  };
-
-  // Загрузка фильмов при изменении страницы
+  // Загрузка фильмов при изменении страницы или параметров
   useEffect(() => {
     // Если мы восстанавливаем состояние, пропускаем загрузку
     if (isRestoringState) {
+      console.log("[EFFECT FETCH] Skipping fetch during restore state");
       return;
     }
 
     const fetchMovies = async () => {
+      console.log(`[EFFECT FETCH] Fetching movies for page ${page}...`);
       // Если это первая страница, показываем основной индикатор загрузки
       // Иначе показываем индикатор загрузки дополнительных фильмов
       if (page === 1) {
         setIsLoading(true);
-        setMovies([]);
+        // Не нужно очищать movies здесь, если параметры изменились,
+        // это должно делаться в другом useEffect, отслеживающем параметры
+        // setMovies([]);
       } else {
         setIsLoadingMore(true);
       }
+      setError(null);
 
       try {
-        // Получаем текущие параметры из URL
-        const currentParams = new URLSearchParams(window.location.search);
-        // Добавляем номер страницы к параметрам
+        // Используем searchParams из зависимостей для формирования запроса
+        const currentParams = new URLSearchParams(searchParams.toString());
         currentParams.set("page", page.toString());
 
         // Логируем параметры для отладки
         console.log(
-          `Загрузка фильмов, страница ${page}, параметры:`,
+          `[EFFECT FETCH] Fetching page ${page} with params:`,
           Object.fromEntries(currentParams.entries())
         );
 
@@ -595,13 +798,71 @@ function DiscoverContent() {
           setError("Произошла неизвестная ошибка при загрузке фильмов");
         }
       } finally {
-        setIsLoading(false);
+        // Ставим isLoading в false только если это была загрузка первой страницы
+        if (page === 1) setIsLoading(false);
         setIsLoadingMore(false);
+        console.log(`[EFFECT FETCH] Fetching finished for page ${page}.`);
       }
     };
 
     fetchMovies();
   }, [page, isRestoringState, searchParams]);
+
+  // Отдельный useEffect для сброса состояния при смене *фильтров* (не страницы)
+  useEffect(() => {
+    // Не сбрасывать при первоначальном рендере или восстановлении состояния
+    if (isRestoringState) {
+      // После первого рендера, когда восстановление закончено (или не требовалось)
+      // сбрасываем флаг, чтобы следующие изменения параметров вызывали перезагрузку
+      const timer = setTimeout(() => setIsRestoringState(false), 0);
+      return () => clearTimeout(timer);
+    }
+
+    // Собираем только параметры фильтрации (исключая page, t, size, gap)
+    const filterParams = new URLSearchParams();
+    const relevantKeys = [
+      "with_genres",
+      "year",
+      "with_origin_country",
+      "trending",
+      "sort_by",
+      "query",
+    ]; // Добавьте другие, если нужно
+    searchParams.forEach((value, key) => {
+      if (relevantKeys.includes(key)) {
+        filterParams.set(key, value);
+      }
+    });
+    const currentFilterString = filterParams.toString();
+
+    // Сравниваем с предыдущими параметрами
+    if (currentFilterString !== lastParams.current) {
+      console.log("[EFFECT PARAMS] Filter params changed! Resetting state.", {
+        prev: lastParams.current,
+        current: currentFilterString,
+      });
+      lastParams.current = currentFilterString;
+
+      // Сбрасываем состояние для новой загрузки (кроме isRestoringState)
+      setPage(1); // Важно: это вызовет повторный запуск fetch-эффекта
+      setMovies([]); // Очищаем фильмы сразу
+      setIsLoading(true); // Показываем главный лоадер
+      setHasMore(true);
+      setError(null);
+      // Очищаем кеш sessionStorage только при явном изменении фильтров
+      Object.values(STORAGE_KEYS).forEach((key) => {
+        if (key !== STORAGE_KEYS.FROM_DISCOVER) sessionStorage.removeItem(key);
+      });
+    } else {
+      console.log(
+        "[EFFECT PARAMS] Filter params did not change.",
+        currentFilterString
+      );
+    }
+
+    // Зависит только от searchParams, чтобы отлавливать изменения фильтров
+    // НЕ зависит от isRestoringState, чтобы сравнение работало корректно
+  }, [searchParams]);
 
   // Сохраняем текущий путь при первой загрузке
   useEffect(() => {
@@ -786,102 +1047,60 @@ function DiscoverContent() {
     return `${baseClass} ${gapClass}`;
   };
 
+  // Restore handlers for size and gap changes
+  // Функция для обновления размера постеров и URL
+  const handleSizeChange = (newSize: PosterSize) => {
+    setPosterSize(newSize);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("size", String(newSize));
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    try {
+      localStorage.setItem(DISCOVER_SETTINGS_POSTER_SIZE_KEY, newSize);
+    } catch (error) {
+      console.error("Error writing posterSize to localStorage:", error);
+    }
+  };
+
+  // Функция для обновления размера промежутка и URL
+  const handleGapChange = (newGap: GapSize) => {
+    setGapSize(newGap);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("gap", String(newGap));
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    try {
+      localStorage.setItem(DISCOVER_SETTINGS_GAP_SIZE_KEY, newGap);
+    } catch (error) {
+      console.error("Error writing gapSize to localStorage:", error);
+    }
+  };
+
   return (
     <div className="min-h-screen text-white">
       <Header />
       <main className="px-6 pt-24 pb-8">
         <div className="max-w-full mx-auto">
-          {/* Оборачиваем заголовок и слайдер во flex-контейнер */}
-          <div className="flex justify-between items-center mb-8">
-            {/* Заголовок */}
-            <div className="flex-grow">
+          {/* Новый контейнер для заголовка и панели фильтров */}
+          <div className="flex justify-between items-center mb-6">
+            {/* Заголовок слева */}
+            <div className="flex-grow mr-4">
+              {" "}
+              {/* Добавим отступ справа */}
               <DynamicHeading />
             </div>
-
-            {/* Выбор размера вертикального промежутка - СКРЫТ на мобильных */}
-            <div className="hidden md:flex items-center gap-2 mr-4 flex-shrink-0">
-              <span className="text-xs text-gray-400">
-                Вертикальный промежуток:
-              </span>
-              <div className="flex gap-1">
-                <button
-                  onClick={() => handleGapChange("m")}
-                  className={`px-3 py-1 text-xs rounded-md transition-all ${
-                    gapSize === "m"
-                      ? "bg-yellow-500 text-black font-medium"
-                      : "bg-gray-700 text-white hover:bg-gray-600"
-                  }`}
-                >
-                  M
-                </button>
-                <button
-                  onClick={() => handleGapChange("l")}
-                  className={`px-3 py-1 text-xs rounded-md transition-all ${
-                    gapSize === "l"
-                      ? "bg-yellow-500 text-black font-medium"
-                      : "bg-gray-700 text-white hover:bg-gray-600"
-                  }`}
-                >
-                  L
-                </button>
-                <button
-                  onClick={() => handleGapChange("xl")}
-                  className={`px-3 py-1 text-xs rounded-md transition-all ${
-                    gapSize === "xl"
-                      ? "bg-yellow-500 text-black font-medium"
-                      : "bg-gray-700 text-white hover:bg-gray-600"
-                  }`}
-                >
-                  XL
-                </button>
-              </div>
-            </div>
-
-            {/* Слайдер размера постеров - ВИДЕН всегда, но ЛЕЙБЛЫ скрыты на мобильных */}
-            {/* Делаем gap одинаковым: gap-3 */}
-            {/* Устанавливаем ширину: 80px по умолчанию, w-48 (192px) на md+ */}
-            <div className="flex items-center gap-3 flex-shrink-0 w-[80px] md:w-48">
-              {/* ЛЕЙБЛ "Размер:" СКРЫТ на мобильных */}
-              <label
-                htmlFor="poster-size-slider"
-                className="hidden md:inline text-xs text-gray-400 whitespace-nowrap"
-              >
-                Размер:
-              </label>
-              <input
-                id="poster-size-slider"
-                type="range"
-                min="0" // 0: small, 1: medium, 2: large
-                max="2"
-                step="1"
-                value={
-                  posterSize === "small" ? 0 : posterSize === "medium" ? 1 : 2
-                }
-                onChange={(e) => {
-                  const value = parseInt(e.target.value, 10);
-                  const newSize =
-                    value === 0 ? "small" : value === 1 ? "medium" : "large";
-                  // Используем функцию handleSizeChange вместо просто setPosterSize
-                  handleSizeChange(newSize);
-                }}
-                className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-yellow-500"
-                title={`Размер постеров: ${
-                  posterSize === "small"
-                    ? "Мелкий"
-                    : posterSize === "medium"
-                    ? "Средний"
-                    : "Крупный"
-                }`}
-              />
-              {/* Отображение текущего размера - СКРЫТО на мобильных */}
-              <span className="hidden md:inline text-xs font-medium text-gray-300 w-14 text-right">
-                {posterSize === "small" && "Мелкий"}
-                {posterSize === "medium" && "Средний"}
-                {posterSize === "large" && "Крупный"}
-              </span>
-            </div>
+            {/* Панель фильтров справа (убираем центрирующую обертку) */}
+            <DiscoverFilterBar
+              posterSize={posterSize}
+              onSizeChange={handleSizeChange}
+              gapSize={gapSize}
+              onGapChange={handleGapChange}
+              categoryTriggerRef={categoryTriggerRef}
+              onOpenCategoryPopover={openCategoryPopover}
+              filterTriggerRef={filterTriggerRef}
+              onOpenFilterPopover={openFilterPopover}
+            />
           </div>
 
+          {/* Grid rendering logic */}
           {isLoading ? (
             <div className="flex justify-center mt-20">
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-500"></div>
@@ -921,17 +1140,118 @@ function DiscoverContent() {
               ))}
             </div>
           )}
-
+          {/* Loading more indicator */}
           {isLoadingMore && (
             <div className="flex justify-center my-8">
               <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-yellow-500"></div>
             </div>
           )}
         </div>
+
+        {/* Render Popovers Outside the main flow, positioned absolutely */}
+        {isCategoryPopoverOpen && popoverPosition && (
+          <div
+            ref={categoryPopoverRef}
+            className={clsx(
+              "absolute z-[999]", // Use high z-index
+              {
+                "animate-slideDown": !isCategoryClosing,
+                "animate-slideUp": isCategoryClosing,
+              }
+            )}
+            style={{
+              top: `${popoverPosition.top}px`,
+              left: `${popoverPosition.left}px`,
+            }}
+          >
+            <CategoryPopoverContent onClose={closeCategoryPopover} />
+          </div>
+        )}
+
+        {isFilterPopoverOpen && popoverPosition && (
+          <div
+            ref={filterPopoverRef}
+            className={clsx(
+              "absolute z-[999]", // Use high z-index
+              {
+                "animate-slideDown": !isFilterClosing,
+                "animate-slideUp": isFilterClosing,
+              }
+            )}
+            style={{
+              top: `${popoverPosition.top}px`,
+              right: `${popoverPosition.right}px`,
+            }}
+          >
+            {/* Pass filter state and handlers */}
+            <FilterPopoverContent
+              genres={genres} // Need to define or import genres/years/countries here
+              years={years}
+              countries={countries}
+              selectedGenres={selectedGenres}
+              selectedYear={selectedYear}
+              selectedCountry={selectedCountry}
+              onGenreToggle={handleGenreToggle}
+              onYearSelect={handleYearSelect}
+              onCountrySelect={handleCountrySelect}
+              onClearGenres={handleClearGenres}
+              onClearYear={handleClearYear}
+              onClearCountry={handleClearCountry}
+              onApplyFilters={applyFiltersFromPopover}
+            />
+          </div>
+        )}
       </main>
     </div>
   );
 }
+
+// Define filter data (genres, years, countries) here or import them
+const genres = [
+  { id: 28, name: "Боевик" },
+  { id: 12, name: "Приключения" },
+  { id: 16, name: "Мультфильм" },
+  { id: 35, name: "Комедия" },
+  { id: 80, name: "Криминал" },
+  { id: 99, name: "Документальный" },
+  { id: 18, name: "Драма" },
+  { id: 10751, name: "Семейный" },
+  { id: 14, name: "Фэнтези" },
+  { id: 36, name: "История" },
+  { id: 27, name: "Ужасы" },
+  { id: 10402, name: "Музыка" },
+  { id: 9648, name: "Детектив" },
+  { id: 10749, name: "Мелодрама" },
+  { id: 878, name: "Фантастика" },
+  { id: 53, name: "Триллер" },
+  { id: 10752, name: "Военный" },
+  { id: 37, name: "Вестерн" },
+];
+const years = [
+  "2025",
+  "2024",
+  "2023",
+  "2022",
+  "2021",
+  "2020",
+  "2019",
+  "2018",
+  "2017",
+  "2016",
+];
+const countries = [
+  { code: "RU", name: "Россия" },
+  { code: "US", name: "США" },
+  { code: "TR", name: "Турция" },
+  { code: "GB", name: "Великобритания" },
+  { code: "ES", name: "Испания" },
+  { code: "KR", name: "Южная Корея" },
+  { code: "IT", name: "Италия" },
+  { code: "DE", name: "Германия" },
+  { code: "JP", name: "Япония" },
+  { code: "FR", name: "Франция" },
+  { code: "IN", name: "Индия" },
+];
 
 export default function DiscoverPage() {
   return (
