@@ -763,13 +763,14 @@ function DiscoverContent() {
     index: number;
     isLastElement: boolean;
   }) => {
-    const { showMovieRating, roundedCorners } = useReleaseQualityVisibility();
+    const { showReleaseQuality } = useReleaseQualityVisibility();
+    const releaseQuality = movie.release_quality || null;
     const year =
       movie.release_date?.split("-")[0] || movie.first_air_date?.split("-")[0];
     const ratingValue = movie.vote_average;
-    const rating = ratingValue ? ratingValue.toFixed(1) : null;
+    const rating = ratingValue ? ratingValue.toFixed(1) : "N/A";
     const imageUrl = movie.poster_path
-      ? getImageUrl(movie.poster_path, "w342")
+      ? getImageUrl(movie.poster_path, "w500")
       : "/placeholder.svg";
 
     const handleClick = () => {
@@ -794,57 +795,65 @@ function DiscoverContent() {
       }
     };
 
+    const refProps = isLastElement ? { ref: lastMovieElementRef } : {};
+
     return (
       <Link
         href={`/movie/${movie.id}`}
-        ref={isLastElement ? lastMovieElementRef : null}
+        key={movie.id}
         onClick={handleClick}
-        className={clsx(
-          "flex gap-4 p-3 bg-zinc-800/50 hover:bg-zinc-700/70 transition-colors duration-200 border border-transparent hover:border-zinc-600",
-          roundedCorners ? "rounded-lg" : "rounded-md"
-        )}
+        className="group flex items-start p-3 bg-zinc-800/50 hover:bg-yellow-500 rounded-lg transition-colors duration-200 gap-4"
+        {...refProps}
       >
-        <div className="w-20 sm:w-24 lg:w-40 flex-shrink-0 relative">
+        <div className="flex-shrink-0 w-40 aspect-[2/3] rounded-md overflow-hidden relative shadow-md">
           <img
             src={imageUrl}
-            alt={movie.title || movie.name || ""}
-            className={clsx(
-              "w-full h-auto object-cover aspect-[2/3]",
-              roundedCorners ? "rounded-md" : "rounded-sm"
-            )}
-            loading={index < 5 ? "eager" : "lazy"}
+            alt={`Постер ${movie.title || movie.name}`}
+            className="w-full h-full object-cover"
+            loading={index < 10 ? "eager" : "lazy"}
             onError={(e) => {
               e.currentTarget.src = "/placeholder.svg";
             }}
           />
-          {showMovieRating && rating && (
+          {ratingValue !== undefined && (
             <div
-              className={clsx(
-                "absolute -top-1 -left-1 z-10 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md shadow-md",
-                ratingValue && ratingValue >= 7.0
+              className={`absolute top-2 left-2 z-10 ${
+                ratingValue >= 7.0
                   ? "bg-green-600"
-                  : ratingValue && ratingValue >= 5.5
+                  : ratingValue >= 5.5
                   ? "bg-gray-600"
                   : "bg-red-600"
-              )}
+              } text-white text-xs font-bold px-2 py-1 rounded-md`}
             >
               {rating}
             </div>
           )}
+          {showReleaseQuality && releaseQuality && (
+            <div
+              className={clsx(
+                "absolute top-1 right-1 text-[9px] font-semibold px-1.5 py-0.5 rounded",
+                releaseQuality.type === "CAM"
+                  ? "bg-red-600/80 text-white"
+                  : releaseQuality.type === "TS"
+                  ? "bg-orange-500/80 text-white"
+                  : "bg-green-600/80 text-white"
+              )}
+            >
+              {releaseQuality.type}
+            </div>
+          )}
         </div>
 
-        <div className="flex flex-col justify-start pt-1 overflow-hidden">
-          <h3 className="text-base sm:text-lg font-semibold truncate">
-            {movie.title || movie.name}
+        <div className="flex-grow">
+          <h3 className="text-lg font-semibold text-white group-hover:text-black mb-1 line-clamp-2 transition-colors duration-200">
+            {movie.title || movie.name || "Без названия"}
           </h3>
-          {year && (
-            <p className="text-sm text-gray-400 mt-0.5 mb-1.5">{year}</p>
-          )}
-          {movie.overview && (
-            <p className="text-xs sm:text-sm text-gray-300 line-clamp-2 sm:line-clamp-3">
-              {movie.overview}
-            </p>
-          )}
+          <p className="text-sm text-zinc-400 group-hover:text-black mb-2 transition-colors duration-200">
+            {year}
+          </p>
+          <p className="text-sm text-zinc-300 group-hover:text-black line-clamp-3 transition-colors duration-200">
+            {movie.overview || "Описание недоступно."}
+          </p>
         </div>
       </Link>
     );
