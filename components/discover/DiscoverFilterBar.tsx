@@ -118,7 +118,7 @@ const DiscoverFilterBar: React.FC<DiscoverFilterBarProps> = ({
           ))}
         </div>
         {/* Добавляем кнопки управления промежутком */}
-        <div className="flex items-center bg-zinc-700/60 p-1 rounded-full text-xs font-medium">
+        <div className="hidden md:flex items-center bg-zinc-700/60 p-1 rounded-full text-xs font-medium">
           {(["m", "l", "xl"] as const).map((gap) => (
             <button
               key={gap}
