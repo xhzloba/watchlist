@@ -851,7 +851,7 @@ function DiscoverContent() {
           <p className="text-sm text-zinc-400 group-hover:text-black mb-2 transition-colors duration-200">
             {year}
           </p>
-          <p className="text-sm text-zinc-300 group-hover:text-black line-clamp-3 transition-colors duration-200">
+          <p className="text-sm text-zinc-400 group-hover:text-black line-clamp-3 transition-colors duration-200">
             {movie.overview || "Описание недоступно."}
           </p>
         </div>
