@@ -47,7 +47,7 @@ const FilterPopoverContent: React.FC<FilterPopoverContentProps> = ({
 
   return (
     <div
-      className="w-[680px] overflow-hidden z-50 border bg-zinc-900 backdrop-blur-md border-zinc-700/50 rounded-lg shadow-2xl"
+      className="overflow-hidden z-50 border bg-zinc-900 backdrop-blur-md border-zinc-700/50 rounded-lg shadow-2xl"
       style={{
         boxShadow:
           "0 10px 25px -5px rgba(0, 0, 0, 0.8), 0 0 5px rgba(255, 200, 0, 0.1)",
