@@ -103,7 +103,8 @@ const DiscoverFilterBar: React.FC<DiscoverFilterBarProps> = ({
                 "px-3 py-1 rounded-full transition-colors duration-200 min-w-[36px] text-center",
                 posterSize === size
                   ? "bg-yellow-500 text-black"
-                  : "text-zinc-400 hover:text-white"
+                  : "text-zinc-400 hover:text-white",
+                size === "small" && "hidden md:inline-block"
               )}
               aria-label={`Размер ${
                 size === "small"
