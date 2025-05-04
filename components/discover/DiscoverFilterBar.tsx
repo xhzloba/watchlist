@@ -93,8 +93,13 @@ const DiscoverFilterBar: React.FC<DiscoverFilterBarProps> = ({
         </button> */}
         {/* Разделитель */}
         <div className="h-5 w-px bg-zinc-600/50 mx-2"></div>
-        {/* Размер элементов */}
-        <div className="flex items-center bg-zinc-700/60 p-1 rounded-full text-xs font-medium">
+        {/* Размер элементов - Hide if viewMode is list */}
+        <div
+          className={clsx(
+            "items-center bg-zinc-700/60 p-1 rounded-full text-xs font-medium",
+            currentViewMode === "list" ? "hidden" : "flex" // Conditionally hide/show
+          )}
+        >
           {(["small", "medium", "large"] as const).map((size) => (
             <button
               key={size}
