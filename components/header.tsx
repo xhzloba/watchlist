@@ -933,6 +933,13 @@ const Header = memo(function HeaderComponent() {
                 isActive={pathname === "/discover"}
                 icon={<Compass className="w-4 h-4" />}
               />
+              {/* ===== ВОССТАНАВЛИВАЕМ Медиатеку ===== */}
+              <AINavigationLink
+                href="/watchlist"
+                label="Медиатека"
+                isActive={pathname === "/watchlist"}
+                icon={<MonitorSmartphone className="w-4 h-4" />}
+              />
               {/* SearchBar теперь здесь */}
               <SearchBar />
             </nav>
