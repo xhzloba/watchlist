@@ -3208,8 +3208,8 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
           </div>
 
           {/* Слайдер с актерами */}
-          <div className="mt-8">
-            <div className="mb-4 px-10">
+          <div className="mt-2 md:mt-8">
+            <div className="mb-1 px-2">
               {" "}
               {/* Этот отступ оставляем для заголовка */}
               <div className="flex flex-col">
@@ -3339,7 +3339,7 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
 
           {/* Блок с рецензиями */}
           <div className="mt-8">
-            <div className="px-6 mb-4">
+            <div className="px-2 mb-2">
               <div className="flex flex-col">
                 <div className="flex items-center">
                   <h2 className="text-xl uppercase tracking-wide font-bebas-neue pb-2 pr-8 relative border-b border-transparent">

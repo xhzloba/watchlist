@@ -61,7 +61,7 @@
     "sonner": "^1.7.1",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
-    "tmdb-xhzloba": "^1.0.41",
+    "tmdb-xhzloba": "^1.4.0",
     "use-debounce": "^10.0.4",
     "vaul": "^0.9.6",
     "zod": "^3.24.1"
