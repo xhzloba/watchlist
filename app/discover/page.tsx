@@ -39,6 +39,14 @@ interface DiscoverMovie extends Movie {
   first_air_date?: string; // Похоже, используется в MovieCard
 }
 
+// Обновленный интерфейс для позиции попапа
+interface PopoverPositionState {
+  left: number;
+  triggerTop: number; // Верх триггера относительно viewport
+  triggerBottom: number; // Низ триггера относительно viewport
+  isStickyAtOpen: boolean;
+}
+
 function DiscoverContent() {
   const [movies, setMovies] = useState<DiscoverMovie[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -52,26 +60,46 @@ function DiscoverContent() {
   const searchParams = useSearchParams();
   const lastParams = useRef("");
 
-  // Состояния для размера постеров, промежутка и вида
   const [posterSize, setPosterSize] = useState<PosterSize>("medium");
   const [gapSize, setGapSize] = useState<GapSize>("m");
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
 
-  // --- Popover States and Refs ---
-  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  // Состояния и реф для липкой панели (перенесены ВЫШЕ)
+  const [isSticky, setIsSticky] = useState(false);
+  const [toolbarHeight, setToolbarHeight] = useState(0);
+  const filterBarWrapperRef = useRef<HTMLDivElement>(null);
 
+  // useEffect для управления липкостью (перенесен ВЫШЕ)
+  useEffect(() => {
+    const wrapper = filterBarWrapperRef.current;
+    if (!wrapper) return;
+
+    setToolbarHeight(wrapper.offsetHeight);
+
+    const handleScroll = () => {
+      if (wrapper) {
+        const offsetTop = wrapper.offsetTop;
+        setIsSticky(window.scrollY > offsetTop);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
+  // --- Состояния и рефы для попапов ---
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [isCategoryPopoverOpen, setIsCategoryPopoverOpen] = useState(false);
   const [isCategoryClosing, setIsCategoryClosing] = useState(false);
   const categoryPopoverRef = useRef<HTMLDivElement>(null);
   const categoryTriggerRef = useRef<HTMLButtonElement>(null);
   const categoryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const [popoverPosition, setPopoverPosition] = useState<{
-    top: number;
-    left?: number;
-    right?: number;
-    width?: number;
-  } | null>(null);
+  // Используем новый тип для состояния
+  const [popoverPosition, setPopoverPosition] =
+    useState<PopoverPositionState | null>(null);
 
   // --- Popover Control Functions ---
   const openFilterModal = useCallback(() => {
@@ -89,9 +117,12 @@ function DiscoverContent() {
     if (categoryTimeoutRef.current) clearTimeout(categoryTimeoutRef.current);
     if (categoryTriggerRef.current) {
       const rect = categoryTriggerRef.current.getBoundingClientRect();
+      // Сохраняем координаты триггера и флаг липкости
       setPopoverPosition({
-        top: rect.bottom + window.scrollY + 8,
         left: rect.left,
+        triggerTop: rect.top,
+        triggerBottom: rect.bottom,
+        isStickyAtOpen: isSticky,
       });
     }
     setIsCategoryClosing(false);
@@ -99,7 +130,7 @@ function DiscoverContent() {
     if (isFilterModalOpen) {
       closeFilterModal();
     }
-  }, [isFilterModalOpen]);
+  }, [isFilterModalOpen, isSticky]);
 
   const closeCategoryPopover = useCallback(() => {
     setIsCategoryClosing(true);
@@ -952,6 +983,9 @@ function DiscoverContent() {
               categoryTriggerRef={categoryTriggerRef}
               onOpenCategoryPopover={openCategoryPopover}
               onOpenFilterModal={openFilterModal}
+              isSticky={isSticky}
+              toolbarHeight={toolbarHeight}
+              wrapperRef={filterBarWrapperRef}
             />
           </div>
 
@@ -1016,18 +1050,41 @@ function DiscoverContent() {
           )}
         </div>
 
+        {/* Рендеринг попапа категорий с position: fixed */}
         {isCategoryPopoverOpen && popoverPosition && (
           <div
             ref={categoryPopoverRef}
-            className={clsx("absolute z-[999]", {
-              "animate-slideDown": !isCategoryClosing,
-              "animate-slideUp": isCategoryClosing,
+            // Используем position: fixed
+            className={clsx("fixed z-[999]", {
+              // Анимации могут потребовать корректировки
+              "animate-slideDown":
+                !isCategoryClosing && !popoverPosition.isStickyAtOpen,
+              "animate-slideUp":
+                isCategoryClosing && !popoverPosition.isStickyAtOpen,
+              "animate-scaleInFromBottom":
+                !isCategoryClosing && popoverPosition.isStickyAtOpen,
+              "animate-scaleOutToBottom":
+                isCategoryClosing && popoverPosition.isStickyAtOpen,
             })}
             style={{
-              top: `${popoverPosition.top}px`,
               left: `${popoverPosition.left}px`,
+              // Устанавливаем top или bottom в зависимости от isStickyAtOpen
+              ...(popoverPosition.isStickyAtOpen
+                ? {
+                    bottom: `${
+                      window.innerHeight - popoverPosition.triggerTop + 8
+                    }px`,
+                  }
+                : {
+                    top: `${popoverPosition.triggerBottom + 8}px`,
+                  }),
+              // Устанавливаем transform-origin для анимации
+              transformOrigin: popoverPosition.isStickyAtOpen
+                ? "bottom left"
+                : "top left",
             }}
           >
+            {/* Убираем лишнюю обертку для transformOrigin, он теперь в style выше */}
             <CategoryPopoverContent onClose={closeCategoryPopover} />
           </div>
         )}

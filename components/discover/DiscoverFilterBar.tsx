@@ -1,6 +1,6 @@
 "use client";
 
-import React, { RefObject, useState, useEffect, useRef } from "react";
+import React, { RefObject } from "react";
 import { List, Grid, Filter, LayoutList } from "lucide-react"; // Removed Eye, X
 import clsx from "clsx";
 import { motion } from "framer-motion";
@@ -23,6 +23,9 @@ interface DiscoverFilterBarProps {
   onOpenFilterModal: () => void;
   currentViewMode: ViewMode;
   onViewChange: (mode: ViewMode) => void;
+  isSticky: boolean;
+  toolbarHeight: number;
+  wrapperRef: RefObject<HTMLDivElement>;
 }
 
 const DiscoverFilterBar: React.FC<DiscoverFilterBarProps> = ({
@@ -35,31 +38,10 @@ const DiscoverFilterBar: React.FC<DiscoverFilterBarProps> = ({
   onOpenFilterModal,
   currentViewMode,
   onViewChange,
+  isSticky,
+  toolbarHeight,
+  wrapperRef,
 }) => {
-  const [isSticky, setIsSticky] = useState(false);
-  const [toolbarHeight, setToolbarHeight] = useState(0);
-  const wrapperRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const wrapper = wrapperRef.current;
-    if (!wrapper) return;
-
-    // Измеряем высоту при монтировании
-    setToolbarHeight(wrapper.offsetHeight);
-
-    const handleScroll = () => {
-      if (wrapper) {
-        const offsetTop = wrapper.offsetTop;
-        setIsSticky(window.scrollY > offsetTop);
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, []); // Пустой массив зависимостей, чтобы эффект запускался один раз при монтировании
-
   return (
     <div ref={wrapperRef} className="relative">
       {" "}
