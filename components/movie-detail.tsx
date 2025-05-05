@@ -510,13 +510,11 @@ const CollectionNotification: React.FC<CollectionNotificationProps> = ({
         </button>
       </div>
       <div className="p-2 max-h-60 overflow-y-auto">
-        {" "}
-        {/* Уменьшен padding */}
-        <div className="grid grid-cols-3 gap-2">
-          {collectionMoviesToShow.map(
-            (
-              movie // Убираем index из параметров map, он больше не нужен для нумерации
-            ) => (
+        {/* Условный рендеринг: сетка или слайдер */}
+        {collectionMoviesToShow.length <= 3 ? (
+          // --- СЕТКА для 3 или менее фильмов ---
+          <div className="grid grid-cols-3 gap-2">
+            {collectionMoviesToShow.map((movie) => (
               <div
                 key={movie.id}
                 className="cursor-pointer group"
@@ -543,14 +541,55 @@ const CollectionNotification: React.FC<CollectionNotificationProps> = ({
                     </p>
                   </div>
                   <div className="absolute top-1 left-1 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-black/70 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full">
-                    {/* Используем карту для получения правильного номера */}
                     {movieIndexMap.get(movie.id) ?? "?"}
                   </div>
                 </div>
               </div>
-            )
-          )}
-        </div>
+            ))}
+          </div>
+        ) : (
+          // --- СЛАЙДЕР для более чем 3 фильмов ---
+          <div className="flex overflow-x-auto scrollbar-hide gap-2 pb-1">
+            {" "}
+            {/* Добавлен pb-1 для тени */}
+            {collectionMoviesToShow.map((movie) => (
+              // Задаем ширину и flex-none для элемента слайдера
+              <div
+                key={movie.id}
+                className="cursor-pointer group flex-none w-20" // Ширина элемента слайдера
+                onClick={() => handleMovieClick(movie.id)}
+              >
+                <div
+                  className={`relative aspect-[2/3] ${
+                    roundedCorners ? "rounded-md" : "rounded"
+                  } overflow-hidden border-2 border-transparent group-hover:border-white transition-colors duration-200`}
+                >
+                  <NextImage
+                    src={getImageUrl(movie.poster_path || "", "w300")}
+                    alt={movie.title || "Постер"}
+                    fill
+                    sizes="80px" // Размер остается прежним
+                    className="object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = "/placeholder.svg";
+                    }}
+                  />
+                  {/* Оверлей с названием и номером */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-between p-1">
+                    {/* Номер фильма вверху */}
+                    <div className="self-start bg-black/70 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full">
+                      {movieIndexMap.get(movie.id) ?? "?"}
+                    </div>
+                    {/* Название фильма внизу */}
+                    <p className="text-[10px] text-white font-medium line-clamp-1">
+                      {movie.title} ({getYear(movie.release_date)})
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </motion.div>
   );
