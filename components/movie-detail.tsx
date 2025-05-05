@@ -602,12 +602,16 @@ interface MovieInfoSidebarProps {
   movie: Movie;
   isOpen: boolean;
   onClose: () => void;
+  logoPath: string | null; // Добавляем logoPath
+  loadingLogo: boolean; // Добавляем loadingLogo
 }
 
 const MovieInfoSidebar: React.FC<MovieInfoSidebarProps> = ({
   movie,
   isOpen,
   onClose,
+  logoPath, // Получаем пропс
+  loadingLogo, // Получаем пропс
 }) => {
   if (!isOpen) return null;
 
@@ -651,6 +655,24 @@ const MovieInfoSidebar: React.FC<MovieInfoSidebarProps> = ({
           </button>
         </div>
         <div className="flex-grow overflow-y-auto p-4 md:p-6 text-sm">
+          {/* === БЛОК С ЛОГОТИПОМ (Выравнивание по левому краю, уменьшен размер) === */}
+          {(loadingLogo || logoPath) && (
+            // Убираем justify-center, уменьшаем min-h
+            <div className="mb-4 flex items-center min-h-[40px]">
+              {loadingLogo ? (
+                <div className="w-5 h-5 border-2 border-gray-600 border-t-yellow-400 rounded-full animate-spin"></div>
+              ) : logoPath ? (
+                <img
+                  src={getImageUrl(logoPath, "w300")}
+                  alt={`${movie.title} logo`}
+                  className="max-h-10 object-contain" // Уменьшаем max-h до 10 (40px)
+                  style={{ filter: "drop-shadow(0px 1px 1px rgba(0,0,0,0.4))" }}
+                />
+              ) : null}
+            </div>
+          )}
+          {/* === КОНЕЦ БЛОКА С ЛОГОТИПОМ === */}
+
           {/* Содержимое взято из старых блоков */}
           <div className="space-y-4">
             {(movie as any).original_title &&
@@ -4587,6 +4609,8 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
             movie={movie}
             isOpen={isSidebarOpen}
             onClose={() => setIsSidebarOpen(false)}
+            logoPath={logoPath} // Передаем logoPath
+            loadingLogo={loadingLogo} // Передаем loadingLogo
           />
         )}
       </AnimatePresence>
