@@ -20,26 +20,6 @@ import Router from "next/router";
 import NProgress from "nprogress";
 import useMediaQuery from "@/hooks/use-media-query";
 
-// Объявление модуля для TypeScript
-declare module "nprogress" {
-  export function start(): void;
-  export function done(force?: boolean): void;
-  export function remove(): void;
-  export function set(n: number): void;
-  export function inc(amount?: number): void;
-  export function configure(options: NProgressOptions): void;
-  export interface NProgressOptions {
-    minimum?: number;
-    template?: string;
-    easing?: string;
-    speed?: number;
-    trickle?: boolean;
-    trickleSpeed?: number;
-    showSpinner?: boolean;
-    parent?: string;
-  }
-}
-
 // Динамический импорт с отключенным SSR
 const ViewingHistoryRow = dynamic(
   () => import("@/components/viewing-history-row"),
