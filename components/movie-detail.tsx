@@ -8,6 +8,7 @@ import {
   useCallback,
   useContext,
   useMemo,
+  memo,
 } from "react";
 import NextImage from "next/image";
 import ColorThief from "colorthief";
@@ -44,6 +45,7 @@ import {
   getMovieImages,
   getMovieCertification,
   getMovieLogos,
+  getPersonMovieCredits, // Добавляем импорт
 } from "@/lib/tmdb";
 import { motion, AnimatePresence } from "framer-motion";
 import { useColorContext } from "@/contexts/color-context";
@@ -63,6 +65,7 @@ import { useKinobox } from "../hooks/use-kinobox";
 import { cn } from "@/lib/utils";
 import { useDiscussions, Discussion } from "../hooks/use-discussions"; // Добавляем импорт хука
 import dynamic from "next/dynamic";
+import ActorNotification from "./actor-notification"; // <-- Новый импорт
 
 // Словарь с переводами стран на русский язык
 const countryNames: Record<string, string> = {
@@ -2730,6 +2733,41 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
   }, []);
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Состояние для сайдбара
+  const [showActorNotification, setShowActorNotification] = useState(false);
+  // Новое состояние, чтобы отследить, было ли уведомление уже показано хотя бы раз
+  const [actorNotificationTriggered, setActorNotificationTriggered] =
+    useState(false);
+
+  const topActors = useMemo(() => {
+    if (Array.isArray(cast)) {
+      // Берем первых 8 актеров
+      return cast.slice(0, 8);
+    }
+    return [];
+  }, [cast]);
+
+  // useEffect для слушателя прокрутки
+  useEffect(() => {
+    const handleScroll = () => {
+      // Показываем только если прокрутка > 100px И уведомление еще НЕ БЫЛО показано ни разу
+      if (window.scrollY > 100 && !actorNotificationTriggered) {
+        setShowActorNotification(true);
+        setActorNotificationTriggered(true); // Отмечаем, что условие выполнилось
+        // Больше не удаляем слушатель здесь, он будет удален при размонтировании
+      }
+    };
+
+    // Добавляем слушатель только если уведомление еще не было триггернуто
+    if (!actorNotificationTriggered) {
+      window.addEventListener("scroll", handleScroll, { passive: true });
+    }
+
+    // Очистка слушателя при размонтировании компонента ИЛИ когда уведомление было показано
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+    // Зависимость теперь от actorNotificationTriggered, чтобы удалить слушатель, когда оно станет true
+  }, [actorNotificationTriggered]);
 
   return (
     <>
@@ -4625,6 +4663,19 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
         <Info size={20} className="mb-1" /> {/* Иконка сверху */}
         <span className="text-xs font-medium">Инфо</span>
       </button>
+
+      {/* === РЕНДЕРИНГ УВЕДОМЛЕНИЯ ОБ АКТЕРАХ === */}
+      <AnimatePresence>
+        {showActorNotification &&
+          topActors.length > 0 &&
+          typeof movie.id === "number" && (
+            <ActorNotification
+              actors={topActors}
+              onClose={() => setShowActorNotification(false)}
+              currentMovieId={movie.id}
+            />
+          )}
+      </AnimatePresence>
     </>
   );
 }

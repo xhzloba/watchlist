@@ -1207,3 +1207,21 @@ export async function getTVByActor(actorId: number): Promise<Movie[]> {
     return [];
   }
 }
+
+export const getPersonMovieCredits = async (
+  personId: number
+): Promise<{ cast: Movie[] }> => {
+  // Fetches movie credits for a specific person
+  const res = await fetch(
+    `${API_BASE_URL}/person/${personId}/movie_credits?api_key=${API_KEY}&language=ru-RU`
+  );
+  if (!res.ok) {
+    throw new Error(`Failed to fetch movie credits for person ${personId}`);
+  }
+  const data = await res.json();
+  // Ensure 'cast' exists and is an array, filter out movies without poster or overview
+  const validCast = (data.cast || []).filter(
+    (movie: Movie) => movie.poster_path && movie.overview
+  );
+  return { cast: validCast };
+};
