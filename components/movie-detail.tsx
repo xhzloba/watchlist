@@ -2746,6 +2746,12 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
     return [];
   }, [cast]);
 
+  // Мемоизируем первых 8 актеров
+  const top3ActorIds = useMemo(() => {
+    // Берем ID только если topActors не пустой
+    return topActors.slice(0, 3).map((actor) => actor.id);
+  }, [topActors]); // Зависит от topActors
+
   // useEffect для слушателя прокрутки
   useEffect(() => {
     const handleScroll = () => {
@@ -4670,9 +4676,10 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
           topActors.length > 0 &&
           typeof movie.id === "number" && (
             <ActorNotification
-              actors={topActors}
+              actors={topActors} // Передаем всех 8
               onClose={() => setShowActorNotification(false)}
               currentMovieId={movie.id}
+              topActorIds={top3ActorIds} // <-- Передаем ID топ-3
             />
           )}
       </AnimatePresence>

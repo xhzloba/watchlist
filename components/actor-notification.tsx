@@ -34,10 +34,16 @@ interface ActorNotificationProps {
   actors: Cast[]; // Первые 8 актеров
   onClose: () => void;
   currentMovieId: number;
+  topActorIds: number[]; // <-- Добавляем ID топ-3 актеров
 }
 
 const ActorNotification: React.FC<ActorNotificationProps> = memo(
-  ({ actors, onClose, currentMovieId }) => {
+  ({
+    actors,
+    onClose,
+    currentMovieId,
+    topActorIds /* <-- Получаем ID топ-3 */,
+  }) => {
     const router = useRouter();
     const { roundedCorners } = useReleaseQualityVisibility();
     // Состояние для хранения ТОП N фильмов КАЖДОГО актера
@@ -110,46 +116,88 @@ const ActorNotification: React.FC<ActorNotificationProps> = memo(
       fetchActorMovies();
     }, [actors, currentMovieId]);
 
-    // useMemo для создания УНИКАЛЬНОГО и ПЕРЕМЕШАННОГО списка фильмов
-    const shuffledUniqueMovies = useMemo(() => {
-      if (isLoading || error) return [];
+    // --- НОВАЯ ЛОГИКА useMemo ---
+    const orderedAndShuffledMovies = useMemo(() => {
+      if (isLoading || error || actors.length === 0) return [];
 
-      const movieMap = new Map<number, { movie: Movie; actors: Cast[] }>();
+      const finalMovieList: { movie: Movie; actors: Cast[] }[] = [];
+      const addedMovieIds = new Set<number>();
 
-      // Собираем уникальные фильмы и всех связанных актеров из топ-8
-      actors.forEach((actor) => {
-        // Используем данные из нового состояния topMoviesPerActor
-        const movies = topMoviesPerActor[actor.id] || [];
-        movies.forEach((movie) => {
-          if (movieMap.has(movie.id)) {
-            const existingEntry = movieMap.get(movie.id)!;
-            if (!existingEntry.actors.some((a) => a.id === actor.id)) {
-              existingEntry.actors.push(actor);
+      // Функция для добавления фильма, если он еще не добавлен
+      const addMovieIfNeeded = (movie: Movie, actor: Cast) => {
+        if (!addedMovieIds.has(movie.id)) {
+          finalMovieList.push({ movie, actors: [actor] }); // Начнем с одного актера, потом можно дополнить
+          addedMovieIds.add(movie.id);
+          return true; // Фильм добавлен
+        }
+        return false; // Фильм уже был
+      };
+
+      // Шаг 1: Обработка топ-3 актеров по порядку
+      for (let i = 0; i < 3 && i < actors.length; i++) {
+        const actor = actors[i];
+        const actorMovies = topMoviesPerActor[actor.id] || [];
+        let addedCountForThisActor = 0;
+        for (const movie of actorMovies) {
+          if (addMovieIfNeeded(movie, actor)) {
+            addedCountForThisActor++;
+            if (addedCountForThisActor >= 2) {
+              break; // Добавили 2 фильма для этого актера
             }
-          } else {
-            movieMap.set(movie.id, { movie: movie, actors: [actor] });
+          }
+        }
+      }
+
+      // Шаг 2: Сбор и обработка фильмов остальных актеров (4-8)
+      const remainingPotentialMovies: { movie: Movie; actor: Cast }[] = [];
+      for (let i = 3; i < actors.length; i++) {
+        const actor = actors[i];
+        const actorMovies = topMoviesPerActor[actor.id] || [];
+        actorMovies.forEach((movie) => {
+          // Добавляем только те, которых еще нет в итоговом списке
+          if (!addedMovieIds.has(movie.id)) {
+            remainingPotentialMovies.push({ movie, actor });
           }
         });
+      }
+
+      // Создаем карту уникальных оставшихся фильмов
+      const remainingMovieMap = new Map<
+        number,
+        { movie: Movie; actors: Cast[] }
+      >();
+      remainingPotentialMovies.forEach(({ movie, actor }) => {
+        if (remainingMovieMap.has(movie.id)) {
+          const existingEntry = remainingMovieMap.get(movie.id)!;
+          if (!existingEntry.actors.some((a) => a.id === actor.id)) {
+            existingEntry.actors.push(actor); // Добавляем доп. актера 4-8, если нужно
+          }
+        } else {
+          // Добавляем только если фильм еще не в finalMovieList (на всякий случай)
+          if (!addedMovieIds.has(movie.id)) {
+            remainingMovieMap.set(movie.id, { movie: movie, actors: [actor] });
+          }
+        }
       });
 
-      // Преобразуем карту в массив
-      const uniqueEntries = Array.from(movieMap.values());
+      // Перемешиваем уникальные оставшиеся фильмы
+      const shuffledOther = shuffleArray(
+        Array.from(remainingMovieMap.values())
+      );
 
-      // Перемешиваем массив уникальных фильмов
-      const shuffledEntries = shuffleArray(uniqueEntries);
+      // Шаг 3: Объединяем и обрезаем до 16
+      const combinedList = [...finalMovieList, ...shuffledOther];
+      return combinedList.slice(0, 16);
 
-      // Берем первые 16 (или меньше)
-      return shuffledEntries.slice(0, 16);
-
-      // Обновляем зависимости, добавляем topMoviesPerActor
+      // Зависимости остаются прежними, так как topActorIds используется косвенно через actors
     }, [actors, topMoviesPerActor, isLoading, error]);
 
     if (isLoading) {
       return null;
     }
 
-    // Используем shuffledUniqueMovies для проверки
-    if (error || shuffledUniqueMovies.length === 0) {
+    // Используем orderedAndShuffledMovies для проверки и рендеринга
+    if (error || orderedAndShuffledMovies.length === 0) {
       return null;
     }
 
@@ -199,9 +247,9 @@ const ActorNotification: React.FC<ActorNotificationProps> = memo(
             ref={scrollContainerRef}
             className="flex overflow-x-auto scrollbar-hide gap-2 pb-1 scroll-smooth"
           >
-            {shuffledUniqueMovies.map(({ movie, actors: movieActors }) => (
+            {orderedAndShuffledMovies.map(({ movie, actors: movieActors }) => (
               <div
-                key={`${movie.id}-actor-rec-shuffled`}
+                key={`${movie.id}-actor-rec-ordered`}
                 className="cursor-pointer group/item flex-none w-24"
                 onClick={() => handleMovieClick(movie.id)}
               >
