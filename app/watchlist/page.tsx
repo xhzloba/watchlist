@@ -18,6 +18,7 @@ import { motion } from "framer-motion";
 import { useRouter, usePathname } from "next/navigation";
 import Router from "next/router";
 import NProgress from "nprogress";
+import useMediaQuery from "@/hooks/use-media-query";
 
 // Объявление модуля для TypeScript
 declare module "nprogress" {
@@ -321,6 +322,7 @@ function WatchlistContent() {
   const { roundedCorners } = useReleaseQualityVisibility();
   const router = useRouter();
   const pathname = usePathname();
+  const isMobile = useMediaQuery("(max-width: 767px)");
 
   // Создаем ключ для принудительного обновления компонента
   const [updateKey, setUpdateKey] = useState(Date.now());
@@ -457,7 +459,15 @@ function WatchlistContent() {
 
       // Заменяем стандартное поведение кнопки "назад" браузера
       history.pushState = new Proxy(history.pushState, {
-        apply: (target, thisArg, argumentsList) => {
+        apply: (
+          target,
+          thisArg,
+          argumentsList: [
+            data: any,
+            unused: string,
+            url?: string | URL | null | undefined
+          ]
+        ) => {
           const result = target.apply(thisArg, argumentsList);
           console.log("История изменена через pushState");
           return result;
@@ -604,9 +614,21 @@ function WatchlistContent() {
                     </h2>
                   </div>
 
-                  {/* Если непросмотренных фильмов 7 или меньше - отображаем в сетке */}
-                  {watchlistMovies.filter((movie) => !movie.is_watched)
-                    .length <= 7 ? (
+                  {/* Условие рендеринга для НЕПРОСМОТРЕННЫХ */}
+                  {isMobile || // Если мобильный, всегда слайдер
+                  watchlistMovies.filter((movie) => !movie.is_watched).length >
+                    7 ? ( // Иначе (десктоп) проверяем кол-во
+                    /* Если мобильный ИЛИ фильмов больше 7 - отображаем в слайдере */
+                    <div className="mb-16">
+                      <WatchlistMovieRow
+                        items={watchlistMovies.filter(
+                          (movie) => !movie.is_watched
+                        )}
+                        onRemove={removeFromWatchlist}
+                      />
+                    </div>
+                  ) : (
+                    /* Иначе (десктоп и фильмов 7 или меньше) - отображаем в сетке */
                     <div className="flex flex-wrap gap-4 pl-6 pr-6 mb-16">
                       {watchlistMovies
                         .filter((movie) => !movie.is_watched)
@@ -673,16 +695,6 @@ function WatchlistContent() {
                           </div>
                         ))}
                     </div>
-                  ) : (
-                    /* Если непросмотренных фильмов 7 и больше - отображаем в слайдере */
-                    <div className="mb-16">
-                      <WatchlistMovieRow
-                        items={watchlistMovies.filter(
-                          (movie) => !movie.is_watched
-                        )}
-                        onRemove={removeFromWatchlist}
-                      />
-                    </div>
                   )}
                 </>
               )}
@@ -705,9 +717,21 @@ function WatchlistContent() {
                     </h2>
                   </div>
 
-                  {/* Если просмотренных фильмов 7 или меньше - отображаем в сетке */}
-                  {watchlistMovies.filter((movie) => movie.is_watched).length <=
-                  7 ? (
+                  {/* Условие рендеринга для ПРОСМОТРЕННЫХ */}
+                  {isMobile || // Если мобильный, всегда слайдер
+                  watchlistMovies.filter((movie) => movie.is_watched).length >
+                    7 ? ( // Иначе (десктоп) проверяем кол-во
+                    /* Если мобильный ИЛИ фильмов больше 7 - отображаем в слайдере */
+                    <div className="mb-16">
+                      <WatchlistMovieRow
+                        items={watchlistMovies.filter(
+                          (movie) => movie.is_watched
+                        )}
+                        onRemove={removeFromWatchlist}
+                      />
+                    </div>
+                  ) : (
+                    /* Иначе (десктоп и фильмов 7 или меньше) - отображаем в сетке */
                     <div className="flex flex-wrap gap-4 pl-6 pr-6 mb-16">
                       {watchlistMovies
                         .filter((movie) => movie.is_watched)
@@ -785,16 +809,6 @@ function WatchlistContent() {
                           </div>
                         ))}
                     </div>
-                  ) : (
-                    /* Если просмотренных фильмов 7 и больше - отображаем в слайдере */
-                    <div className="mb-16">
-                      <WatchlistMovieRow
-                        items={watchlistMovies.filter(
-                          (movie) => movie.is_watched
-                        )}
-                        onRemove={removeFromWatchlist}
-                      />
-                    </div>
                   )}
                 </>
               )}
@@ -834,16 +848,16 @@ function WatchlistContent() {
 
 export default function WatchlistPage() {
   return (
-    <GradientBackground>
-      <Suspense
-        fallback={
-          <div className="min-h-screen flex items-center justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-500"></div>
-          </div>
-        }
-      >
+    <Suspense
+      fallback={
+        <div className="flex justify-center items-center h-screen">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-500"></div>
+        </div>
+      }
+    >
+      <GradientBackground>
         <WatchlistContent />
-      </Suspense>
-    </GradientBackground>
+      </GradientBackground>
+    </Suspense>
   );
 }
