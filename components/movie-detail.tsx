@@ -27,7 +27,8 @@ import {
   Building2,
   MessageCircle,
   ThumbsUp,
-  Film, // Добавим иконку Film
+  Film,
+  Info,
 } from "lucide-react";
 import type { Movie, Cast } from "@/lib/tmdb";
 import {
@@ -595,6 +596,184 @@ const CollectionNotification: React.FC<CollectionNotificationProps> = ({
   );
 };
 // === КОНЕЦ КОМПОНЕНТА УВЕДОМЛЕНИЯ ===
+
+// === НОВЫЙ КОМПОНЕНТ: САЙДБАР С ИНФОРМАЦИЕЙ ===
+interface MovieInfoSidebarProps {
+  movie: Movie;
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const MovieInfoSidebar: React.FC<MovieInfoSidebarProps> = ({
+  movie,
+  isOpen,
+  onClose,
+}) => {
+  if (!isOpen) return null;
+
+  // Функция для форматирования валюты
+  const formatCurrency = (amount: number | undefined) => {
+    if (!amount) return "-";
+    return new Intl.NumberFormat("ru-RU", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  return (
+    <>
+      {/* Оверлей для закрытия */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black/50 z-[60]" // z-index ниже сайдбара
+        onClick={onClose}
+      />
+      {/* Сайдбар */}
+      <motion.div
+        initial={{ x: "100%" }}
+        animate={{ x: 0 }}
+        exit={{ x: "100%" }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        className="fixed top-0 right-0 h-full w-full max-w-md bg-gradient-to-b from-gray-900 to-black shadow-xl z-[65] flex flex-col border-l border-white/10"
+      >
+        <div className="flex-shrink-0 p-4 border-b border-white/10 flex justify-between items-center">
+          <h2 className="text-lg font-semibold text-white">
+            Информация о фильме
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-white p-1 rounded-full hover:bg-white/10"
+          >
+            <X size={20} />
+          </button>
+        </div>
+        <div className="flex-grow overflow-y-auto p-4 md:p-6 text-sm">
+          {/* Содержимое взято из старых блоков */}
+          <div className="space-y-4">
+            {(movie as any).original_title &&
+              (movie as any).original_title !== movie.title && (
+                <div>
+                  <span className="block text-gray-400 mb-1">
+                    Оригинальное название
+                  </span>
+                  <span className="text-white">
+                    {(movie as any).original_title}
+                  </span>
+                </div>
+              )}
+            {movie.release_date && (
+              <div>
+                <span className="block text-gray-400 mb-1">Дата выхода</span>
+                <span className="text-white">
+                  {new Date(movie.release_date).toLocaleDateString("ru-RU", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </span>
+              </div>
+            )}
+            {(movie as any).status && (
+              <div>
+                <span className="block text-gray-400 mb-1">Статус</span>
+                <span className="text-white">
+                  {(movie as any).status === "Released"
+                    ? "Выпущен"
+                    : (movie as any).status === "In Production"
+                    ? "В производстве"
+                    : (movie as any).status === "Post Production"
+                    ? "Пост-продакшн"
+                    : (movie as any).status === "Planned"
+                    ? "Запланирован"
+                    : (movie as any).status}
+                </span>
+              </div>
+            )}
+            {(movie as any).runtime > 0 && (
+              <div>
+                <span className="block text-gray-400 mb-1">
+                  Продолжительность
+                </span>
+                <span className="text-white">
+                  {Math.floor((movie as any).runtime / 60)}ч{" "}
+                  {(movie as any).runtime % 60}
+                  мин
+                </span>
+              </div>
+            )}
+            {movie.genres && movie.genres.length > 0 && (
+              <div>
+                <span className="block text-gray-400 mb-1">Жанры</span>
+                <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1">
+                  {movie.genres.map((genre) => (
+                    <span key={genre.id} className="py-1 text-white">
+                      {genre.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {(movie as any).budget > 0 && (
+              <div>
+                <span className="block text-gray-400 mb-1">Бюджет</span>
+                <span className="text-white">
+                  {formatCurrency((movie as any).budget)}
+                </span>
+              </div>
+            )}
+            {(movie as any).revenue > 0 && (
+              <div>
+                <span className="block text-gray-400 mb-1">Сборы</span>
+                <span className="text-white">
+                  {formatCurrency((movie as any).revenue)}
+                </span>
+              </div>
+            )}
+            {(movie as any).spoken_languages &&
+              (movie as any).spoken_languages.length > 0 && (
+                <div>
+                  <span className="block text-gray-400 mb-1">Языки</span>
+                  <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1">
+                    {(movie as any).spoken_languages.map((language: any) => (
+                      <span key={language.iso_639_1} className="text-white">
+                        {language.name || language.english_name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            {(movie as any).production_companies &&
+              (movie as any).production_companies.length > 0 && (
+                <div>
+                  <span className="block text-gray-400 mb-1">Производство</span>
+                  <p className="text-white leading-relaxed">
+                    {(movie as any).production_companies
+                      .map((company: any) => company.name)
+                      .join(", ")}
+                  </p>
+                </div>
+              )}
+            {(movie as any).production_countries &&
+              (movie as any).production_countries.length > 0 && (
+                <div>
+                  <span className="block text-gray-400 mb-1">Страна</span>
+                  <p className="text-white leading-relaxed">
+                    {(movie as any).production_countries
+                      .map((country: any) => country.name)
+                      .join(", ")}
+                  </p>
+                </div>
+              )}
+          </div>
+        </div>
+      </motion.div>
+    </>
+  );
+};
+// === КОНЕЦ КОМПОНЕНТА САЙДБАРА ===
 
 export default function MovieDetail({ movie, cast }: MovieDetailProps) {
   const {
@@ -2528,6 +2707,8 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
     };
   }, []);
 
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Состояние для сайдбара
+
   return (
     <>
       {/* Убираем полноэкранный индикатор загрузки, чтобы он не перекрывал хедер */}
@@ -4301,200 +4482,6 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
               )}
             </div>
           )}
-
-          {/* Секция информация о фильме */}
-          <div className="mt-8">
-            <div className="px-6 mb-4">
-              <div className="flex flex-col">
-                <div className="flex items-center">
-                  <h2 className="text-xl uppercase tracking-wide font-bebas-neue pb-2 pr-8 relative border-b border-transparent">
-                    ИНФОРМАЦИЯ О ФИЛЬМЕ
-                    <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-yellow-500/40 to-transparent"></div>
-                  </h2>
-                </div>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className=" relative px-6">
-                <div className="bg-gray-900/50 rounded-lg py-5 px-6">
-                  <div className="space-y-3 text-sm">
-                    {" "}
-                    {/* Уменьшаем размер шрифта */}
-                    {(movie as any).original_title && (
-                      <div className="flex flex-col">
-                        <span className="text-gray-400">
-                          Оригинальное название
-                        </span>
-                        <span className="text-white">
-                          {(movie as any).original_title}
-                        </span>
-                      </div>
-                    )}
-                    {movie.release_date && (
-                      <div className="flex flex-col">
-                        <span className="text-gray-400 text-sm">
-                          Дата выхода
-                        </span>
-                        <span className="text-white">
-                          {new Date(movie.release_date).toLocaleDateString(
-                            "ru-RU",
-                            { day: "numeric", month: "long", year: "numeric" }
-                          )}
-                        </span>
-                      </div>
-                    )}
-                    {(movie as any).status && (
-                      <div className="flex flex-col">
-                        <span className="text-gray-400">Статус</span>
-                        <span className="text-white">
-                          {(movie as any).status === "Released"
-                            ? "Выпущен"
-                            : (movie as any).status === "In Production"
-                            ? "В производстве"
-                            : (movie as any).status === "Post Production"
-                            ? "Пост-продакшн"
-                            : (movie as any).status === "Planned"
-                            ? "Запланирован"
-                            : (movie as any).status}
-                        </span>
-                      </div>
-                    )}
-                    {(movie as any).runtime > 0 && (
-                      <div className="flex flex-col">
-                        <span className="text-gray-400 text-sm">
-                          Продолжительность
-                        </span>
-                        <span className="text-white">
-                          {Math.floor((movie as any).runtime / 60)}ч{" "}
-                          {(movie as any).runtime % 60}
-                          мин
-                        </span>
-                      </div>
-                    )}
-                    {movie.genres && movie.genres.length > 0 && (
-                      <div className="flex flex-col">
-                        <span className="text-gray-400 text-sm">Жанры</span>
-                        <div className="flex flex-wrap gap-2 mt-1">
-                          {movie.genres.map((genre) => (
-                            <span
-                              key={genre.id}
-                              className="py-1 text-sm text-white"
-                            >
-                              {genre.name}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <div className="bg-gray-900/50 rounded-lg p-5">
-                  <h3 className="text-lg font-medium mb-4 text-white">
-                    Дополнительно
-                  </h3>
-
-                  <div className="space-y-3 text-sm">
-                    {" "}
-                    {/* Добавляем text-sm здесь */}
-                    {(movie as any).budget > 0 && (
-                      <div className="flex flex-col">
-                        <span className="text-gray-400">Бюджет</span>{" "}
-                        {/* Убираем text-sm отсюда */}
-                        <span className="text-white">
-                          {new Intl.NumberFormat("ru-RU", {
-                            style: "currency",
-                            currency: "USD",
-                            maximumFractionDigits: 0,
-                          }).format((movie as any).budget)}
-                        </span>
-                      </div>
-                    )}
-                    {(movie as any).revenue > 0 && (
-                      <div className="flex flex-col">
-                        <span className="text-gray-400">Сборы</span>{" "}
-                        {/* Убираем text-sm отсюда */}
-                        <span className="text-white">
-                          {new Intl.NumberFormat("ru-RU", {
-                            style: "currency",
-                            currency: "USD",
-                            maximumFractionDigits: 0,
-                          }).format((movie as any).revenue)}
-                        </span>
-                      </div>
-                    )}
-                    {(movie as any).spoken_languages &&
-                      (movie as any).spoken_languages.length > 0 && (
-                        <div className="flex flex-col">
-                          <span className="text-gray-400">Языки</span>{" "}
-                          {/* Убираем text-sm отсюда */}
-                          <div className="flex flex-wrap gap-2 mt-1">
-                            {(movie as any).spoken_languages.map(
-                              (language: any) => (
-                                <span
-                                  key={language.iso_639_1}
-                                  className="text-white"
-                                >
-                                  {language.name || language.english_name}
-                                </span>
-                              )
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    {/* Добавляем блок производственных студий */}
-                    {(movie as any).production_companies &&
-                      (movie as any).production_companies.length > 0 && (
-                        <div className="flex flex-col">
-                          <span className="text-gray-400">Производство</span>
-                          <div className="flex flex-wrap gap-2 mt-1">
-                            {(movie as any).production_companies.map(
-                              (company: any) => (
-                                <span key={company.id} className="text-white">
-                                  {company.name}
-                                  {/* Добавляем запятую после каждой студии, кроме последней */}
-                                  {(movie as any).production_companies.indexOf(
-                                    company
-                                  ) !==
-                                    (movie as any).production_companies.length -
-                                      1 && ", "}
-                                </span>
-                              )
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    {/* Добавляем блок стран производства */}
-                    {(movie as any).production_countries &&
-                      (movie as any).production_countries.length > 0 && (
-                        <div className="flex flex-col">
-                          <span className="text-gray-400">Страна</span>
-                          <div className="flex flex-wrap gap-2 mt-1">
-                            {(movie as any).production_countries.map(
-                              (country: any) => (
-                                <span
-                                  key={country.iso_3166_1}
-                                  className="text-white"
-                                >
-                                  {country.name}
-                                  {(movie as any).production_countries.indexOf(
-                                    country
-                                  ) !==
-                                    (movie as any).production_countries.length -
-                                      1 && ", "}
-                                </span>
-                              )
-                            )}
-                          </div>
-                        </div>
-                      )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         </motion.div>
       </div>
 
@@ -4592,6 +4579,28 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
             />
           )}
       </AnimatePresence>
+
+      {/* === РЕНДЕРИНГ САЙДБАРА === */}
+      <AnimatePresence>
+        {isSidebarOpen && (
+          <MovieInfoSidebar
+            movie={movie}
+            isOpen={isSidebarOpen}
+            onClose={() => setIsSidebarOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* === КНОПКА ОТКРЫТИЯ САЙДБАРА === */}
+      <button
+        onClick={() => setIsSidebarOpen(true)}
+        className="fixed top-1/2 -translate-y-1/2 right-0 z-[80] p-2 bg-black/50 hover:bg-black/70 text-white rounded-l-lg transition-all transform hover:scale-105 shadow-lg flex items-center justify-center"
+        title="Информация о фильме"
+        style={{ writingMode: "vertical-rl", textOrientation: "mixed" }} // Вертикальная кнопка
+      >
+        <Info size={20} className="mb-1" /> {/* Иконка сверху */}
+        <span className="text-xs font-medium">Инфо</span>
+      </button>
     </>
   );
 }
