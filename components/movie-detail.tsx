@@ -27,6 +27,7 @@ import {
   Building2,
   MessageCircle,
   ThumbsUp,
+  Film, // Добавим иконку Film
 } from "lucide-react";
 import type { Movie, Cast } from "@/lib/tmdb";
 import {
@@ -96,6 +97,211 @@ const countryNames: Record<string, string> = {
 const getCountryNameRU = (countryCode: string): string => {
   return countryNames[countryCode] || countryCode;
 };
+
+// --- HELPER FUNCTIONS FOR COLOR EXTRACTION (Moved Outside Component) ---
+
+// Функция для определения яркости цвета
+const getLuminance = (rgb: number[]) => {
+  const [r, g, b] = rgb;
+  // Формула для расчета воспринимаемой яркости
+  return 0.299 * r + 0.587 * g + 0.114 * b;
+};
+
+// Функция для определения, является ли цвет красноватым
+const isReddish = (rgb: number[]) => {
+  const [r, g, b] = rgb;
+  // Красный значительно больше других каналов
+  return r > g * 1.3 && r > b * 1.3;
+};
+
+// Функция для определения сильно красного цвета (действительно доминантного)
+const isStronglyReddish = (rgb: number[]) => {
+  const [r, g, b] = rgb;
+  // Красный ОЧЕНЬ сильно доминирует над другими каналами
+  return r > g * 1.7 && r > b * 1.7 && r > 100;
+};
+
+// Функция для проверки и коррекции бледных цветов
+const avoidPaleColors = (rgb: number[]) => {
+  // Получаем яркость и насыщенность
+  const luminance = (rgb[0] * 0.299 + rgb[1] * 0.587 + rgb[2] * 0.114) / 255;
+
+  // Находим максимальный и минимальный каналы
+  const max = Math.max(...rgb);
+  const min = Math.min(...rgb);
+  const saturation = max === 0 ? 0 : (max - min) / max;
+
+  // Если цвет слишком бледный (высокая яркость + низкая насыщенность)
+  if (luminance > 0.7 && saturation < 0.3) {
+    // Создаем более насыщенную и темную версию
+    return [
+      Math.round(rgb[0] * 0.6),
+      Math.round(rgb[1] * 0.6),
+      Math.round(rgb[2] * 0.65),
+    ];
+  }
+
+  // Для слишком темных цветов немного повышаем яркость
+  if (luminance < 0.1) {
+    return [
+      Math.min(255, Math.round(rgb[0] * 1.4)),
+      Math.min(255, Math.round(rgb[1] * 1.4)),
+      Math.min(255, Math.round(rgb[2] * 1.4)),
+    ];
+  }
+
+  return rgb;
+};
+
+// Функция для определения, является ли цвет ярким желтым
+const isBrightYellow = (rgb: number[]) => {
+  const [r, g, b] = rgb;
+  // Желтый имеет высокие значения красного и зеленого, но низкое значение синего
+  return r > 200 && g > 180 && b < 100 && r - b > 150 && g - b > 130;
+};
+
+// Функция для смещения желтых цветов в сторону оранжевого
+const shiftYellowToOrange = (rgb: number[]) => {
+  const [r, g, b] = rgb;
+  // Определяем, является ли цвет желтым: высокий красный и зеленый, низкий синий
+  if (isBrightYellow(rgb)) {
+    // Используем isBrightYellow для определения
+    // Смещаем в сторону оранжевого (увеличиваем красный, уменьшаем зеленый)
+    const targetR = 177;
+    const targetG = 72;
+    const targetB = 36;
+
+    // Степень смещения зависит от "желтости" цвета
+    const yellowness = Math.min(1, (r + g) / 450);
+    const shiftFactor = 0.4 * yellowness; // Максимум 40% смещения
+
+    return [
+      Math.round(r * (1 - shiftFactor) + targetR * shiftFactor),
+      Math.round(g * (1 - shiftFactor) + targetG * shiftFactor),
+      Math.round(b * (1 - shiftFactor) + targetB * shiftFactor),
+    ];
+  }
+  return rgb;
+};
+
+// Функция для определения цветов по частям изображения
+const getSampledColors = (palette: number[][]) => {
+  // Проверка на достаточное количество цветов
+  if (!palette || palette.length < 3) {
+    // Базовая темная палитра
+    return {
+      topLeft: [23, 23, 35], // Темно-синий
+      topRight: [30, 35, 55], // Синий
+      bottomLeft: [15, 20, 45], // Глубокий синий
+      bottomRight: [25, 30, 50], // Темно-синий
+    };
+  }
+
+  // Сортируем палитру по насыщенности
+  const sortedByVibrance = [...palette].sort((a, b) => {
+    const satA = Math.max(...a) - Math.min(...a);
+    const satB = Math.max(...b) - Math.min(...b);
+    return satB - satA; // От более насыщенных к менее
+  });
+
+  // Сортируем по яркости (темные в начале)
+  const sortedByLuminance = [...palette].sort((a, b) => {
+    const lumA = getLuminance(a);
+    const lumB = getLuminance(b);
+    return lumA - lumB;
+  });
+
+  // Отделяем красные от не-красных цветов
+  const nonReddishColors = palette.filter((color) => !isReddish(color));
+  const strongReddishColors = palette.filter((color) =>
+    isStronglyReddish(color)
+  );
+
+  // Сортируем не-красные цвета по насыщенности
+  const sortedNonReddish = [...nonReddishColors].sort((a, b) => {
+    const satA = Math.max(...a) - Math.min(...a);
+    const satB = Math.max(...b) - Math.min(...b);
+    return satB - satA; // От более насыщенных к менее
+  });
+
+  // Отдельно выделяем синие оттенки (для правого нижнего угла тоже)
+  const blueHues = palette.filter(
+    (color) => color[2] > color[0] && color[2] > color[1]
+  );
+
+  // Сортируем синие по насыщенности
+  const sortedBlueHues = [...blueHues].sort((a, b) => {
+    const satA = a[2] - Math.min(a[0], a[1]);
+    const satB = b[2] - Math.min(b[0], b[1]);
+    return satB - satA;
+  });
+
+  // Фильтруем не-красные темные цвета для верхнего левого угла
+  const nonReddishDarkColors = sortedByLuminance
+    .slice(0, Math.max(3, Math.floor(sortedByLuminance.length / 3)))
+    .filter((color) => !isReddish(color));
+
+  // Берем темный цвет для верхнего левого, избегая красных оттенков
+  const topLeft =
+    nonReddishDarkColors.length > 0 ? nonReddishDarkColors[0] : [40, 40, 40]; // Темно-серый по умолчанию вместо синего
+
+  // Для верхнего правого угла избегаем красных оттенков полностью
+  const topRightBase =
+    nonReddishDarkColors.length > 1
+      ? nonReddishDarkColors[1] // Второй не-красный темный цвет
+      : [50, 50, 50]; // Серый по умолчанию вместо синего
+
+  // Смешиваем с верхним левым для лучшего перехода
+  const topRight = [
+    Math.round((topLeft[0] + topRightBase[0]) / 2),
+    Math.round((topLeft[1] + topRightBase[1]) / 2),
+    Math.round((topLeft[2] + topRightBase[2]) / 2.2),
+  ];
+
+  // Для нижнего левого используем насыщенный оттенок из палитры
+  const bottomLeft =
+    blueHues.length > 0
+      ? sortedBlueHues[0]
+      : [
+          Math.round(topLeft[0] * 0.8),
+          Math.round(topLeft[1] * 0.8),
+          Math.round(topLeft[2] * 0.8),
+        ]; // Темнее верхнего левого вместо синего
+
+  // Для нижнего правого предпочитаем не-красные насыщенные цвета или синие
+  let bottomRight;
+
+  // Проверяем, есть ли в палитре очень сильные красные (явно доминирующие)
+  // Они должны составлять значительную часть палитры
+  const isRedDominant =
+    strongReddishColors.length >= Math.ceil(palette.length * 0.4);
+
+  if (isRedDominant) {
+    // Если красные явно доминируют, используем самый насыщенный красный
+    bottomRight = strongReddishColors[0];
+  } else if (sortedNonReddish.length > 0) {
+    // Иначе берем самый насыщенный не-красный
+    bottomRight = sortedNonReddish[0];
+  } else if (blueHues.length > 0) {
+    // Если нет насыщенных не-красных, берем синий
+    bottomRight = sortedBlueHues[0];
+  } else {
+    // Крайний случай - стандартный темно-синий
+    bottomRight = [35, 35, 50];
+  }
+
+  // Применяем коррекции ко всем цветам
+  return {
+    topLeft: avoidPaleColors(topLeft),
+    topRight: avoidPaleColors(topRight),
+    bottomLeft: avoidPaleColors(bottomLeft),
+    bottomRight: isBrightYellow(bottomRight)
+      ? [120, 77, 13] // Специальный цвет для яркого желтого
+      : avoidPaleColors(bottomRight),
+  };
+};
+
+// --- END HELPER FUNCTIONS ---
 
 interface MovieDetailProps {
   movie: Movie;
@@ -217,6 +423,139 @@ const KinoboxPlayer = ({ kpId, onClose }: KinoboxPlayerProps) => {
     </div>
   );
 };
+
+// === НОВЫЙ КОМПОНЕНТ: Уведомление о коллекции ===
+interface CollectionNotificationProps {
+  movies: Movie[];
+  collectionName: string;
+  currentMovieId: number; // ID текущего фильма, чтобы не показывать его в уведомлении
+  onClose: () => void;
+}
+
+const CollectionNotification: React.FC<CollectionNotificationProps> = ({
+  movies,
+  collectionName,
+  currentMovieId,
+  onClose,
+}) => {
+  const router = useRouter();
+  const { roundedCorners } = useReleaseQualityVisibility();
+
+  // 1. Создаем карту с оригинальными хронологическими индексами
+  const movieIndexMap = useMemo(() => {
+    const sortedFullCollection = [...movies].sort((a, b) => {
+      if (!a.release_date) return 1;
+      if (!b.release_date) return -1;
+      return (
+        new Date(a.release_date).getTime() - new Date(b.release_date).getTime()
+      );
+    });
+    const indexMap = new Map<number, number>();
+    sortedFullCollection.forEach((movie, index) => {
+      indexMap.set(movie.id, index + 1); // Сохраняем 1-based индекс
+    });
+    return indexMap;
+  }, [movies]);
+
+  // 2. Фильтруем *после* создания карты индексов
+  const collectionMoviesToShow = useMemo(() => {
+    // Сортируем еще раз здесь, т.к. порядок может быть важен для отображения,
+    // хотя для получения индекса это уже не нужно.
+    return movies
+      .filter((movie) => movie.id !== currentMovieId)
+      .sort((a, b) => {
+        if (!a.release_date) return 1;
+        if (!b.release_date) return -1;
+        return (
+          new Date(a.release_date).getTime() -
+          new Date(b.release_date).getTime()
+        );
+      });
+  }, [movies, currentMovieId]);
+
+  if (collectionMoviesToShow.length === 0) {
+    return null;
+  }
+
+  const handleMovieClick = (movieId: number) => {
+    playSound("choose.mp3");
+    onClose();
+    router.push(`/movie/${movieId}`);
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 100 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 100 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+      className="fixed top-24 right-4 z-[70] w-80 md:w-96 max-w-[calc(100vw-2rem)] bg-yellow-500 rounded-xl shadow-lg border border-black/20 overflow-hidden text-black"
+    >
+      <div className="p-2 border-b border-black/10 flex justify-between items-center">
+        {" "}
+        {/* Уменьшен padding, изменен цвет бордера */}
+        <div className="flex items-center gap-2">
+          {/* Иконка теперь черная */}
+          <Film className="w-5 h-5 text-black" />
+          {/* Новый заголовок */}
+          <h3 className="text-sm font-semibold truncate">А вы смотрели?</h3>
+        </div>
+        <button
+          onClick={onClose}
+          // Изменены цвета кнопки
+          className="text-black/70 hover:text-black transition-colors p-1 rounded-full hover:bg-black/10"
+          aria-label="Закрыть уведомление"
+        >
+          <X size={16} />
+        </button>
+      </div>
+      <div className="p-2 max-h-60 overflow-y-auto">
+        {" "}
+        {/* Уменьшен padding */}
+        <div className="grid grid-cols-3 gap-2">
+          {collectionMoviesToShow.map(
+            (
+              movie // Убираем index из параметров map, он больше не нужен для нумерации
+            ) => (
+              <div
+                key={movie.id}
+                className="cursor-pointer group"
+                onClick={() => handleMovieClick(movie.id)}
+              >
+                <div
+                  className={`relative aspect-[2/3] ${
+                    roundedCorners ? "rounded-md" : "rounded"
+                  } overflow-hidden border-2 border-transparent group-hover:border-white transition-colors duration-200`}
+                >
+                  <NextImage
+                    src={getImageUrl(movie.poster_path || "", "w300")}
+                    alt={movie.title || "Постер"}
+                    fill
+                    sizes="80px"
+                    className="object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = "/placeholder.svg";
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-end p-1">
+                    <p className="text-[10px] text-white font-medium line-clamp-1">
+                      {movie.title} ({getYear(movie.release_date)})
+                    </p>
+                  </div>
+                  <div className="absolute top-1 left-1 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-black/70 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full">
+                    {/* Используем карту для получения правильного номера */}
+                    {movieIndexMap.get(movie.id) ?? "?"}
+                  </div>
+                </div>
+              </div>
+            )
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+// === КОНЕЦ КОМПОНЕНТА УВЕДОМЛЕНИЯ ===
 
 export default function MovieDetail({ movie, cast }: MovieDetailProps) {
   const {
@@ -528,35 +867,7 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
               const palette = colorThief.getPalette(img, 8); // Увеличиваем палитру до 8 цветов для лучшего анализа
 
               if (palette && palette.length >= 4) {
-                // Функция для определения "чистоты" цвета (насколько он близок к чисто белому или чисто черному)
-                const getColorPurity = (rgb: number[]) => {
-                  const [r, g, b] = rgb;
-                  // Проверяем близость к белому (все каналы > 240)
-                  const isNearWhite = r > 240 && g > 240 && b > 240;
-                  // Проверяем близость к черному (все каналы < 30)
-                  const isNearBlack = r < 30 && g < 30 && b < 30;
-                  // Возвращаем оценку "чистоты" (0 - чистый цвет, 1 - белый/черный)
-                  return isNearWhite || isNearBlack ? 1 : 0;
-                };
-
-                // Функция для определения насыщенности цвета
-                const getSaturation = (rgb: number[]) => {
-                  const [r, g, b] = rgb;
-                  const max = Math.max(r, g, b);
-                  const min = Math.min(r, g, b);
-                  // Если яркость 0, то насыщенность тоже 0
-                  if (max === 0) return 0;
-                  return (max - min) / max;
-                };
-
-                // Функция для определения яркости цвета
-                const getLuminance = (rgb: number[]) => {
-                  const [r, g, b] = rgb;
-                  // Формула для расчета воспринимаемой яркости
-                  return 0.299 * r + 0.587 * g + 0.114 * b;
-                };
-
-                // Функция для определения цветовой группы
+                // Function to determine color group (moved outside for clarity)
                 const getColorGroup = (rgb: number[]) => {
                   const [r, g, b] = rgb;
                   // Определяем доминантный канал - улучшенное определение синего
@@ -579,8 +890,8 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
 
                   if (maxDiff < 20) {
                     // Различаем темный серый и светлый серый
-                    const luminance = getLuminance(rgb);
-                    if (luminance < 80) return "darkGray";
+                    const localLuminance = getLuminance(rgb); // Use the outer getLuminance
+                    if (localLuminance < 80) return "darkGray";
                     return "lightGray";
                   }
 
@@ -588,7 +899,7 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                   return "other";
                 };
 
-                // Функция для определения, является ли цвет серым
+                // Функция для определения, является ли цвет серым (moved outside)
                 const isGrayish = (rgb: number[]) => {
                   const colorGroup = getColorGroup(rgb);
                   return (
@@ -596,7 +907,7 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                   );
                 };
 
-                // Функция для смягчения слишком ярких цветов
+                // Функция для смягчения слишком ярких цветов (moved outside)
                 const softenColor = (rgb: number[]) => {
                   const [r, g, b] = rgb;
                   // Если цвет близок к белому, смягчаем его
@@ -610,30 +921,7 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                   return rgb;
                 };
 
-                // Функция для смещения желтых цветов в сторону оранжевого
-                const shiftYellowToOrange = (rgb: number[]) => {
-                  const [r, g, b] = rgb;
-                  // Определяем, является ли цвет желтым: высокий красный и зеленый, низкий синий
-                  if (r > 180 && g > 160 && b < 100 && r > b && g > b) {
-                    // Смещаем в сторону оранжевого (увеличиваем красный, уменьшаем зеленый)
-                    const targetR = 177;
-                    const targetG = 72;
-                    const targetB = 36;
-
-                    // Степень смещения зависит от "желтости" цвета
-                    const yellowness = Math.min(1, (r + g) / 450);
-                    const shiftFactor = 0.4 * yellowness; // Максимум 40% смещения
-
-                    return [
-                      Math.round(r * (1 - shiftFactor) + targetR * shiftFactor),
-                      Math.round(g * (1 - shiftFactor) + targetG * shiftFactor),
-                      Math.round(b * (1 - shiftFactor) + targetB * shiftFactor),
-                    ];
-                  }
-                  return rgb;
-                };
-
-                // Функция для снижения влияния недоминантных красных оттенков
+                // Function to reduce weak red tones (moved outside)
                 const reduceWeakRed = (rgb: number[]) => {
                   const [r, g, b] = rgb;
 
@@ -668,7 +956,7 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                   return rgb;
                 };
 
-                // Улучшенная функция для предотвращения доминирования красных оттенков
+                // Function to reduce overall red dominance (moved outside)
                 const reduceRedDominance = (rgb: number[]) => {
                   // Если красный канал значительно больше других - это может быть проблемой
                   if (rgb[0] > rgb[1] * 1.4 && rgb[0] > rgb[2] * 1.4) {
@@ -682,178 +970,25 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                   return rgb;
                 };
 
-                // Улучшенная функция для проверки и коррекции бледных цветов
-                const avoidPaleColors = (rgb: number[]) => {
-                  // Получаем яркость и насыщенность
-                  const luminance =
-                    (rgb[0] * 0.299 + rgb[1] * 0.587 + rgb[2] * 0.114) / 255;
-
-                  // Находим максимальный и минимальный каналы
-                  const max = Math.max(...rgb);
-                  const min = Math.min(...rgb);
-                  const saturation = max === 0 ? 0 : (max - min) / max;
-
-                  // Если цвет слишком бледный (высокая яркость + низкая насыщенность)
-                  if (luminance > 0.7 && saturation < 0.3) {
-                    // Создаем более насыщенную и темную версию
-                    return [
-                      Math.round(rgb[0] * 0.6),
-                      Math.round(rgb[1] * 0.6),
-                      Math.round(rgb[2] * 0.65),
-                    ];
-                  }
-
-                  // Для слишком темных цветов немного повышаем яркость
-                  if (luminance < 0.1) {
-                    return [
-                      Math.min(255, Math.round(rgb[0] * 1.4)),
-                      Math.min(255, Math.round(rgb[1] * 1.4)),
-                      Math.min(255, Math.round(rgb[2] * 1.4)),
-                    ];
-                  }
-
-                  return rgb;
-                };
-
-                // Функция для определения, является ли цвет красноватым
-                const isReddish = (rgb: number[]) => {
+                // Функция для определения "чистоты" цвета (насколько он близок к чисто белому или чисто черному)
+                const getColorPurity = (rgb: number[]) => {
                   const [r, g, b] = rgb;
-                  // Красный значительно больше других каналов
-                  return r > g * 1.3 && r > b * 1.3;
+                  // Проверяем близость к белому (все каналы > 240)
+                  const isNearWhite = r > 240 && g > 240 && b > 240;
+                  // Проверяем близость к черному (все каналы < 30)
+                  const isNearBlack = r < 30 && g < 30 && b < 30;
+                  // Возвращаем оценку "чистоты" (0 - чистый цвет, 1 - белый/черный)
+                  return isNearWhite || isNearBlack ? 1 : 0;
                 };
 
-                // Функция для определения сильно красного цвета (действительно доминантного)
-                const isStronglyReddish = (rgb: number[]) => {
+                // Функция для определения насыщенности цвета
+                const getSaturation = (rgb: number[]) => {
                   const [r, g, b] = rgb;
-                  // Красный ОЧЕНЬ сильно доминирует над другими каналами
-                  return r > g * 1.7 && r > b * 1.7 && r > 100;
-                };
-
-                // Улучшенная функция для определения цветов по частям изображения
-                const getSampledColors = (palette: number[][]) => {
-                  // Проверка на достаточное количество цветов
-                  if (!palette || palette.length < 3) {
-                    // Базовая темная палитра
-                    return {
-                      topLeft: [23, 23, 35], // Темно-синий
-                      topRight: [30, 35, 55], // Синий
-                      bottomLeft: [15, 20, 45], // Глубокий синий
-                      bottomRight: [25, 30, 50], // Темно-синий
-                    };
-                  }
-
-                  // Сортируем палитру по насыщенности
-                  const sortedByVibrance = [...palette].sort((a, b) => {
-                    const satA = Math.max(...a) - Math.min(...a);
-                    const satB = Math.max(...b) - Math.min(...b);
-                    return satB - satA; // От более насыщенных к менее
-                  });
-
-                  // Сортируем по яркости (темные в начале)
-                  const sortedByLuminance = [...palette].sort((a, b) => {
-                    const lumA = a[0] * 0.299 + a[1] * 0.587 + a[2] * 0.114;
-                    const lumB = b[0] * 0.299 + b[1] * 0.587 + b[2] * 0.114;
-                    return lumA - lumB;
-                  });
-
-                  // Отделяем красные от не-красных цветов
-                  const nonReddishColors = palette.filter(
-                    (color) => !isReddish(color)
-                  );
-                  const strongReddishColors = palette.filter((color) =>
-                    isStronglyReddish(color)
-                  );
-
-                  // Сортируем не-красные цвета по насыщенности
-                  const sortedNonReddish = [...nonReddishColors].sort(
-                    (a, b) => {
-                      const satA = Math.max(...a) - Math.min(...a);
-                      const satB = Math.max(...b) - Math.min(...b);
-                      return satB - satA; // От более насыщенных к менее
-                    }
-                  );
-
-                  // Отдельно выделяем синие оттенки (для правого нижнего угла тоже)
-                  const blueHues = palette.filter(
-                    (color) => color[2] > color[0] && color[2] > color[1]
-                  );
-
-                  // Сортируем синие по насыщенности
-                  const sortedBlueHues = [...blueHues].sort((a, b) => {
-                    const satA = a[2] - Math.min(a[0], a[1]);
-                    const satB = b[2] - Math.min(b[0], b[1]);
-                    return satB - satA;
-                  });
-
-                  // Фильтруем не-красные темные цвета для верхнего левого угла
-                  const nonReddishDarkColors = sortedByLuminance
-                    .slice(
-                      0,
-                      Math.max(3, Math.floor(sortedByLuminance.length / 3))
-                    )
-                    .filter((color) => !isReddish(color));
-
-                  // Берем темный цвет для верхнего левого, избегая красных оттенков
-                  const topLeft =
-                    nonReddishDarkColors.length > 0
-                      ? nonReddishDarkColors[0]
-                      : [40, 40, 40]; // Темно-серый по умолчанию вместо синего
-
-                  // Для верхнего правого угла избегаем красных оттенков полностью
-                  const topRightBase =
-                    nonReddishDarkColors.length > 1
-                      ? nonReddishDarkColors[1] // Второй не-красный темный цвет
-                      : [50, 50, 50]; // Серый по умолчанию вместо синего
-
-                  // Смешиваем с верхним левым для лучшего перехода
-                  const topRight = [
-                    Math.round((topLeft[0] + topRightBase[0]) / 2),
-                    Math.round((topLeft[1] + topRightBase[1]) / 2),
-                    Math.round((topLeft[2] + topRightBase[2]) / 2.2),
-                  ];
-
-                  // Для нижнего левого используем насыщенный оттенок из палитры
-                  const bottomLeft =
-                    blueHues.length > 0
-                      ? sortedBlueHues[0]
-                      : [
-                          Math.round(topLeft[0] * 0.8),
-                          Math.round(topLeft[1] * 0.8),
-                          Math.round(topLeft[2] * 0.8),
-                        ]; // Темнее верхнего левого вместо синего
-
-                  // Для нижнего правого предпочитаем не-красные насыщенные цвета или синие
-                  let bottomRight;
-
-                  // Проверяем, есть ли в палитре очень сильные красные (явно доминирующие)
-                  // Они должны составлять значительную часть палитры
-                  const isRedDominant =
-                    strongReddishColors.length >=
-                    Math.ceil(palette.length * 0.4);
-
-                  if (isRedDominant) {
-                    // Если красные явно доминируют, используем самый насыщенный красный
-                    bottomRight = strongReddishColors[0];
-                  } else if (sortedNonReddish.length > 0) {
-                    // Иначе берем самый насыщенный не-красный
-                    bottomRight = sortedNonReddish[0];
-                  } else if (blueHues.length > 0) {
-                    // Если нет насыщенных не-красных, берем синий
-                    bottomRight = sortedBlueHues[0];
-                  } else {
-                    // Крайний случай - стандартный темно-синий
-                    bottomRight = [35, 35, 50];
-                  }
-
-                  // Применяем коррекции ко всем цветам
-                  return {
-                    topLeft: avoidPaleColors(topLeft),
-                    topRight: avoidPaleColors(topRight),
-                    bottomLeft: avoidPaleColors(bottomLeft),
-                    bottomRight: isBrightYellow(bottomRight)
-                      ? [120, 77, 13]
-                      : avoidPaleColors(bottomRight),
-                  };
+                  const max = Math.max(r, g, b);
+                  const min = Math.min(r, g, b);
+                  // Если яркость 0, то насыщенность тоже 0
+                  if (max === 0) return 0;
+                  return (max - min) / max;
                 };
 
                 // Функция для гармонизации цветов (сделать их более согласованными)
@@ -999,14 +1134,14 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                 const sortedPalette = [...palette]
                   .filter((color) => {
                     // Исключаем слишком темные цвета (яркость < 30)
-                    const luminance = getLuminance(color);
-                    return luminance > 30 && luminance < 240;
+                    const localLuminance = getLuminance(color); // Use outer getLuminance
+                    return localLuminance > 30 && localLuminance < 240;
                   })
                   .map((color) => ({
                     color,
                     saturation: getSaturation(color),
                     purity: getColorPurity(color),
-                    luminance: getLuminance(color),
+                    luminance: getLuminance(color), // Use outer getLuminance
                   }))
                   .sort((a, b) => {
                     // Баланс между насыщенностью и яркостью
@@ -1052,10 +1187,9 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                 // Запасной вариант, если палитра не получена
                 const dominantColor = colorThief.getColor(img);
                 if (dominantColor && dominantColor.length === 3) {
-                  // Функция для смягчения слишком ярких цветов
-                  const softenColor = (rgb: number[]) => {
+                  // Функция для смягчения слишком ярких цветов (use outer helper)
+                  const softenColorLocal = (rgb: number[]) => {
                     const [r, g, b] = rgb;
-                    // Если цвет близок к белому, смягчаем его
                     if (r > 200 && g > 200 && b > 200) {
                       return [
                         Math.max(120, r - 60),
@@ -1068,35 +1202,29 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
 
                   // Смягчаем доминирующий цвет
                   const softDominant = shiftYellowToOrange(
-                    softenColor(dominantColor)
+                    softenColorLocal(dominantColor)
                   );
 
-                  // Проверяем, является ли доминирующий цвет серым
-                  const isGrayish = (rgb: number[]) => {
+                  // Проверяем, является ли доминирующий цвет серым (use outer helper)
+                  const isGrayishLocal = (rgb: number[]) => {
                     const [r, g, b] = rgb;
-                    // Проверяем разницу между RGB каналами
                     const maxDiff = Math.max(
                       Math.abs(r - g),
                       Math.abs(r - b),
                       Math.abs(g - b)
                     );
-                    // Если разница между каналами менее 20, считаем цвет серым
                     return maxDiff < 20;
                   };
 
-                  // Проверяем, является ли доминирующий цвет серым
-                  const isGrayDominant = isGrayish(softDominant);
+                  const isGrayDominant = isGrayishLocal(softDominant);
 
                   let newColors;
 
                   if (isGrayDominant) {
                     // Для серых постеров создаем искусственную палитру
                     const [r, g, b] = softDominant;
-
-                    // Создаем искусственную палитру из доминантного цвета
                     const grayPalette = [
                       softDominant,
-                      // Создаем несколько вариаций
                       [
                         Math.max(0, r - 30),
                         Math.max(0, g - 30),
@@ -1113,66 +1241,55 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                         Math.min(255, b + 25),
                       ],
                     ];
-
-                    // Используем общую функцию для получения цветов
-                    const sampledColors = getSampledColors(grayPalette);
-
+                    const sampledColors = getSampledColors(grayPalette); // Use outer helper
                     newColors = {
                       topLeft: `rgba(${sampledColors.topLeft[0]}, ${sampledColors.topLeft[1]}, ${sampledColors.topLeft[2]}, 0.32)`,
                       topRight: `rgba(${sampledColors.topRight[0]}, ${sampledColors.topRight[1]}, ${sampledColors.topRight[2]}, 0.90)`,
                       bottomLeft: `rgba(${sampledColors.bottomLeft[0]}, ${sampledColors.bottomLeft[1]}, ${sampledColors.bottomLeft[2]}, 0.90)`,
-                      bottomRight: isBrightYellow(sampledColors.bottomRight)
-                        ? `rgb(120 77 13 / 95%)` // Используем указанный цвет с прозрачностью 95%
+                      bottomRight: isBrightYellow(sampledColors.bottomRight) // Use outer helper
+                        ? `rgb(120 77 13 / 95%)`
                         : `rgba(${sampledColors.bottomRight[0]}, ${sampledColors.bottomRight[1]}, ${sampledColors.bottomRight[2]}, 0.95)`,
                     };
                   } else {
                     // Для не-серых изображений создаем разнообразную палитру
                     const [r, g, b] = softDominant;
-
-                    // Создаем разнообразную палитру на основе доминантного цвета
                     const colorPalette = [
                       softDominant,
-                      // Темный вариант
                       [
                         Math.max(0, r - 40),
                         Math.max(0, g - 40),
                         Math.max(0, b - 40),
                       ],
-                      // Светлый вариант
                       [
                         Math.min(255, r + 30),
                         Math.min(255, g + 30),
                         Math.min(255, b + 30),
                       ],
-                      // Акцентный вариант - смещаем в сторону наиболее выраженного канала
                       r >= g && r >= b
                         ? [
                             Math.min(255, r + 20),
                             Math.max(0, g - 10),
                             Math.max(0, b - 10),
-                          ] // Красный акцент
+                          ]
                         : g >= r && g >= b
                         ? [
                             Math.max(0, r - 10),
                             Math.min(255, g + 20),
                             Math.max(0, b - 10),
-                          ] // Зеленый акцент
+                          ]
                         : [
                             Math.max(0, r - 10),
                             Math.max(0, g - 10),
                             Math.min(255, b + 20),
-                          ], // Синий акцент
+                          ],
                     ];
-
-                    // Используем общую функцию для получения цветов
-                    const sampledColors = getSampledColors(colorPalette);
-
+                    const sampledColors = getSampledColors(colorPalette); // Use outer helper
                     newColors = {
                       topLeft: `rgba(${sampledColors.topLeft[0]}, ${sampledColors.topLeft[1]}, ${sampledColors.topLeft[2]}, 0.32)`,
                       topRight: `rgba(${sampledColors.topRight[0]}, ${sampledColors.topRight[1]}, ${sampledColors.topRight[2]}, 0.90)`,
                       bottomLeft: `rgba(${sampledColors.bottomLeft[0]}, ${sampledColors.bottomLeft[1]}, ${sampledColors.bottomLeft[2]}, 0.90)`,
-                      bottomRight: isBrightYellow(sampledColors.bottomRight)
-                        ? `rgb(120 77 13 / 95%)` // Используем указанный цвет с прозрачностью 95%
+                      bottomRight: isBrightYellow(sampledColors.bottomRight) // Use outer helper
+                        ? `rgb(120 77 13 / 95%)`
                         : `rgba(${sampledColors.bottomRight[0]}, ${sampledColors.bottomRight[1]}, ${sampledColors.bottomRight[2]}, 0.95)`,
                     };
                   }
@@ -1199,7 +1316,7 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
     }, 500); // Увеличил задержку до 500мс для лучшего визуального эффекта
 
     return () => clearTimeout(timeout);
-  }, [movie.poster_path, setMovieColors]);
+  }, [movie.poster_path, setMovieColors]); // Removed startColorAnimation dependency
 
   // Удаляем эффект, который добавляет блокирующие стили
   useEffect(() => {
@@ -1762,11 +1879,26 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
   const [loadingCollection, setLoadingCollection] = useState(false);
   const [prevCollectionMoviesCount, setPrevCollectionMoviesCount] = useState(0);
   const [collectionInfo, setCollectionInfo] = useState<any>(null);
+  const [showCollectionNotification, setShowCollectionNotification] =
+    useState(false); // Состояние для уведомления о коллекции
+  const collectionNotificationTimerRef = useRef<NodeJS.Timeout | null>(null); // Ref для таймера
 
   // Добавляем эффект для загрузки коллекции
   useEffect(() => {
     async function fetchCollection() {
-      if (!(movie as any).belongs_to_collection?.id) return;
+      // Очищаем предыдущий таймер, если он есть
+      if (collectionNotificationTimerRef.current) {
+        clearTimeout(collectionNotificationTimerRef.current);
+        collectionNotificationTimerRef.current = null;
+        setShowCollectionNotification(false); // Скрываем уведомление при смене фильма
+      }
+
+      if (!(movie as any).belongs_to_collection?.id) {
+        setShowCollectionNotification(false); // Убедимся, что уведомление скрыто, если коллекции нет
+        setCollectionMovies([]); // Очищаем коллекцию
+        setCollectionInfo(null); // Очищаем инфо о коллекции
+        return;
+      }
 
       try {
         setLoadingCollection(true);
@@ -1778,7 +1910,7 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
         // Сортируем фильмы по дате релиза и исключаем текущий фильм
         const sortedMovies = data.parts
           ? [...data.parts]
-              .filter((collectionMovie) => collectionMovie.id !== movie.id) // Исключаем текущий фильм
+              // Убираем фильтрацию текущего фильма здесь, сделаем это в компоненте уведомления
               .sort((a, b) => {
                 if (!a.release_date) return 1;
                 if (!b.release_date) return -1;
@@ -1797,18 +1929,33 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
           poster_path: data.poster_path,
         });
 
-        if (sortedMovies.length > 0) {
+        if (sortedMovies.length > 1) {
+          // Показываем уведомление только если в коллекции больше одного фильма
           setPrevCollectionMoviesCount(sortedMovies.length);
+          // Показываем уведомление с задержкой в 3 секунды
+          collectionNotificationTimerRef.current = setTimeout(() => {
+            setShowCollectionNotification(true);
+          }, 3000); // 3 секунды задержки
+        } else {
+          setShowCollectionNotification(false); // Скрываем, если фильмов мало
         }
       } catch (error) {
         console.error("Ошибка при загрузке коллекции:", error);
+        setShowCollectionNotification(false); // Скрываем в случае ошибки
       } finally {
         setLoadingCollection(false);
       }
     }
 
     fetchCollection();
-  }, [movie]);
+
+    // Очистка таймера при размонтировании компонента или смене фильма
+    return () => {
+      if (collectionNotificationTimerRef.current) {
+        clearTimeout(collectionNotificationTimerRef.current);
+      }
+    };
+  }, [movie]); // Перезапускаем эффект при смене фильма
 
   // Добавляем новое состояние для хранения сертификации
   const [certification, setCertification] = useState<string>("N/A");
@@ -1897,13 +2044,6 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
 
   // Получаем настройку закругленных углов из контекста
   const { roundedCorners } = useReleaseQualityVisibility();
-
-  // Функция для определения, является ли цвет ярким желтым
-  const isBrightYellow = (rgb: number[]) => {
-    const [r, g, b] = rgb;
-    // Желтый имеет высокие значения красного и зеленого, но низкое значение синего
-    return r > 200 && g > 180 && b < 100 && r - b > 150 && g - b > 130;
-  };
 
   // Добавляем функцию для загрузки качества фильма
   const [movieQuality, setMovieQuality] = useState<string | null>(null);
@@ -4399,6 +4539,20 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
       {isKinoboxOpen && kinoboxId && (
         <KinoboxPlayer kpId={kinoboxId} onClose={closeKinoboxPlayer} />
       )}
+
+      {/* === РЕНДЕРИНГ УВЕДОМЛЕНИЯ О КОЛЛЕКЦИИ === */}
+      <AnimatePresence>
+        {showCollectionNotification &&
+          collectionMovies.length > 1 &&
+          collectionInfo && (
+            <CollectionNotification
+              movies={collectionMovies}
+              collectionName={collectionInfo.name}
+              currentMovieId={movie.id} // Передаем ID текущего фильма
+              onClose={() => setShowCollectionNotification(false)}
+            />
+          )}
+      </AnimatePresence>
     </>
   );
 }
