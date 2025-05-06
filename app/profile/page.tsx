@@ -168,7 +168,9 @@ export default function ProfilePage() {
     setYellowHover(safeGetItem(SETTINGS_KEYS.YELLOW_HOVER) === "true");
     setDynamicBackdrop(safeGetItem(SETTINGS_KEYS.DYNAMIC_BACKDROP) === "true");
     setDisableColorOverlay(
-      safeGetItem(SETTINGS_KEYS.DISABLE_COLOR_OVERLAY) === "true"
+      safeGetItem(SETTINGS_KEYS.DISABLE_COLOR_OVERLAY) === null
+        ? true
+        : safeGetItem(SETTINGS_KEYS.DISABLE_COLOR_OVERLAY) === "true"
     );
     setShowActorRecommendations(
       safeGetItem(SETTINGS_KEYS.SHOW_ACTOR_RECOMMENDATIONS) === null
@@ -257,6 +259,106 @@ export default function ProfilePage() {
     mounted,
   ]);
 
+  // НОВЫЙ useEffect для прослушивания внешних изменений настроек
+  useEffect(() => {
+    const handleExternalSettingsChange = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      if (customEvent.detail) {
+        const {
+          showMovieRating: newShowMovieRating,
+          enableSoundEffects: newEnableSoundEffects,
+          roundedCorners: newRoundedCorners,
+          showTitles: newShowTitles,
+          yellowHover: newYellowHover,
+          dynamicBackdrop: newDynamicBackdrop,
+          disableColorOverlay: newDisableColorOverlay,
+          showActorRecommendations: newShowActorRec,
+          showCollectionRecommendations: newShowCollectionRec,
+        } = customEvent.detail;
+
+        // Обновляем состояния, только если они действительно изменились
+        // и если новое значение было передано (typeof === 'boolean')
+        if (
+          typeof newShowMovieRating === "boolean" &&
+          showMovieRating !== newShowMovieRating
+        ) {
+          setShowMovieRating(newShowMovieRating);
+        }
+        if (
+          typeof newEnableSoundEffects === "boolean" &&
+          enableSoundEffects !== newEnableSoundEffects
+        ) {
+          setEnableSoundEffects(newEnableSoundEffects);
+        }
+        if (
+          typeof newRoundedCorners === "boolean" &&
+          roundedCorners !== newRoundedCorners
+        ) {
+          setRoundedCorners(newRoundedCorners);
+        }
+        if (
+          typeof newShowTitles === "boolean" &&
+          showTitles !== newShowTitles
+        ) {
+          setShowTitles(newShowTitles);
+        }
+        if (
+          typeof newYellowHover === "boolean" &&
+          yellowHover !== newYellowHover
+        ) {
+          setYellowHover(newYellowHover);
+        }
+        if (
+          typeof newDynamicBackdrop === "boolean" &&
+          dynamicBackdrop !== newDynamicBackdrop
+        ) {
+          setDynamicBackdrop(newDynamicBackdrop);
+        }
+        if (
+          typeof newDisableColorOverlay === "boolean" &&
+          disableColorOverlay !== newDisableColorOverlay
+        ) {
+          setDisableColorOverlay(newDisableColorOverlay);
+        }
+        if (
+          typeof newShowActorRec === "boolean" &&
+          showActorRecommendations !== newShowActorRec
+        ) {
+          setShowActorRecommendations(newShowActorRec);
+        }
+        if (
+          typeof newShowCollectionRec === "boolean" &&
+          showCollectionRecommendations !== newShowCollectionRec
+        ) {
+          setShowCollectionRecommendations(newShowCollectionRec);
+        }
+      }
+    };
+
+    document.addEventListener("settingsChange", handleExternalSettingsChange);
+    console.log("ProfilePage: Added settingsChange event listener");
+
+    return () => {
+      document.removeEventListener(
+        "settingsChange",
+        handleExternalSettingsChange
+      );
+      console.log("ProfilePage: Removed settingsChange event listener");
+    };
+    // Зависимости нужны, чтобы функция handleExternalSettingsChange всегда имела доступ к актуальным состояниям
+    // и чтобы не было лишних добавлений/удалений слушателя без необходимости.
+  }, [
+    showMovieRating,
+    enableSoundEffects,
+    roundedCorners,
+    showTitles,
+    yellowHover,
+    dynamicBackdrop,
+    disableColorOverlay,
+    showActorRecommendations,
+    showCollectionRecommendations,
+  ]);
+
   // Функция сохранения имени (перенесена сюда)
   function saveUsername(name: string) {
     if (name.trim().length > 0) {
@@ -275,7 +377,7 @@ export default function ProfilePage() {
     setShowTitles(true);
     setYellowHover(false);
     setDynamicBackdrop(false);
-    setDisableColorOverlay(false);
+    setDisableColorOverlay(true);
     setShowActorRecommendations(false);
     setShowCollectionRecommendations(false);
     // Можно добавить звук

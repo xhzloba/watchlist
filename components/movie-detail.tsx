@@ -2606,16 +2606,18 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
 
   // Добавляем состояние для отключения цветных градиентов
   const [disableColorOverlay, setDisableColorOverlay] = useState(() => {
-    // Проверяем сохраненную настройку, по умолчанию отключено
+    // Проверяем сохраненную настройку, по умолчанию ОТКЛЮЧЕНО (true)
     if (typeof window !== "undefined") {
       try {
         const saved = localStorage.getItem("settings_disable_color_overlay");
-        return saved ? saved === "true" : false;
+        // Если в localStorage ничего нет (null), то по умолчанию true (градиенты отключены)
+        // Иначе, используем сохраненное значение.
+        return saved === null ? true : saved === "true";
       } catch (e) {
-        return false;
+        return true; // При ошибке также отключаем градиенты по умолчанию
       }
     }
-    return false;
+    return true; // Для SSR или если window не доступен, отключаем по умолчанию
   });
 
   // Слушаем события изменения настроек
@@ -2829,12 +2831,38 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
     localStorage.setItem("settings_show_collection_recommendations", "true");
     setIsCollectionRecEnabled(true);
 
+    // Получаем текущие значения ДРУГИХ настроек из localStorage, чтобы передать их все
+    // Это упрощенный вариант, в идеале лучше иметь централизованный сервис настроек
+    const currentShowMovieRating =
+      localStorage.getItem("settings_show_movie_rating") === "true";
+    const currentEnableSoundEffects =
+      localStorage.getItem("settings_enable_sound_effects") === "true";
+    const currentRoundedCorners =
+      localStorage.getItem("settings_rounded_corners") === "true";
+    const currentShowTitles =
+      localStorage.getItem("settings_show_titles") === "true";
+    const currentYellowHover =
+      localStorage.getItem("settings_yellow_hover") === "true";
+    const currentDynamicBackdrop =
+      localStorage.getItem("settings_dynamic_backdrop") === "true";
+    const currentDisableColorOverlay =
+      localStorage.getItem("settings_disable_color_overlay") === "true";
+    // const currentShowCardGlow = localStorage.getItem("uiSettings") ? JSON.parse(localStorage.getItem("uiSettings")!).showCardGlow : false; // uiSettings хранятся вместе
+
     // Диспатчим событие для обновления настроек в других местах (например, профиль)
     const event = new CustomEvent("settingsChange", {
       detail: {
         showActorRecommendations: true,
         showCollectionRecommendations: true,
-        // ... могут быть и другие настройки, которые нужно передать, если они изменяются этим действием
+        // Передаем остальные настройки, чтобы ProfilePage их получил
+        showMovieRating: currentShowMovieRating,
+        enableSoundEffects: currentEnableSoundEffects,
+        roundedCorners: currentRoundedCorners,
+        showTitles: currentShowTitles,
+        yellowHover: currentYellowHover,
+        dynamicBackdrop: currentDynamicBackdrop,
+        disableColorOverlay: currentDisableColorOverlay,
+        // showCardGlow: currentShowCardGlow, // Если нужно синхронизировать и ее
       },
     });
     document.dispatchEvent(event);
