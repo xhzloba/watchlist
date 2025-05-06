@@ -3014,6 +3014,24 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
   }, [movie]);
   // === КОНЕЦ useMemo ===
 
+  // === НОВАЯ ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ для стилей статуса ===
+  const getStatusStyles = (status: string | null): string => {
+    if (!status) return "border-gray-500 text-gray-400"; // Стиль по умолчанию, если статус null
+
+    switch (status) {
+      case "Выпущен":
+        return "border-green-600 text-green-500"; // Более темный зеленый для контраста
+      case "Пост-продакшн":
+        return "border-orange-500 text-orange-400";
+      case "В производстве":
+      case "Запланирован":
+        return "border-red-500 text-red-400";
+      default:
+        return "border-gray-500 text-gray-400"; // Для неизвестных статусов
+    }
+  };
+  // === КОНЕЦ ФУНКЦИИ ===
+
   return (
     <>
       {/* Убираем полноэкранный индикатор загрузки, чтобы он не перекрывал хедер */}
@@ -3261,18 +3279,34 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                   ` (${movie.release_date?.split("-")[0]})`}
               </h1>
               {/* === НОВОЕ: Дата релиза для десктопа === */}
-              {prioritizedReleaseInfo && (
+              {prioritizedReleaseInfo && prioritizedReleaseInfo.dateString && (
                 <p className="hidden md:block text-gray-400 mb-2 text-sm">
                   {prioritizedReleaseInfo.dateString}
-                  {prioritizedReleaseInfo.countryString &&
-                    ` (${prioritizedReleaseInfo.countryString})`}
                   {prioritizedReleaseInfo.statusString && (
-                    <span className="ml-1 border border-gray-500 px-1 rounded-sm">
+                    <span
+                      className={`ml-1 border px-1 rounded-sm ${getStatusStyles(
+                        prioritizedReleaseInfo.statusString
+                      )}`}
+                    >
                       {prioritizedReleaseInfo.statusString}
                     </span>
                   )}
                 </p>
               )}
+              {/* Случай, когда есть только статус (без даты) */}
+              {prioritizedReleaseInfo &&
+                !prioritizedReleaseInfo.dateString &&
+                prioritizedReleaseInfo.statusString && (
+                  <p className="hidden md:block text-gray-400 mb-2 text-sm">
+                    <span
+                      className={`border px-1 rounded-sm ${getStatusStyles(
+                        prioritizedReleaseInfo.statusString
+                      )}`}
+                    >
+                      {prioritizedReleaseInfo.statusString}
+                    </span>
+                  </p>
+                )}
               {/* Логотип или заголовок для мобильных */}
               <div className="block md:hidden mb-3 flex flex-col items-center">
                 {" "}
@@ -3300,18 +3334,34 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                 )}
               </div>
               {/* === НОВОЕ: Дата релиза для мобильных === */}
-              {prioritizedReleaseInfo && (
-                <p className="block md:hidden text-gray-400 mb-2 text-sm text-center">
+              {prioritizedReleaseInfo && prioritizedReleaseInfo.dateString && (
+                <p className="relatve block md:hidden text-gray-400 mb-2 text-sm text-center">
                   {prioritizedReleaseInfo.dateString}
-                  {prioritizedReleaseInfo.countryString &&
-                    ` (${prioritizedReleaseInfo.countryString})`}
                   {prioritizedReleaseInfo.statusString && (
-                    <span className="ml-1 border border-gray-500 px-1 rounded-sm">
+                    <span
+                      className={`ml-1 border px-1 rounded-sm ${getStatusStyles(
+                        prioritizedReleaseInfo.statusString
+                      )}`}
+                    >
                       {prioritizedReleaseInfo.statusString}
                     </span>
                   )}
                 </p>
               )}
+              {/* Случай, когда есть только статус (без даты) для мобильных */}
+              {prioritizedReleaseInfo &&
+                !prioritizedReleaseInfo.dateString &&
+                prioritizedReleaseInfo.statusString && (
+                  <p className="relative block md:hidden text-gray-400 mb-2 text-sm text-center">
+                    <span
+                      className={`border px-1 rounded-sm ${getStatusStyles(
+                        prioritizedReleaseInfo.statusString
+                      )}`}
+                    >
+                      {prioritizedReleaseInfo.statusString}
+                    </span>
+                  </p>
+                )}
               <p className="text-gray-400 mb-3 text-sm relative text-center md:text-left">
                 {" "}
                 {/* Центрируем на мобильных, выравниваем влево на десктопе */}
