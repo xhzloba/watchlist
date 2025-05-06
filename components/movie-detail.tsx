@@ -444,6 +444,7 @@ const CollectionNotification: React.FC<CollectionNotificationProps> = ({
 }) => {
   const router = useRouter();
   const { roundedCorners } = useReleaseQualityVisibility();
+  const sliderRef = useRef<HTMLDivElement>(null); // <-- Добавляем ref для слайдера
 
   // 1. Создаем карту с оригинальными хронологическими индексами
   const movieIndexMap = useMemo(() => {
@@ -485,6 +486,20 @@ const CollectionNotification: React.FC<CollectionNotificationProps> = ({
     playSound("choose.mp3");
     onClose();
     router.push(`/movie/${movieId}`);
+  };
+
+  // Функция прокрутки влево
+  const scrollLeft = () => {
+    if (sliderRef.current) {
+      sliderRef.current.scrollBy({ left: -150, behavior: "smooth" }); // Прокрутка на 150px
+    }
+  };
+
+  // Функция прокрутки вправо
+  const scrollRight = () => {
+    if (sliderRef.current) {
+      sliderRef.current.scrollBy({ left: 150, behavior: "smooth" }); // Прокрутка на 150px
+    }
   };
 
   return (
@@ -553,45 +568,77 @@ const CollectionNotification: React.FC<CollectionNotificationProps> = ({
           </div>
         ) : (
           // --- СЛАЙДЕР для более чем 3 фильмов ---
-          <div className="flex overflow-x-auto scrollbar-hide gap-2 pb-1">
+          <div className="relative group">
             {" "}
-            {/* Добавлен pb-1 для тени */}
-            {collectionMoviesToShow.map((movie) => (
-              // Задаем ширину и flex-none для элемента слайдера
-              <div
-                key={movie.id}
-                className="cursor-pointer group flex-none w-20" // Ширина элемента слайдера
-                onClick={() => handleMovieClick(movie.id)}
-              >
+            {/* Обертка для стрелок и слайдера */}
+            <div
+              ref={sliderRef}
+              className="flex overflow-x-auto scrollbar-hide gap-2 pb-1"
+            >
+              {" "}
+              {/* Добавлен pb-1 для тени */}
+              {collectionMoviesToShow.map((movie) => (
+                // Задаем ширину и flex-none для элемента слайдера
                 <div
-                  className={`relative aspect-[2/3] ${
-                    roundedCorners ? "rounded-md" : "rounded"
-                  } overflow-hidden border-2 border-transparent group-hover:border-white transition-colors duration-200`}
+                  key={movie.id}
+                  className="cursor-pointer group/item flex-none w-20" // Ширина элемента слайдера, group/item для ховера на постере
+                  onClick={() => handleMovieClick(movie.id)}
                 >
-                  <NextImage
-                    src={getImageUrl(movie.poster_path || "", "w300")}
-                    alt={movie.title || "Постер"}
-                    fill
-                    sizes="80px" // Размер остается прежним
-                    className="object-cover"
-                    onError={(e) => {
-                      e.currentTarget.src = "/placeholder.svg";
-                    }}
-                  />
-                  {/* Оверлей с названием и номером */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-between p-1">
-                    {/* Номер фильма вверху */}
-                    <div className="self-start bg-black/70 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full">
-                      {movieIndexMap.get(movie.id) ?? "?"}
+                  <div
+                    className={`relative aspect-[2/3] ${
+                      roundedCorners ? "rounded-md" : "rounded"
+                    } overflow-hidden border-2 border-transparent group-hover/item:border-white transition-colors duration-200`} // Используем group-hover/item
+                  >
+                    <NextImage
+                      src={getImageUrl(movie.poster_path || "", "w300")}
+                      alt={movie.title || "Постер"}
+                      fill
+                      sizes="80px" // Размер остается прежним
+                      className="object-cover"
+                      onError={(e) => {
+                        e.currentTarget.src = "/placeholder.svg";
+                      }}
+                    />
+                    {/* Оверлей с названием и номером */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-between p-1">
+                      {/* Номер фильма вверху */}
+                      <div className="self-start bg-black/70 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full">
+                        {movieIndexMap.get(movie.id) ?? "?"}
+                      </div>
+                      {/* Название фильма внизу */}
+                      <p className="text-[10px] text-white font-medium line-clamp-1">
+                        {movie.title} ({getYear(movie.release_date)})
+                      </p>
                     </div>
-                    {/* Название фильма внизу */}
-                    <p className="text-[10px] text-white font-medium line-clamp-1">
-                      {movie.title} ({getYear(movie.release_date)})
-                    </p>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+            {/* Стрелки навигации */}
+            {collectionMoviesToShow.length > 3 && (
+              <>
+                <button
+                  onClick={scrollLeft}
+                  className="absolute top-1/2 -translate-y-1/2 left-0 z-20 p-1 rounded-full 
+                           bg-black/30 hover:bg-black/60 text-white 
+                           transition-all duration-300 
+                           hidden md:group-hover:block" // Скрыто на мобильных, появляется при наведении на десктопе
+                  aria-label="Прокрутить влево"
+                >
+                  <ChevronLeft size={20} />
+                </button>
+                <button
+                  onClick={scrollRight}
+                  className="absolute top-1/2 -translate-y-1/2 right-0 z-20 p-1 rounded-full 
+                           bg-black/30 hover:bg-black/60 text-white 
+                           transition-all duration-300 
+                           hidden md:group-hover:block" // Скрыто на мобильных, появляется при наведении на десктопе
+                  aria-label="Прокрутить вправо"
+                >
+                  <ChevronRight size={20} />
+                </button>
+              </>
+            )}
           </div>
         )}
       </div>
