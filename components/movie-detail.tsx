@@ -2738,6 +2738,9 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
   const [actorNotificationTriggered, setActorNotificationTriggered] =
     useState(false);
 
+  // --- НОВОЕ: Состояние для отслеживания включена ли настройка ---
+  const [isActorRecEnabled, setIsActorRecEnabled] = useState(true); // По умолчанию включено
+
   const topActors = useMemo(() => {
     if (Array.isArray(cast)) {
       // Берем первых 8 актеров
@@ -2752,28 +2755,67 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
     return topActors.slice(0, 3).map((actor) => actor.id);
   }, [topActors]); // Зависит от topActors
 
-  // useEffect для слушателя прокрутки
+  // --- НОВОЕ: useEffect для чтения начального состояния из localStorage ---
   useEffect(() => {
-    const handleScroll = () => {
-      // Показываем только если прокрутка > 100px И уведомление еще НЕ БЫЛО показано ни разу
-      if (window.scrollY > 100 && !actorNotificationTriggered) {
-        setShowActorNotification(true);
-        setActorNotificationTriggered(true); // Отмечаем, что условие выполнилось
-        // Больше не удаляем слушатель здесь, он будет удален при размонтировании
+    if (typeof window !== "undefined") {
+      try {
+        const savedSetting = localStorage.getItem(
+          "settings_show_actor_recommendations"
+        );
+        // Если в localStorage ничего нет (null), считаем настройку включенной
+        setIsActorRecEnabled(
+          savedSetting === null ? true : savedSetting === "true"
+        );
+      } catch (e) {
+        console.error("Ошибка чтения настройки ActorRec:", e);
+        setIsActorRecEnabled(true); // Безопасное значение по умолчанию
+      }
+    }
+  }, []); // Запускается один раз при монтировании
+
+  // --- НОВОЕ: useEffect для отслеживания изменений настройки через события ---
+  useEffect(() => {
+    const handleSettingsChange = (event: Event) => {
+      // Убедимся, что это CustomEvent и есть detail
+      if (event instanceof CustomEvent && event.detail) {
+        // Проверяем наличие именно нашего ключа
+        if (typeof event.detail.showActorRecommendations === "boolean") {
+          setIsActorRecEnabled(event.detail.showActorRecommendations);
+        }
       }
     };
 
-    // Добавляем слушатель только если уведомление еще не было триггернуто
-    if (!actorNotificationTriggered) {
+    document.addEventListener("settingsChange", handleSettingsChange);
+    return () => {
+      document.removeEventListener("settingsChange", handleSettingsChange);
+    };
+  }, []); // Пустые зависимости, чтобы слушатель добавился один раз
+
+  // useEffect для слушателя прокрутки
+  useEffect(() => {
+    const handleScroll = () => {
+      // Условие теперь включает проверку isActorRecEnabled
+      if (
+        window.scrollY > 100 &&
+        isActorRecEnabled &&
+        !actorNotificationTriggered
+      ) {
+        setShowActorNotification(true);
+        setActorNotificationTriggered(true);
+      }
+    };
+
+    // Добавляем слушатель только если настройка включена И уведомление еще не было триггернуто
+    if (isActorRecEnabled && !actorNotificationTriggered) {
       window.addEventListener("scroll", handleScroll, { passive: true });
     }
 
-    // Очистка слушателя при размонтировании компонента ИЛИ когда уведомление было показано
+    // Очистка слушателя
     return () => {
       window.removeEventListener("scroll", handleScroll);
     };
-    // Зависимость теперь от actorNotificationTriggered, чтобы удалить слушатель, когда оно станет true
-  }, [actorNotificationTriggered]);
+    // Обновляем зависимости
+  }, [actorNotificationTriggered, isActorRecEnabled]);
 
   return (
     <>
@@ -4672,14 +4714,15 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
 
       {/* === РЕНДЕРИНГ УВЕДОМЛЕНИЯ ОБ АКТЕРАХ === */}
       <AnimatePresence>
-        {showActorNotification &&
+        {isActorRecEnabled &&
+          showActorNotification &&
           topActors.length > 0 &&
           typeof movie.id === "number" && (
             <ActorNotification
-              actors={topActors} // Передаем всех 8
+              actors={topActors}
               onClose={() => setShowActorNotification(false)}
               currentMovieId={movie.id}
-              topActorIds={top3ActorIds} // <-- Передаем ID топ-3
+              topActorIds={top3ActorIds} // Убедимся, что top3ActorIds все еще передается
             />
           )}
       </AnimatePresence>

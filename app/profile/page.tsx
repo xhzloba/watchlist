@@ -34,6 +34,7 @@ const SETTINGS_KEYS = {
   YELLOW_HOVER: "settings_yellow_hover",
   DYNAMIC_BACKDROP: "settings_dynamic_backdrop",
   DISABLE_COLOR_OVERLAY: "settings_disable_color_overlay",
+  SHOW_ACTOR_RECOMMENDATIONS: "settings_show_actor_recommendations",
 };
 
 // Определяем правильные ключи watchlist здесь для ясности
@@ -139,6 +140,8 @@ export default function ProfilePage() {
   const [yellowHover, setYellowHover] = useState(false);
   const [dynamicBackdrop, setDynamicBackdrop] = useState(false);
   const [disableColorOverlay, setDisableColorOverlay] = useState(false);
+  const [showActorRecommendations, setShowActorRecommendations] =
+    useState(true);
 
   // Вкладки
   // Инициализируем по умолчанию, загрузка из localStorage будет в useEffect
@@ -163,6 +166,11 @@ export default function ProfilePage() {
     setDynamicBackdrop(safeGetItem(SETTINGS_KEYS.DYNAMIC_BACKDROP) === "true");
     setDisableColorOverlay(
       safeGetItem(SETTINGS_KEYS.DISABLE_COLOR_OVERLAY) === "true"
+    );
+    setShowActorRecommendations(
+      safeGetItem(SETTINGS_KEYS.SHOW_ACTOR_RECOMMENDATIONS) === null
+        ? true
+        : safeGetItem(SETTINGS_KEYS.SHOW_ACTOR_RECOMMENDATIONS) === "true"
     );
     // Загружаем активную вкладку
     const savedTab = safeGetItem("profile_active_tab");
@@ -202,6 +210,10 @@ export default function ProfilePage() {
         SETTINGS_KEYS.DISABLE_COLOR_OVERLAY,
         disableColorOverlay.toString()
       );
+      safeSetItem(
+        SETTINGS_KEYS.SHOW_ACTOR_RECOMMENDATIONS,
+        showActorRecommendations.toString()
+      );
 
       // Оповещаем другие компоненты об изменении настроек (если нужно)
       // Можно использовать CustomEvent, как было в Header, или контекст настроек
@@ -214,6 +226,7 @@ export default function ProfilePage() {
           yellowHover,
           dynamicBackdrop,
           disableColorOverlay,
+          showActorRecommendations,
         },
       });
       document.dispatchEvent(event);
@@ -226,6 +239,7 @@ export default function ProfilePage() {
     yellowHover,
     dynamicBackdrop,
     disableColorOverlay,
+    showActorRecommendations,
     mounted,
   ]);
 
@@ -248,6 +262,7 @@ export default function ProfilePage() {
     setYellowHover(false);
     setDynamicBackdrop(false);
     setDisableColorOverlay(false);
+    setShowActorRecommendations(true);
     // Можно добавить звук
     playSound("reset.mp3");
     // localStorage обновится через useEffect
@@ -597,10 +612,7 @@ export default function ProfilePage() {
         );
       case "interface":
         return (
-          <div>
-            <h3 className="text-white font-bold text-xl mb-6">
-              Настройки интерфейса
-            </h3>
+          <div className="space-y-6">
             <SettingToggle
               id="show-titles"
               label="Названия фильмов под постерами"
@@ -637,13 +649,19 @@ export default function ProfilePage() {
               onChange={setDynamicBackdrop}
             />
             <SettingToggle
-              id="disable-color-overlay"
-              label="Отключить цветные градиенты"
-              description="Отключить цветные градиенты на страницах фильмов для улучшения производительности"
+              id="disableColorOverlay"
+              label="Отключить цветные градиенты фона"
+              description="Убирает динамические цветные градиенты на фоне страниц с деталями фильма, используя стандартный темный фон."
               checked={disableColorOverlay}
               onChange={setDisableColorOverlay}
             />
-            {/* Добавляем переключатель для свечения */}
+            <SettingToggle
+              id="showActorRecommendations"
+              label="Показывать рекомендации по актерам"
+              description="Отображает всплывающее уведомление с фильмами актеров на странице деталей фильма при прокрутке."
+              checked={showActorRecommendations}
+              onChange={setShowActorRecommendations}
+            />
             <SettingToggle
               id="card-glow"
               label="Эффект свечения карточек"
@@ -715,6 +733,8 @@ export default function ProfilePage() {
         setDynamicBackdrop={setDynamicBackdrop}
         disableColorOverlay={disableColorOverlay}
         setDisableColorOverlay={setDisableColorOverlay}
+        showActorRecommendations={showActorRecommendations}
+        setShowActorRecommendations={setShowActorRecommendations}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         importExportMessage={importExportMessage}
@@ -793,6 +813,8 @@ function ProfilePageContent(props: any) {
     setDynamicBackdrop,
     disableColorOverlay,
     setDisableColorOverlay,
+    showActorRecommendations,
+    setShowActorRecommendations,
     activeTab,
     setActiveTab,
     importExportMessage,
