@@ -29,6 +29,7 @@ export interface Movie {
   character?: string;
   status?: string;
   job?: string;
+  release_date_origin_country_code?: string;
 }
 
 export interface Cast {
@@ -237,7 +238,7 @@ export async function getMovieDetail(id: string): Promise<any> {
       `${API_BASE_URL}/movie/${id}?` +
         `api_key=${API_KEY}&` +
         `language=ru-RU&` +
-        `append_to_response=credits,videos,images&` +
+        `append_to_response=credits,videos,images,release_dates&` +
         `include_image_language=ru,en,null`,
       {
         next: { revalidate: 0 },
@@ -275,6 +276,75 @@ export async function getMovieDetail(id: string): Promise<any> {
     }
 
     const data = await response.json();
+
+    // Логика выбора даты релиза
+    data.release_date_origin_country_code = null;
+
+    if (data.release_dates && data.release_dates.results) {
+      const preferredTypesOrder = [3, 4, 5, 2, 1, 6]; // Theatrical, Digital, Physical, Theatrical (limited), Premiere, TV
+      let finalReleaseDate: string | null = null;
+      let finalReleaseCountryCode: string | null = null;
+
+      const countriesToTry = ["RU", "US"];
+      for (const countryCode of countriesToTry) {
+        const countryReleases = data.release_dates.results.find(
+          (r: any) => r.iso_3166_1 === countryCode
+        );
+        if (countryReleases && countryReleases.release_dates) {
+          const sortedDates = [...countryReleases.release_dates]
+            .filter(
+              (rd: any) => rd.release_date && rd.release_date.length >= 10
+            )
+            .sort((a: any, b: any) => {
+              const typeAIndex = preferredTypesOrder.indexOf(a.type);
+              const typeBIndex = preferredTypesOrder.indexOf(b.type);
+              if (typeAIndex !== typeBIndex) {
+                return (
+                  (typeAIndex === -1 ? Infinity : typeAIndex) -
+                  (typeBIndex === -1 ? Infinity : typeBIndex)
+                );
+              }
+              return (
+                new Date(a.release_date).getTime() -
+                new Date(b.release_date).getTime()
+              );
+            });
+          if (sortedDates.length > 0) {
+            finalReleaseDate = sortedDates[0].release_date.substring(0, 10);
+            finalReleaseCountryCode = countryCode;
+            break;
+          }
+        }
+      }
+
+      if (finalReleaseDate) {
+        if (data.release_date !== finalReleaseDate) {
+          console.log(
+            `[TMDB GetDetail] Обновлена дата релиза для фильма ID ${
+              data.id
+            }: с ${
+              data.release_date || "отсутствует"
+            } на ${finalReleaseDate} (приоритет: ${finalReleaseCountryCode})`
+          );
+          data.release_date = finalReleaseDate;
+          data.release_date_origin_country_code = finalReleaseCountryCode;
+        } else {
+          data.release_date_origin_country_code = finalReleaseCountryCode;
+        }
+      } else if (data.release_date && data.release_date.length > 10) {
+        data.release_date = data.release_date.substring(0, 10);
+      } else if (!data.release_date) {
+        console.log(
+          `[TMDB GetDetail] Дата релиза не найдена для фильма ID ${data.id}`
+        );
+        data.release_date = "";
+      }
+    } else if (data.release_date && data.release_date.length > 10) {
+      data.release_date = data.release_date.substring(0, 10);
+    } else if (!data.release_date) {
+      data.release_date = "";
+    }
+
     return data;
   } catch (error) {
     console.error("Ошибка при получении данных о фильме:", error);

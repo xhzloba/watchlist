@@ -748,6 +748,17 @@ const MovieInfoSidebar: React.FC<MovieInfoSidebarProps> = ({
                     month: "long",
                     year: "numeric",
                   })}
+                  {movie.release_date_origin_country_code && (
+                    <span className="text-gray-400 ml-1">
+                      (
+                      {movie.release_date_origin_country_code === "RU"
+                        ? "Россия"
+                        : movie.release_date_origin_country_code === "US"
+                        ? "США"
+                        : movie.release_date_origin_country_code}
+                      )
+                    </span>
+                  )}
                 </span>
               </div>
             )}
