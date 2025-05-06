@@ -142,9 +142,9 @@ export default function ProfilePage() {
   const [dynamicBackdrop, setDynamicBackdrop] = useState(false);
   const [disableColorOverlay, setDisableColorOverlay] = useState(false);
   const [showActorRecommendations, setShowActorRecommendations] =
-    useState(true);
+    useState(false);
   const [showCollectionRecommendations, setShowCollectionRecommendations] =
-    useState(true);
+    useState(false);
 
   // Вкладки
   // Инициализируем по умолчанию, загрузка из localStorage будет в useEffect
@@ -172,12 +172,12 @@ export default function ProfilePage() {
     );
     setShowActorRecommendations(
       safeGetItem(SETTINGS_KEYS.SHOW_ACTOR_RECOMMENDATIONS) === null
-        ? true
+        ? false
         : safeGetItem(SETTINGS_KEYS.SHOW_ACTOR_RECOMMENDATIONS) === "true"
     );
     setShowCollectionRecommendations(
       safeGetItem(SETTINGS_KEYS.SHOW_COLLECTION_RECOMMENDATIONS) === null
-        ? true
+        ? false
         : safeGetItem(SETTINGS_KEYS.SHOW_COLLECTION_RECOMMENDATIONS) === "true"
     );
     // Загружаем активную вкладку
@@ -276,8 +276,8 @@ export default function ProfilePage() {
     setYellowHover(false);
     setDynamicBackdrop(false);
     setDisableColorOverlay(false);
-    setShowActorRecommendations(true);
-    setShowCollectionRecommendations(true);
+    setShowActorRecommendations(false);
+    setShowCollectionRecommendations(false);
     // Можно добавить звук
     playSound("reset.mp3");
     // localStorage обновится через useEffect
