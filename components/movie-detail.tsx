@@ -704,7 +704,13 @@ const MovieInfoSidebar: React.FC<MovieInfoSidebarProps> = ({
             {(movie as any).status && (
               <div>
                 <span className="block text-gray-400 mb-1">Статус</span>
-                <span className="text-white">
+                <span
+                  className={
+                    (movie as any).status === "Released"
+                      ? "text-lime-400 font-medium" // Салатовый для "Выпущен"
+                      : "text-red-500 font-medium" // Красный для остальных
+                  }
+                >
                   {(movie as any).status === "Released"
                     ? "Выпущен"
                     : (movie as any).status === "In Production"
