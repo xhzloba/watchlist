@@ -3335,7 +3335,7 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
               </div>
               {/* === НОВОЕ: Дата релиза для мобильных === */}
               {prioritizedReleaseInfo && prioritizedReleaseInfo.dateString && (
-                <p className="relatve block md:hidden text-gray-400 mb-2 text-sm text-center">
+                <p className="relative block md:hidden text-gray-400 mb-2 text-sm text-center">
                   {prioritizedReleaseInfo.dateString}
                   {prioritizedReleaseInfo.statusString && (
                     <span
