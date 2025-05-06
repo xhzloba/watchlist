@@ -2825,6 +2825,10 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
     localStorage.setItem("settings_show_collection_recommendations", "true");
     setIsCollectionRecEnabled(true);
 
+    // Включаем цветные градиенты (устанавливаем 'false' для disableColorOverlay)
+    localStorage.setItem("settings_disable_color_overlay", "false");
+    setDisableColorOverlay(false);
+
     // Получаем текущие значения ДРУГИХ настроек из localStorage, чтобы передать их все
     // Это упрощенный вариант, в идеале лучше иметь централизованный сервис настроек
     const currentShowMovieRating =
@@ -2839,8 +2843,7 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
       localStorage.getItem("settings_yellow_hover") === "true";
     const currentDynamicBackdrop =
       localStorage.getItem("settings_dynamic_backdrop") === "true";
-    const currentDisableColorOverlay =
-      localStorage.getItem("settings_disable_color_overlay") === "true";
+    // const currentDisableColorOverlay = localStorage.getItem("settings_disable_color_overlay") === "true"; // Уже установлено в false выше
     // const currentShowCardGlow = localStorage.getItem("uiSettings") ? JSON.parse(localStorage.getItem("uiSettings")!).showCardGlow : false; // uiSettings хранятся вместе
 
     // Диспатчим событие для обновления настроек в других местах (например, профиль)
@@ -2848,6 +2851,7 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
       detail: {
         showActorRecommendations: true,
         showCollectionRecommendations: true,
+        disableColorOverlay: false, // <--- Убедимся, что передаем false
         // Передаем остальные настройки, чтобы ProfilePage их получил
         showMovieRating: currentShowMovieRating,
         enableSoundEffects: currentEnableSoundEffects,
@@ -2855,7 +2859,6 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
         showTitles: currentShowTitles,
         yellowHover: currentYellowHover,
         dynamicBackdrop: currentDynamicBackdrop,
-        disableColorOverlay: currentDisableColorOverlay,
         // showCardGlow: currentShowCardGlow, // Если нужно синхронизировать и ее
       },
     });
