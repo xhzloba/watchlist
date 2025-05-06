@@ -2704,6 +2704,8 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
 
   // --- НОВОЕ: Состояние для отслеживания включена ли настройка ---
   const [isActorRecEnabled, setIsActorRecEnabled] = useState(true); // По умолчанию включено
+  // --- НОВОЕ: Состояние для отслеживания включена ли настройка для коллекций ---
+  const [isCollectionRecEnabled, setIsCollectionRecEnabled] = useState(true); // По умолчанию включено
 
   const topActors = useMemo(() => {
     if (Array.isArray(cast)) {
@@ -2734,6 +2736,21 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
         console.error("Ошибка чтения настройки ActorRec:", e);
         setIsActorRecEnabled(true); // Безопасное значение по умолчанию
       }
+
+      // --- НОВОЕ: Чтение настройки для уведомлений о коллекциях ---
+      try {
+        const savedCollectionSetting = localStorage.getItem(
+          "settings_show_collection_recommendations"
+        );
+        setIsCollectionRecEnabled(
+          savedCollectionSetting === null
+            ? true
+            : savedCollectionSetting === "true"
+        );
+      } catch (e) {
+        console.error("Ошибка чтения настройки CollectionRec:", e);
+        setIsCollectionRecEnabled(true); // Безопасное значение по умолчанию
+      }
     }
   }, []); // Запускается один раз при монтировании
 
@@ -2745,6 +2762,10 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
         // Проверяем наличие именно нашего ключа
         if (typeof event.detail.showActorRecommendations === "boolean") {
           setIsActorRecEnabled(event.detail.showActorRecommendations);
+        }
+        // --- НОВОЕ: Обработка изменения настройки для коллекций ---
+        if (typeof event.detail.showCollectionRecommendations === "boolean") {
+          setIsCollectionRecEnabled(event.detail.showCollectionRecommendations);
         }
       }
     };
@@ -4647,6 +4668,7 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
       {/* === РЕНДЕРИНГ УВЕДОМЛЕНИЯ О КОЛЛЕКЦИИ === */}
       <AnimatePresence>
         {showCollectionNotification &&
+          isCollectionRecEnabled && // <-- ДОБАВЛЕНО УСЛОВИЕ
           collectionMovies.length > 1 &&
           collectionInfo && (
             <CollectionNotification

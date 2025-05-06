@@ -35,6 +35,7 @@ const SETTINGS_KEYS = {
   DYNAMIC_BACKDROP: "settings_dynamic_backdrop",
   DISABLE_COLOR_OVERLAY: "settings_disable_color_overlay",
   SHOW_ACTOR_RECOMMENDATIONS: "settings_show_actor_recommendations",
+  SHOW_COLLECTION_RECOMMENDATIONS: "settings_show_collection_recommendations",
 };
 
 // Определяем правильные ключи watchlist здесь для ясности
@@ -142,6 +143,8 @@ export default function ProfilePage() {
   const [disableColorOverlay, setDisableColorOverlay] = useState(false);
   const [showActorRecommendations, setShowActorRecommendations] =
     useState(true);
+  const [showCollectionRecommendations, setShowCollectionRecommendations] =
+    useState(true);
 
   // Вкладки
   // Инициализируем по умолчанию, загрузка из localStorage будет в useEffect
@@ -171,6 +174,11 @@ export default function ProfilePage() {
       safeGetItem(SETTINGS_KEYS.SHOW_ACTOR_RECOMMENDATIONS) === null
         ? true
         : safeGetItem(SETTINGS_KEYS.SHOW_ACTOR_RECOMMENDATIONS) === "true"
+    );
+    setShowCollectionRecommendations(
+      safeGetItem(SETTINGS_KEYS.SHOW_COLLECTION_RECOMMENDATIONS) === null
+        ? true
+        : safeGetItem(SETTINGS_KEYS.SHOW_COLLECTION_RECOMMENDATIONS) === "true"
     );
     // Загружаем активную вкладку
     const savedTab = safeGetItem("profile_active_tab");
@@ -214,6 +222,10 @@ export default function ProfilePage() {
         SETTINGS_KEYS.SHOW_ACTOR_RECOMMENDATIONS,
         showActorRecommendations.toString()
       );
+      safeSetItem(
+        SETTINGS_KEYS.SHOW_COLLECTION_RECOMMENDATIONS,
+        showCollectionRecommendations.toString()
+      );
 
       // Оповещаем другие компоненты об изменении настроек (если нужно)
       // Можно использовать CustomEvent, как было в Header, или контекст настроек
@@ -227,6 +239,7 @@ export default function ProfilePage() {
           dynamicBackdrop,
           disableColorOverlay,
           showActorRecommendations,
+          showCollectionRecommendations,
         },
       });
       document.dispatchEvent(event);
@@ -240,6 +253,7 @@ export default function ProfilePage() {
     dynamicBackdrop,
     disableColorOverlay,
     showActorRecommendations,
+    showCollectionRecommendations,
     mounted,
   ]);
 
@@ -263,6 +277,7 @@ export default function ProfilePage() {
     setDynamicBackdrop(false);
     setDisableColorOverlay(false);
     setShowActorRecommendations(true);
+    setShowCollectionRecommendations(true);
     // Можно добавить звук
     playSound("reset.mp3");
     // localStorage обновится через useEffect
@@ -663,6 +678,13 @@ export default function ProfilePage() {
               onChange={setShowActorRecommendations}
             />
             <SettingToggle
+              id="toggle-collection-recommendations"
+              label="Уведомления о коллекциях"
+              description="Показывать всплывающие подсказки с фильмами из той же коллекции, что и текущий фильм."
+              checked={showCollectionRecommendations}
+              onChange={setShowCollectionRecommendations}
+            />
+            <SettingToggle
               id="card-glow"
               label="Эффект свечения карточек"
               description="Добавляет легкое свечение сверху карточек при наведении в разделах 'Обзор' и 'Популярное'"
@@ -735,6 +757,8 @@ export default function ProfilePage() {
         setDisableColorOverlay={setDisableColorOverlay}
         showActorRecommendations={showActorRecommendations}
         setShowActorRecommendations={setShowActorRecommendations}
+        showCollectionRecommendations={showCollectionRecommendations}
+        setShowCollectionRecommendations={setShowCollectionRecommendations}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         importExportMessage={importExportMessage}
@@ -815,6 +839,8 @@ function ProfilePageContent(props: any) {
     setDisableColorOverlay,
     showActorRecommendations,
     setShowActorRecommendations,
+    showCollectionRecommendations,
+    setShowCollectionRecommendations,
     activeTab,
     setActiveTab,
     importExportMessage,
