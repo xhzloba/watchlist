@@ -370,9 +370,10 @@ const RottenTomatoIcon = () => (
 interface KinoboxPlayerProps {
   kpId: string | number;
   onClose: () => void;
+  movieTitle: string; // Убедимся, что пропс есть
 }
 
-const KinoboxPlayer = ({ kpId, onClose }: KinoboxPlayerProps) => {
+const KinoboxPlayer = ({ kpId, onClose, movieTitle }: KinoboxPlayerProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -384,7 +385,7 @@ const KinoboxPlayer = ({ kpId, onClose }: KinoboxPlayerProps) => {
     script.onload = () => {
       if (containerRef.current) {
         (window as any).kbox(containerRef.current, {
-          search: { kinopoisk: kpId },
+          search: { kinopoisk: kpId, title: movieTitle }, // Используем kpId и movieTitle
           menu: {
             enabled: false,
           },
@@ -394,6 +395,7 @@ const KinoboxPlayer = ({ kpId, onClose }: KinoboxPlayerProps) => {
               position: 1,
             },
             alloha: {
+              // Можно оставить Alloha в списке плееров Kinobox, если он там есть по умолчанию
               enable: true,
               position: 2,
             },
@@ -411,7 +413,7 @@ const KinoboxPlayer = ({ kpId, onClose }: KinoboxPlayerProps) => {
         document.body.removeChild(script);
       } catch (e) {}
     };
-  }, [kpId]);
+  }, [kpId, movieTitle]); // Добавляем movieTitle в зависимости
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80">
@@ -2351,7 +2353,7 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
   const [loadingRatings, setLoadingRatings] = useState(false);
 
   // Добавляем состояние для хранения URL iframe из API
-  const [apiIframeUrl, setApiIframeUrl] = useState<string | null>(null);
+  // const [apiIframeUrl, setApiIframeUrl] = useState<string | null>(null); // Комментируем или удаляем
 
   // Добавляем эффект для загрузки данных о качестве
   useEffect(() => {
@@ -2360,95 +2362,81 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
 
       try {
         setLoadingQuality(true);
+        // setApiIframeUrl(null); // Больше не нужно
+        setMovieQuality(null);
+        setImdbRating(null);
+        setKpRating(null);
 
-        // Получаем год из даты релиза
+        const title = (movie as any).original_title || movie.title || "";
+        const encodedTitle = encodeURIComponent(title);
         const year = movie.release_date ? movie.release_date.split("-")[0] : "";
 
-        // Используем оригинальное название фильма или обычное название
-        // Приоритет для original_title
-        const title = (movie as any).original_title || movie.title || "";
+        let data = null;
 
-        // Кодируем название для URL, обеспечиваем правильное кодирование
-        const encodedTitle = encodeURIComponent(title);
+        // Попытка 1: Название и год
+        if (year) {
+          const urlWithNameAndYear = `https://api.alloha.tv/?token=3a4e69a3bb3a0eb3b5bf5eba7e563b&name=${encodedTitle}&year=${year}`;
+          console.log(
+            "Запрос качества/рейтингов (название + год):",
+            urlWithNameAndYear
+          );
+          const response = await fetch(urlWithNameAndYear);
+          data = await response.json();
+          console.log("Ответ API качества/рейтингов (название + год):", data);
+        }
 
-        // Используем URL только с названием и годом
-        const url = `https://api.alloha.tv/?token=3a4e69a3bb3a0eb3b5bf5eba7e563b&name=${encodedTitle}&year=${year}`;
+        // Попытка 2: Только по названию (если первая не дала данных или года не было)
+        if (!data || data.status !== "success" || !data.data) {
+          const urlWithNameOnly = `https://api.alloha.tv/?token=3a4e69a3bb3a0eb3b5bf5eba7e563b&name=${encodedTitle}`;
+          console.log(
+            "Запрос качества/рейтингов (только название):",
+            urlWithNameOnly
+          );
+          const response = await fetch(urlWithNameOnly);
+          data = await response.json(); // Перезаписываем data результатом второго запроса
+          console.log("Ответ API качества/рейтингов (только название):", data);
+        }
 
-        console.log("Запрос качества фильма:", url);
-
-        const response = await fetch(url);
-        const data = await response.json();
-
-        console.log("Ответ API качества:", data);
-
-        if (data.status === "success" && data.data) {
+        // Обработка результатов для качества и рейтингов
+        if (data?.status === "success" && data?.data) {
           if (data.data.quality) {
             console.log("Установлено качество:", data.data.quality);
             setMovieQuality(data.data.quality);
-
-            // Сохраняем рейтинги, если они есть в ответе
-            if (data.data.rating_imdb) {
-              setImdbRating(data.data.rating_imdb.toString());
-            }
-            if (data.data.rating_kp) {
-              setKpRating(data.data.rating_kp.toString());
-            }
           }
-
-          // Сохраняем URL iframe, если он есть в ответе
-          if (data.data.iframe) {
-            console.log("Получен iframe URL:", data.data.iframe);
-            setApiIframeUrl(data.data.iframe);
+          if (data.data.rating_imdb) {
+            setImdbRating(data.data.rating_imdb.toString());
           }
+          if (data.data.rating_kp) {
+            setKpRating(data.data.rating_kp.toString());
+          }
+          // НЕ УСТАНАВЛИВАЕМ APIIFRAMEURL
+          // if (data.data.iframe) {
+          //   console.log("Найден iframe URL от Alloha, но он не будет использован напрямую:", data.data.iframe);
+          //   // setApiIframeUrl(data.data.iframe); // НЕ ДЕЛАЕМ ЭТОГО
+          // }
         } else {
-          console.log("Качество не найдено в ответе API");
-
-          // Дополнительная попытка с использованием разных параметров
-          // Попробуем искать только по названию без года
-          const fallbackUrl = `https://api.alloha.tv/?token=3a4e69a3bb3a0eb3b5bf5eba7e563b&name=${encodedTitle}`;
-          console.log("Попытка запроса без года:", fallbackUrl);
-
-          const fallbackResponse = await fetch(fallbackUrl);
-          const fallbackData = await fallbackResponse.json();
-
-          console.log("Ответ запроса без года:", fallbackData);
-
-          if (fallbackData.status === "success" && fallbackData.data) {
-            if (fallbackData.data.quality) {
-              console.log(
-                "Установлено качество из запроса без года:",
-                fallbackData.data.quality
-              );
-              setMovieQuality(fallbackData.data.quality);
-
-              // Сохраняем рейтинги из запроса без года, если они есть
-              if (fallbackData.data.rating_imdb) {
-                setImdbRating(fallbackData.data.rating_imdb.toString());
-              }
-              if (fallbackData.data.rating_kp) {
-                setKpRating(fallbackData.data.rating_kp.toString());
-              }
-            }
-
-            // Сохраняем URL iframe из второго запроса, если он есть
-            if (fallbackData.data.iframe) {
-              console.log(
-                "Получен iframe URL из запроса без года:",
-                fallbackData.data.iframe
-              );
-              setApiIframeUrl(fallbackData.data.iframe);
-            }
-          }
+          console.log("Качество/рейтинги не найдены в ответе API Alloha.");
         }
       } catch (error) {
-        console.error("Ошибка при загрузке качества фильма:", error);
+        console.error(
+          "Ошибка при загрузке качества/рейтингов от Alloha:",
+          error
+        );
+        setMovieQuality(null);
+        setImdbRating(null);
+        setKpRating(null);
       } finally {
         setLoadingQuality(false);
       }
     }
 
     fetchMovieQuality();
-  }, [movie.id, movie.title, movie.release_date]);
+  }, [
+    movie.id,
+    movie.title,
+    (movie as any).original_title,
+    movie.release_date,
+  ]);
 
   // Добавляем ref для поповера
   const translationPopoverRef = useRef<HTMLDivElement>(null);
@@ -2489,54 +2477,27 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
   // Функция открытия Kinobox плеера
   const openKinoboxPlayer = () => {
     playSound("click.mp3");
-
-    // Проверяем есть ли kinoboxId
-    if (kinoboxId) {
-      // Если есть - открываем обычный плеер kinobox
+    if (kinoboxId && movie.title) {
+      // Проверяем наличие kinoboxId и movie.title
       setIsKinoboxOpen(true);
+      // Добавляем фильм в историю просмотров при открытии плеера
+      addToHistory({
+        id: movie.id,
+        title: movie.title || "Фильм без названия",
+        poster_path: movie.poster_path || "",
+        backdrop_path: movie.backdrop_path || "",
+        release_date: movie.release_date || "",
+        vote_average: movie.vote_average || 0,
+        overview: movie.overview || "",
+      });
     } else {
-      // Проверяем, есть ли ответ API качества с iframe
-      const apiResponse = getApiQualityResponse();
-      if (apiResponse?.data?.iframe) {
-        // Если есть iframe в ответе API качества - используем его
-        setIframeUrl(apiResponse.data.iframe);
-        setIsIframeOpen(true);
-      } else {
-        // Если ничего нет - показываем уведомление
-        showPosterNotification("Просмотр фильма недоступен", "info");
-        playSound("error.mp3");
-      }
+      showPosterNotification("Просмотр фильма на WatchList недоступен", "info");
+      playSound("error.mp3");
     }
   };
 
-  // Функция для получения данных из ответа API качества
-  const getApiQualityResponse = () => {
-    try {
-      // Используем сохраненный URL из API, если он есть
-      if (apiIframeUrl) {
-        return {
-          status: "success",
-          data: {
-            quality: movieQuality,
-            iframe: apiIframeUrl,
-          },
-        };
-      } else if (movieQuality) {
-        // Если URL нет, но есть качество, используем стандартный URL для качества
-        return {
-          status: "success",
-          data: {
-            quality: movieQuality,
-            iframe: `https://api.alloha.tv/iframe?token=3a4e69a3bb3a0eb3b5bf5eba7e563b&kp=${movie.id}`,
-          },
-        };
-      }
-      return null;
-    } catch (error) {
-      console.error("Ошибка при получении данных API качества:", error);
-      return null;
-    }
-  };
+  // Функция для получения данных из ответа API качества (БОЛЬШЕ НЕ ИСПОЛЬЗУЕТСЯ ДЛЯ ALLOНA IFRAME)
+  // const getApiQualityResponse = () => { ... }; // Комментируем или удаляем
 
   // Функция закрытия Kinobox плеера
   const closeKinoboxPlayer = () => {
@@ -2566,64 +2527,14 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
     return null;
   };
 
-  // Функция для открытия iframe
-  const openIframe = async () => {
-    const apiResponse = getApiQualityResponse();
-    if (apiResponse?.data?.iframe) {
-      setIframeUrl(apiResponse.data.iframe);
-      setIsIframeOpen(true);
+  // Функция для открытия iframe (БОЛЬШЕ НЕ ИСПОЛЬЗУЕТСЯ)
+  // const openIframe = async () => { ... }; // Комментируем или удаляем
 
-      // Добавляем фильм в историю просмотров
-      addToHistory({
-        id: movie.id,
-        title: movie.title || "Фильм без названия", // Используем fallback
-        poster_path: movie.poster_path || "", // Используем fallback
-        backdrop_path: movie.backdrop_path || "", // Используем fallback
-        release_date: movie.release_date || "", // Используем fallback
-        vote_average: movie.vote_average || 0, // Используем fallback
-        overview: movie.overview || "", // Используем fallback
-      });
-    } else {
-      showPosterNotification("Просмотр фильмов временно недоступен", "info");
-      playSound("error.mp3");
-    }
-  };
+  // Функция для закрытия iframe (БОЛЬШЕ НЕ ИСПОЛЬЗУЕТСЯ)
+  // const closeIframe = () => { ... }; // Комментируем или удаляем
 
-  // Функция для закрытия iframe
-  const closeIframe = () => {
-    setIsIframeOpen(false);
-    setIframeUrl("");
-  };
-
-  // Компонент IframePlayer
-  const IframePlayer = ({
-    url,
-    onClose,
-  }: {
-    url: string;
-    onClose: () => void;
-  }) => {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80">
-        <div className="relative w-full max-w-5xl h-[80vh]">
-          <button
-            className="absolute top-4 right-4 text-white bg-black bg-opacity-50 p-2 rounded-full"
-            onClick={onClose}
-          >
-            <X size={24} />
-          </button>
-          <iframe
-            src={url}
-            className="w-full h-full border-0"
-            allowFullScreen
-            allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
-            referrerPolicy="origin"
-            sandbox="allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-popups allow-popups-to-escape-sandbox allow-presentation allow-same-origin allow-scripts"
-          ></iframe>
-        </div>
-      </div>
-    );
-  };
+  // Компонент IframePlayer (БОЛЬШЕ НЕ ИСПОЛЬЗУЕТСЯ)
+  // const IframePlayer = ({...}) => { ... }; // Комментируем или удаляем
 
   const [currentBackdropIndex, setCurrentBackdropIndex] = useState(0);
   const [currentBackdropPath, setCurrentBackdropPath] = useState<string | null>(
@@ -4718,14 +4629,20 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
       </AnimatePresence>
 
       {/* Отображаем iframe плеер, если открыт */}
-      {isIframeOpen && iframeUrl && (
+      {/* {isIframeOpen && iframeUrl && (
         <IframePlayer url={iframeUrl} onClose={closeIframe} />
-      )}
+      )} */}
 
       {/* Добавляем Kinobox плеер */}
-      {isKinoboxOpen && kinoboxId && (
-        <KinoboxPlayer kpId={kinoboxId} onClose={closeKinoboxPlayer} />
-      )}
+      {isKinoboxOpen &&
+        kinoboxId &&
+        movie.title && ( // Условие для рендера KinoboxPlayer
+          <KinoboxPlayer
+            kpId={kinoboxId}
+            onClose={closeKinoboxPlayer}
+            movieTitle={movie.title}
+          />
+        )}
 
       {/* === РЕНДЕРИНГ УВЕДОМЛЕНИЯ О КОЛЛЕКЦИИ === */}
       <AnimatePresence>
