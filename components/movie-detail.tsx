@@ -2887,6 +2887,133 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
   };
   // --- КОНЕЦ НОВОЙ ЛОГИКИ ---
 
+  // === НОВОЕ: useMemo для приоритезированной даты релиза ===
+  const prioritizedReleaseInfo: {
+    dateString: string;
+    countryString: string | null;
+    statusString: string | null;
+  } | null = useMemo(() => {
+    if (!movie) return null;
+
+    let releaseInfoFromDates: {
+      date: string;
+      countryCode: string | null;
+    } | null = null;
+
+    // 1. Ищем театральный релиз в России
+    const ruRelease = ((movie as any).release_dates?.results || []).find(
+      (r: any) => r.iso_3166_1 === "RU"
+    );
+    if (ruRelease) {
+      const theatricalRu = ruRelease.release_dates.find(
+        (rd: any) => rd.type === 3
+      );
+      if (theatricalRu) {
+        releaseInfoFromDates = {
+          date: theatricalRu.release_date,
+          countryCode: "RU",
+        };
+      }
+    }
+
+    // 2. Если нет в России, ищем театральный релиз в США
+    if (!releaseInfoFromDates) {
+      const usRelease = ((movie as any).release_dates?.results || []).find(
+        (r: any) => r.iso_3166_1 === "US"
+      );
+      if (usRelease) {
+        const theatricalUs = usRelease.release_dates.find(
+          (rd: any) => rd.type === 3
+        );
+        if (theatricalUs) {
+          releaseInfoFromDates = {
+            date: theatricalUs.release_date,
+            countryCode: "US",
+          };
+        }
+      }
+    }
+
+    // 3. Если не нашли специфических релизов в release_dates, но есть основная movie.release_date
+    if (!releaseInfoFromDates && movie.release_date) {
+      // Попробуем угадать страну по production_countries, если это не РФ или США, возьмем первую
+      let guessedCountryCode: string | null = null;
+      if (
+        (movie as any).production_countries &&
+        (movie as any).production_countries.length > 0
+      ) {
+        const ruProdCountry = (movie as any).production_countries.find(
+          (pc: any) => pc.iso_3166_1 === "RU"
+        );
+        const usProdCountry = (movie as any).production_countries.find(
+          (pc: any) => pc.iso_3166_1 === "US"
+        );
+        if (ruProdCountry) guessedCountryCode = "RU";
+        else if (usProdCountry) guessedCountryCode = "US";
+        // Не берем первую попавшуюся, если это не РФ/США, чтобы избежать нерелевантной страны для даты релиза
+      }
+      releaseInfoFromDates = {
+        date: movie.release_date,
+        countryCode: guessedCountryCode,
+      };
+    }
+
+    let formattedDate = "";
+    // let countryNameFromDate: string | null = null; // Эту переменную можно удалить или оставить null
+
+    if (releaseInfoFromDates && releaseInfoFromDates.date) {
+      try {
+        const dateObj = new Date(releaseInfoFromDates.date.split("T")[0]);
+        formattedDate = dateObj.toLocaleDateString("ru-RU", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        });
+        // Логика для countryNameFromDate здесь больше не нужна для вывода,
+        // так как countryString в возвращаемом объекте будет null
+      } catch (e) {
+        console.error("Ошибка форматирования даты релиза:", e);
+        // Не возвращаем null сразу, чтобы дать шанс отобразить статус
+      }
+    }
+
+    let statusText = "";
+    if (movie.status) {
+      switch (movie.status) {
+        case "Released":
+          statusText = "Выпущен";
+          break;
+        case "Post Production":
+          statusText = "Пост-продакшн";
+          break;
+        case "In Production":
+          statusText = "В производстве";
+          break;
+        case "Planned":
+          statusText = "Запланирован";
+          break;
+        // Не добавляем default, чтобы не показывать неизвестные статусы, если нет даты
+      }
+    }
+
+    // Если нет ни даты, ни валидного статуса, то ничего не показываем
+    if (
+      !formattedDate &&
+      !["Выпущен", "Пост-продакшн", "В производстве", "Запланирован"].includes(
+        statusText
+      )
+    ) {
+      return null;
+    }
+
+    return {
+      dateString: formattedDate, // Будет пустой, если дата невалидна или отсутствует
+      countryString: null, // Всегда null, чтобы страна не отображалась
+      statusString: statusText, // Только переведенный статус
+    };
+  }, [movie]);
+  // === КОНЕЦ useMemo ===
+
   return (
     <>
       {/* Убираем полноэкранный индикатор загрузки, чтобы он не перекрывал хедер */}
@@ -3133,6 +3260,19 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                 {movie.release_date &&
                   ` (${movie.release_date?.split("-")[0]})`}
               </h1>
+              {/* === НОВОЕ: Дата релиза для десктопа === */}
+              {prioritizedReleaseInfo && (
+                <p className="hidden md:block text-gray-400 mb-2 text-sm">
+                  {prioritizedReleaseInfo.dateString}
+                  {prioritizedReleaseInfo.countryString &&
+                    ` (${prioritizedReleaseInfo.countryString})`}
+                  {prioritizedReleaseInfo.statusString && (
+                    <span className="ml-1 border border-gray-500 px-1 rounded-sm">
+                      {prioritizedReleaseInfo.statusString}
+                    </span>
+                  )}
+                </p>
+              )}
               {/* Логотип или заголовок для мобильных */}
               <div className="block md:hidden mb-3 flex flex-col items-center">
                 {" "}
@@ -3159,6 +3299,19 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                   </h1>
                 )}
               </div>
+              {/* === НОВОЕ: Дата релиза для мобильных === */}
+              {prioritizedReleaseInfo && (
+                <p className="block md:hidden text-gray-400 mb-2 text-sm text-center">
+                  {prioritizedReleaseInfo.dateString}
+                  {prioritizedReleaseInfo.countryString &&
+                    ` (${prioritizedReleaseInfo.countryString})`}
+                  {prioritizedReleaseInfo.statusString && (
+                    <span className="ml-1 border border-gray-500 px-1 rounded-sm">
+                      {prioritizedReleaseInfo.statusString}
+                    </span>
+                  )}
+                </p>
+              )}
               <p className="text-gray-400 mb-3 text-sm relative text-center md:text-left">
                 {" "}
                 {/* Центрируем на мобильных, выравниваем влево на десктопе */}
@@ -3228,7 +3381,8 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                   {/* Длительность (перенесена сюда) */}
                   <span className="whitespace-nowrap">
                     {Math.floor((movie.runtime || 0) / 60)}ч{" "}
-                    {(movie.runtime || 0) % 60}мин
+                    {(movie.runtime || 0) % 60}
+                    мин
                   </span>
                 </div>
                 {/* === ГРУППА 2: Качество + Жанры === */}
