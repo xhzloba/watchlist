@@ -66,6 +66,7 @@ import { cn } from "@/lib/utils";
 import { useDiscussions, Discussion } from "../hooks/use-discussions"; // Добавляем импорт хука
 import dynamic from "next/dynamic";
 import ActorNotification from "./actor-notification"; // <-- Новый импорт
+import FirstVisitFeatureNotification from "./FirstVisitFeatureNotification"; // <-- НОВЫЙ ИМПОРТ КОМПОНЕНТА
 
 // Словарь с переводами стран на русский язык
 const countryNames: Record<string, string> = {
@@ -2705,7 +2706,7 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
   // --- НОВОЕ: Состояние для отслеживания включена ли настройка ---
   const [isActorRecEnabled, setIsActorRecEnabled] = useState(true); // По умолчанию включено
   // --- НОВОЕ: Состояние для отслеживания включена ли настройка для коллекций ---
-  const [isCollectionRecEnabled, setIsCollectionRecEnabled] = useState(true); // По умолчанию включено
+  const [isCollectionRecEnabled, setIsCollectionRecEnabled] = useState(false); // По умолчанию false
 
   const topActors = useMemo(() => {
     if (Array.isArray(cast)) {
@@ -2801,6 +2802,54 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
     };
     // Обновляем зависимости
   }, [actorNotificationTriggered, isActorRecEnabled]);
+
+  // --- НОВОЕ: Логика для уведомления о функциях при первом визите ---
+  const [showFirstVisitNotification, setShowFirstVisitNotification] =
+    useState(false);
+
+  useEffect(() => {
+    const hasSeenNotification = localStorage.getItem(
+      "hasSeenFeatureDiscoveryNotification"
+    );
+    if (hasSeenNotification !== "true") {
+      // Показываем уведомление с задержкой, если пользователь его еще не видел
+      const timer = setTimeout(() => {
+        setShowFirstVisitNotification(true);
+      }, 3500); // Задержка в 3.5 секунды
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  const handleEnableDiscoveredFeatures = () => {
+    // Включаем рекомендации по актерам
+    localStorage.setItem("settings_show_actor_recommendations", "true");
+    setIsActorRecEnabled(true);
+
+    // Включаем уведомления о коллекциях
+    localStorage.setItem("settings_show_collection_recommendations", "true");
+    setIsCollectionRecEnabled(true);
+
+    // Диспатчим событие для обновления настроек в других местах (например, профиль)
+    const event = new CustomEvent("settingsChange", {
+      detail: {
+        showActorRecommendations: true,
+        showCollectionRecommendations: true,
+        // ... могут быть и другие настройки, которые нужно передать, если они изменяются этим действием
+      },
+    });
+    document.dispatchEvent(event);
+
+    // Закрываем уведомление и помечаем, что оно было показано и действие выполнено
+    setShowFirstVisitNotification(false);
+    localStorage.setItem("hasSeenFeatureDiscoveryNotification", "true");
+  };
+
+  const handleDismissFeatureDiscovery = () => {
+    // Просто закрываем уведомление и помечаем, что оно было показано
+    setShowFirstVisitNotification(false);
+    localStorage.setItem("hasSeenFeatureDiscoveryNotification", "true");
+  };
+  // --- КОНЕЦ НОВОЙ ЛОГИКИ ---
 
   return (
     <>
@@ -4717,6 +4766,16 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
               topActorIds={top3ActorIds} // Убедимся, что top3ActorIds все еще передается
             />
           )}
+      </AnimatePresence>
+
+      {/* --- НОВОЕ: РЕНДЕРИНГ УВЕДОМЛЕНИЯ О ФУНКЦИЯХ ПРИ ПЕРВОМ ВИЗИТЕ --- */}
+      <AnimatePresence>
+        {showFirstVisitNotification && (
+          <FirstVisitFeatureNotification
+            onEnableFeatures={handleEnableDiscoveredFeatures}
+            onDismiss={handleDismissFeatureDiscovery}
+          />
+        )}
       </AnimatePresence>
     </>
   );

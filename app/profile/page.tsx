@@ -140,7 +140,7 @@ export default function ProfilePage() {
   const [showTitles, setShowTitles] = useState(true);
   const [yellowHover, setYellowHover] = useState(false);
   const [dynamicBackdrop, setDynamicBackdrop] = useState(false);
-  const [disableColorOverlay, setDisableColorOverlay] = useState(false);
+  const [disableColorOverlay, setDisableColorOverlay] = useState(true);
   const [showActorRecommendations, setShowActorRecommendations] =
     useState(false);
   const [showCollectionRecommendations, setShowCollectionRecommendations] =
