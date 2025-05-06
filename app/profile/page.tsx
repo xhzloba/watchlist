@@ -141,10 +141,39 @@ export default function ProfilePage() {
   const [yellowHover, setYellowHover] = useState(false);
   const [dynamicBackdrop, setDynamicBackdrop] = useState(false);
   const [disableColorOverlay, setDisableColorOverlay] = useState(true);
-  const [showActorRecommendations, setShowActorRecommendations] =
-    useState(false);
+  const [showActorRecommendations, setShowActorRecommendations] = useState(
+    () => {
+      if (typeof window !== "undefined") {
+        try {
+          const saved = localStorage.getItem(
+            "settings_show_actor_recommendations"
+          );
+          // Если в localStorage ничего нет (null), то по умолчанию false (уведомления выключены)
+          // Иначе, используем сохраненное значение.
+          return saved === "true";
+        } catch (e) {
+          return false; // При ошибке также выключаем по умолчанию
+        }
+      }
+      return false; // Для SSR или если window не доступен, выключаем по умолчанию
+    }
+  );
   const [showCollectionRecommendations, setShowCollectionRecommendations] =
-    useState(false);
+    useState(() => {
+      if (typeof window !== "undefined") {
+        try {
+          const saved = localStorage.getItem(
+            "settings_show_collection_recommendations"
+          );
+          // Если в localStorage ничего нет (null), то по умолчанию false (уведомления выключены)
+          // Иначе, используем сохраненное значение.
+          return saved === "true";
+        } catch (e) {
+          return false; // При ошибке также выключаем по умолчанию
+        }
+      }
+      return false; // Для SSR или если window не доступен, выключаем по умолчанию
+    });
 
   // Вкладки
   // Инициализируем по умолчанию, загрузка из localStorage будет в useEffect

@@ -2731,13 +2731,11 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
         const savedSetting = localStorage.getItem(
           "settings_show_actor_recommendations"
         );
-        // Если в localStorage ничего нет (null), считаем настройку включенной
-        setIsActorRecEnabled(
-          savedSetting === null ? true : savedSetting === "true"
-        );
+        // Если в localStorage ничего нет (null), считаем настройку выключенной
+        setIsActorRecEnabled(savedSetting === "true");
       } catch (e) {
         console.error("Ошибка чтения настройки ActorRec:", e);
-        setIsActorRecEnabled(true); // Безопасное значение по умолчанию
+        setIsActorRecEnabled(false); // Безопасное значение по умолчанию - выключено
       }
 
       // --- НОВОЕ: Чтение настройки для уведомлений о коллекциях ---
@@ -2745,14 +2743,10 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
         const savedCollectionSetting = localStorage.getItem(
           "settings_show_collection_recommendations"
         );
-        setIsCollectionRecEnabled(
-          savedCollectionSetting === null
-            ? true
-            : savedCollectionSetting === "true"
-        );
+        setIsCollectionRecEnabled(savedCollectionSetting === "true");
       } catch (e) {
         console.error("Ошибка чтения настройки CollectionRec:", e);
-        setIsCollectionRecEnabled(true); // Безопасное значение по умолчанию
+        setIsCollectionRecEnabled(false); // Безопасное значение по умолчанию - выключено
       }
     }
   }, []); // Запускается один раз при монтировании
