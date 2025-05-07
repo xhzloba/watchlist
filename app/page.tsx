@@ -274,7 +274,7 @@ async function HomePageContent() {
               title="В тренде за неделю"
               items={trending.slice(0, 20)}
               variant="poster"
-              posterSize="large"
+              posterSize="xlarge"
               showDate
               showYear
               disableGlowEffect={true}
@@ -294,7 +294,7 @@ async function HomePageContent() {
               title="ПОПУЛЯРНОЕ НА WATCHLIST"
               items={popularMovies.slice(0, 20)} // Передаем результат без фильтрации
               variant="poster"
-              posterSize="large"
+              posterSize="xlarge"
               showDate
               showYear
               viewAllLink="/popular" // <--- Добавляем ссылку "Показать все"
@@ -304,7 +304,7 @@ async function HomePageContent() {
               title="СЕЙЧАС СМОТРЯТ"
               items={nowPlaying.slice(0, 20)}
               variant="poster"
-              posterSize="large"
+              posterSize="xlarge"
               showDate
               showYear
               disableGlowEffect={true}
@@ -344,7 +344,7 @@ async function HomePageContent() {
                   title={slider.title}
                   items={slider.items}
                   variant="poster"
-                  posterSize="large"
+                  posterSize="xlarge"
                   actorImage={slider.actor.imageUrl}
                   showDate
                   showYear
@@ -358,7 +358,7 @@ async function HomePageContent() {
                   title={slider.title}
                   items={slider.items}
                   variant="poster"
-                  posterSize="large"
+                  posterSize="xlarge"
                   showDate
                   showYear
                   keywordIds={

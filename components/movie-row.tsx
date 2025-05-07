@@ -31,7 +31,7 @@ interface MovieRowProps {
   hideTitle?: boolean;
   backdropStyle?: boolean;
   onMovieClick?: () => void;
-  posterSize?: "normal" | "large" | "small";
+  posterSize?: "normal" | "large" | "small" | "xlarge";
   backdropSize?: "normal" | "large" | "small";
   actorImage?: string;
   gap?: string;
@@ -152,14 +152,17 @@ export default function MovieRow({
       // variant === "poster"
       // Используем специальные классы с CSS media queries внутри
       switch (posterSize) {
+        case "xlarge":
+          baseClass = "w-[180px] md:w-[280px]"; // xlarge: мобильный 180px, десктоп 280px
+          break;
         case "large":
-          baseClass = "w-[160px] md:w-[230px]"; // Мобильный и десктоп размеры
+          baseClass = "w-[160px] md:w-[230px]"; // large: мобильный 160px, десктоп 230px
           break;
         case "small":
-          baseClass = "w-[160px]"; // Одинаковый для мобильного и десктопа
+          baseClass = "w-[140px] md:w-[180px]"; // small: мобильный 140px, десктоп 180px
           break;
-        default: // normal
-          baseClass = "w-[160px] md:w-[200px]"; // Мобильный и десктоп размеры
+        default: // normal (или не указан)
+          baseClass = "w-[160px] md:w-[280px]"; // normal: мобильный 160px, десктоп 280px (XL десктоп по умолчанию)
       }
     }
 
