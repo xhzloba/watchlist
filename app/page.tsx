@@ -262,7 +262,7 @@ async function HomePageContent() {
         <main className="pb-8">
           {/* Слайдер популярных фильмов во всю ширину */}
           {popularMovies && popularMovies.length > 0 && (
-            <HeroBackdropSlider items={popularMovies.slice(0, 10)} />
+            <HeroBackdropSlider items={popularMovies.slice(0, 20)} />
           )}
           <div className="container-fluid mx-auto space-y-4 pt-8 md:pt-12">
             {/* Фиксированные первые 3 слайдера */}

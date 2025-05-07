@@ -7,35 +7,102 @@ import { useRouter } from "next/navigation"; // Используем next/naviga
 import { type Movie as LocalMovieType } from "@/lib/tmdb"; // Исправленный импорт типа
 // import { LocalMovieType } from "@/types"; // Временно комментируем, пока не найден правильный тип
 
+// Функция для перемешивания массива (Fisher-Yates shuffle)
+function shuffleArray<T>(array: T[]): T[] {
+  const newArray = [...array];
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+  }
+  return newArray;
+}
+
 interface HeroBackdropSliderProps {
   items: LocalMovieType[]; // Используем правильный тип
 }
 
 const HeroBackdropSlider: React.FC<HeroBackdropSliderProps> = ({ items }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [shuffledClientItems, setShuffledClientItems] = useState<
+    LocalMovieType[] | null
+  >(null);
+  const [activeClientIndex, setActiveClientIndex] = useState(0);
+  const [carouselReadyToStart, setCarouselReadyToStart] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    if (!items || items.length === 0) return;
+    // Этот эффект подготавливает данные для карусели и запускает таймер для ее старта
+    if (items && items.length > 0) {
+      const shuffled = shuffleArray([...items]);
+      setShuffledClientItems(shuffled);
+      setActiveClientIndex(0); // Готовим первый индекс для перемешанного списка
 
-    const intervalId = setInterval(() => {
-      setCurrentIndex((prevIndex) => (prevIndex + 1) % items.length);
-    }, 3000); // Меняем каждые 3 секунды
+      const startTimer = setTimeout(() => {
+        setCarouselReadyToStart(true);
+      }, 7000); // Даем 7 секунд на показ серверного/начального элемента
 
-    return () => clearInterval(intervalId);
+      return () => clearTimeout(startTimer);
+    } else {
+      // Сброс, если items пуст
+      setShuffledClientItems(null);
+      setCarouselReadyToStart(false);
+    }
   }, [items]);
 
+  useEffect(() => {
+    // Этот эффект отвечает за интервал смены слайдов в карусели
+    // Запускается только после того, как карусель готова к старту
+    if (
+      !carouselReadyToStart ||
+      !shuffledClientItems ||
+      shuffledClientItems.length === 0
+    ) {
+      return;
+    }
+
+    const intervalId = setInterval(() => {
+      setActiveClientIndex(
+        (prevIndex) => (prevIndex + 1) % shuffledClientItems.length
+      );
+    }, 7000); // 7 секунд на каждый слайд в карусели
+
+    return () => clearInterval(intervalId);
+  }, [carouselReadyToStart, shuffledClientItems]);
+
   if (!items || items.length === 0) {
-    return null; // Не рендерим ничего, если нет элементов
+    return null;
   }
 
-  const currentMovie = items[currentIndex];
+  // Определяем, какой фильм показывать
+  let currentMovie: LocalMovieType;
+  let imagePriority: boolean;
+
+  if (!carouselReadyToStart || !shuffledClientItems) {
+    // До того как карусель готова, показываем первый элемент из оригинального списка (серверный рендер)
+    currentMovie = items[0];
+    imagePriority = true; // Высокий приоритет для первого изображения
+  } else {
+    // Карусель запущена, используем перемешанный список
+    currentMovie = shuffledClientItems[activeClientIndex];
+    imagePriority = activeClientIndex === 0; // Приоритет для первого элемента *карусели*
+    // (если он не совпадает с items[0] и показывается впервые)
+    // Хотя, если items[0] уже загружен с priority, это может быть излишним
+    // Оставим priority только для изначального items[0]
+    imagePriority = !carouselReadyToStart; // Более простой вариант: priority только для серверного items[0]
+  }
+
+  if (!currentMovie) {
+    return null; // На случай, если что-то пошло не так
+  }
+
   const backdropUrl = currentMovie.backdrop_path
-    ? `https://imagetmdb.com/t/p/original${currentMovie.backdrop_path}` // Возвращаем исходный URL
-    : "/placeholder-backdrop.jpg"; // Запасное изображение, если нет бэкдропа
+    ? `https://imagetmdb.com/t/p/original${currentMovie.backdrop_path}`
+    : "/placeholder-backdrop.jpg";
 
   const handleBackdropClick = () => {
-    router.push(`/movie/${currentMovie.id}`);
+    // Убедимся, что currentMovie существует перед переходом
+    if (currentMovie && currentMovie.id) {
+      router.push(`/movie/${currentMovie.id}`);
+    }
   };
 
   return (
@@ -49,9 +116,8 @@ const HeroBackdropSlider: React.FC<HeroBackdropSliderProps> = ({ items }) => {
         layout="fill"
         objectFit="cover"
         className="transition-opacity duration-500 ease-in-out"
-        priority={true} // Первый бэкдроп загружаем с приоритетом
+        priority={imagePriority}
       />
-      {/* Статичное затемнение, без изменения по ховеру */}
       <div className="absolute inset-0 bg-black bg-opacity-30 transition-opacity duration-300"></div>
       <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10 bg-gradient-to-t from-black via-black/70 to-transparent">
         <h2 className="text-2xl md:text-4xl font-bold text-white drop-shadow-lg">
