@@ -282,18 +282,6 @@ export default function MovieRow({
               )}
             </div>
           ))}
-
-          <button
-            onClick={handleShowAll}
-            className={`flex-none ${
-              variant === "poster" ? getPosterWidth() : getPosterWidth()
-            } ${variant === "poster" ? "aspect-[2/3]" : "aspect-video"} ${
-              roundedCorners ? "rounded-xl" : "rounded-md"
-            } bg-gray-800/50 flex flex-col items-center justify-center gap-2 hover:bg-gray-800 transition-colors`}
-          >
-            <Grid className="w-8 h-8" />
-            <span className="text-sm font-medium">Показать все</span>
-          </button>
         </div>
 
         <button
