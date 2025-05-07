@@ -334,9 +334,29 @@ const HeroBackdropSlider: React.FC<HeroBackdropSliderProps> = ({ items }) => {
 
         {/* Описание фильма */}
         {currentMovie.overview && (
-          <p className="mt-3 text-sm md:text-base max-w-md md:max-w-lg text-gray-200 leading-relaxed line-clamp-4 md:line-clamp-8">
-            {currentMovie.overview}
-          </p>
+          <>
+            <p className="mt-3 text-sm md:text-base max-w-md md:max-w-lg text-gray-200 leading-relaxed line-clamp-4 md:line-clamp-8">
+              {currentMovie.overview}
+            </p>
+            {/* Кнопка "Смотреть" - только для десктопа */}
+            <div className="hidden md:block mt-6">
+              <button
+                onClick={() => router.push(`/movie/${currentMovie.id}`)}
+                className="
+                  flex justify-center items-center 
+                  h-[52px] py-[14px] px-[28px] 
+                  text-white text-base font-semibold leading-5 
+                  rounded-full border-none 
+                  bg-[linear-gradient(135deg,#FF5500_69.93%,#D6BB00_100%)] 
+                  hover:brightness-110 
+                  focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black focus:ring-yellow-400 
+                  transition-all duration-200 ease-in-out transform hover:scale-105
+                "
+              >
+                Смотреть
+              </button>
+            </div>
+          </>
         )}
       </div>
     </div>
