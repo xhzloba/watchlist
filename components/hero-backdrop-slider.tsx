@@ -256,7 +256,7 @@ const HeroBackdropSlider: React.FC<HeroBackdropSliderProps> = ({ items }) => {
     <>
       {/* Фон и оверлей */}
       <div
-        className="fixed top-0 left-0 right-0 w-full h-[60vh] md:h-[75vh] z-10 [mask-image:linear-gradient(to_bottom,white_calc(100%-150px),transparent_100%)]" // Возвращен mask-image
+        className="fixed top-0 left-0 right-0 w-full h-[60vh] md:h-[75vh] z-10 [mask-image:linear-gradient(to_bottom,white_calc(100%-150px),transparent_100%),linear-gradient(to_right,transparent_0px,white_250px)] [mask-composite:intersect]" // Возвращен mask-image
         // onClick НЕ ЗДЕСЬ, если фон должен быть кликабельным, нужно будет решить как, учитывая z-20 контент
       >
         <Image
