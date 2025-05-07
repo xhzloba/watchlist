@@ -338,7 +338,7 @@ const HeroBackdropSlider: React.FC<HeroBackdropSliderProps> = ({ items }) => {
             </p>
             {/* Кнопка "Смотреть" - только для десктопа */}
             <div
-              className="hidden md:block mt-6 pointer-events-auto relative z-20"
+              className="hidden md:block mt-6 relative z-20"
               onClick={(e) => e.stopPropagation()}
             >
               <button
