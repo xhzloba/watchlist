@@ -252,37 +252,35 @@ const HeroBackdropSlider: React.FC<HeroBackdropSliderProps> = ({ items }) => {
     ? `https://imagetmdb.com/t/p/original${currentMovie.backdrop_path}`
     : "/placeholder-backdrop.jpg";
 
-  const handleBackdropClick = () => {
-    // Убедимся, что currentMovie существует перед переходом
-    if (currentMovie && currentMovie.id) {
-      router.push(`/movie/${currentMovie.id}`);
-    }
-  };
-
   return (
-    <div
-      className="fixed top-0 left-0 right-0 w-full h-[60vh] md:h-[75vh] cursor-pointer z-0 [mask-image:linear-gradient(to_bottom,white_calc(100%-150px),transparent_100%)]"
-      onClick={handleBackdropClick}
-    >
-      <Image
-        src={backdropUrl}
-        alt={currentMovie.title || "Movie backdrop"}
-        layout="fill"
-        objectFit="cover"
-        className="transition-opacity duration-500 ease-in-out"
-        priority={imagePriority}
-      />
+    <>
+      {/* Фон и оверлей */}
       <div
-        className="absolute inset-0 transition-opacity duration-100"
-        style={{ backgroundColor: `rgba(0, 0, 0, ${overlayOpacity})` }}
-      ></div>
-      {/* Контейнер для логотипа или названия и остальной информации */}
-      <div
-        className="absolute top-1/2 left-10 md:left-20 transform -translate-y-1/2 z-10 max-w-[calc(100%-80px)] md:max-w-[calc(100%-160px)] text-white"
-        style={detailsStyle} // Применяем стиль для управления видимостью и доступностью
+        className="fixed top-0 left-0 right-0 w-full h-[60vh] md:h-[75vh] z-10 [mask-image:linear-gradient(to_bottom,white_calc(100%-150px),transparent_100%)]" // Возвращен mask-image
+        // onClick НЕ ЗДЕСЬ, если фон должен быть кликабельным, нужно будет решить как, учитывая z-20 контент
       >
-        <div className="mb-4 h-[150px] flex items-end">
+        <Image
+          src={backdropUrl}
+          alt={currentMovie.title || "Movie backdrop"}
+          layout="fill"
+          objectFit="cover"
+          className="transition-opacity duration-500 ease-in-out"
+          priority={imagePriority}
+        />
+        <div
+          className="absolute inset-0 transition-opacity duration-100"
+          style={{ backgroundColor: `rgba(0, 0, 0, ${overlayOpacity})` }}
+        ></div>
+      </div>
+
+      {/* Контейнер для логотипа, названия, описания и кнопки */}
+      <div
+        className="fixed top-1/3 left-10 md:left-20 transform -translate-y-1/2 z-40 max-w-[calc(100%-80px)] md:max-w-[calc(100%-160px)] text-white" // Изменен top-1/2 на top-1/3
+        style={detailsStyle} // Применяем стиль для управления видимостью и доступностью (включая pointer-events)
+      >
+        <div className="mb-4 h-[150px] flex items-center">
           {" "}
+          {/* Изменено items-end на items-center */}{" "}
           {/* Задаем фиксированную высоту для контейнера лого/тайтла/лоадера */}
           {isLogoLoading ? (
             <div className="w-[50px] h-[50px] animate-spin rounded-full border-t-2 border-b-2 border-yellow-500"></div> /* Простой лоадер */
@@ -339,7 +337,10 @@ const HeroBackdropSlider: React.FC<HeroBackdropSliderProps> = ({ items }) => {
               {currentMovie.overview}
             </p>
             {/* Кнопка "Смотреть" - только для десктопа */}
-            <div className="hidden md:block mt-6">
+            <div
+              className="hidden md:block mt-6 pointer-events-auto relative z-20"
+              onClick={(e) => e.stopPropagation()}
+            >
               <button
                 onClick={() => router.push(`/movie/${currentMovie.id}`)}
                 className="
@@ -359,7 +360,7 @@ const HeroBackdropSlider: React.FC<HeroBackdropSliderProps> = ({ items }) => {
           </>
         )}
       </div>
-    </div>
+    </>
   );
 };
 
