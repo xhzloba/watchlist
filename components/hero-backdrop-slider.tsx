@@ -67,6 +67,7 @@ const HeroBackdropSlider: React.FC<HeroBackdropSliderProps> = ({ items }) => {
     transition: "opacity 0.3s ease-out",
   });
   const router = useRouter();
+  const [isLogoLoading, setIsLogoLoading] = useState(false); // Новое состояние для лоадера
 
   useEffect(() => {
     // Этот эффект подготавливает данные для карусели и запускает таймер для ее старта
@@ -167,6 +168,7 @@ const HeroBackdropSlider: React.FC<HeroBackdropSliderProps> = ({ items }) => {
     // Загрузка логотипа для текущего фильма
     if (currentMovie && currentMovie.id) {
       setCurrentMovieLogoUrl(null); // Сбрасываем предыдущий логотип
+      setIsLogoLoading(true); // Начинаем загрузку логотипа
       getMovieLogos(currentMovie.id)
         .then((logoData) => {
           if (logoData && logoData.logos && logoData.logos.length > 0) {
@@ -189,9 +191,13 @@ const HeroBackdropSlider: React.FC<HeroBackdropSliderProps> = ({ items }) => {
         .catch((error) => {
           console.error("Ошибка загрузки логотипа:", error);
           setCurrentMovieLogoUrl(null); // Убедимся, что лого не показывается при ошибке
+        })
+        .finally(() => {
+          setIsLogoLoading(false); // Заканчиваем загрузку логотипа
         });
     } else {
       setCurrentMovieLogoUrl(null); // Если фильма нет, логотипа тоже нет
+      setIsLogoLoading(false); // Убедимся, что лоадер выключен
     }
   }, [currentMovie]); // Перезагружаем логотип при смене currentMovie
 
@@ -275,8 +281,12 @@ const HeroBackdropSlider: React.FC<HeroBackdropSliderProps> = ({ items }) => {
         className="absolute top-1/2 left-10 md:left-20 transform -translate-y-1/2 z-10 max-w-[calc(100%-80px)] md:max-w-[calc(100%-160px)] text-white"
         style={detailsStyle} // Применяем стиль для управления видимостью и доступностью
       >
-        <div className="mb-4">
-          {currentMovieLogoUrl ? (
+        <div className="mb-4 h-[150px] flex items-center">
+          {" "}
+          {/* Задаем фиксированную высоту для контейнера лого/тайтла/лоадера */}
+          {isLogoLoading ? (
+            <div className="w-[50px] h-[50px] animate-spin rounded-full border-t-2 border-b-2 border-yellow-500"></div> /* Простой лоадер */
+          ) : currentMovieLogoUrl ? (
             <Image
               src={currentMovieLogoUrl}
               alt={`${currentMovie.title || "Movie"} logo`}
