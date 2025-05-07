@@ -334,7 +334,7 @@ const HeroBackdropSlider: React.FC<HeroBackdropSliderProps> = ({ items }) => {
 
         {/* Описание фильма */}
         {currentMovie.overview && (
-          <p className="mt-3 text-xs md:text-sm max-w-md md:max-w-lg text-gray-200 leading-relaxed line-clamp-3 md:line-clamp-4">
+          <p className="mt-3 text-sm md:text-base max-w-md md:max-w-lg text-gray-200 leading-relaxed line-clamp-4 md:line-clamp-8">
             {currentMovie.overview}
           </p>
         )}
