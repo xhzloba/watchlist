@@ -281,7 +281,7 @@ const HeroBackdropSlider: React.FC<HeroBackdropSliderProps> = ({ items }) => {
         className="absolute top-1/2 left-10 md:left-20 transform -translate-y-1/2 z-10 max-w-[calc(100%-80px)] md:max-w-[calc(100%-160px)] text-white"
         style={detailsStyle} // Применяем стиль для управления видимостью и доступностью
       >
-        <div className="mb-4 h-[150px] flex items-center">
+        <div className="mb-4 h-[150px] flex items-end">
           {" "}
           {/* Задаем фиксированную высоту для контейнера лого/тайтла/лоадера */}
           {isLogoLoading ? (
