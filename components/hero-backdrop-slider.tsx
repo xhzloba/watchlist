@@ -27,6 +27,7 @@ const HeroBackdropSlider: React.FC<HeroBackdropSliderProps> = ({ items }) => {
   >(null);
   const [activeClientIndex, setActiveClientIndex] = useState(0);
   const [carouselReadyToStart, setCarouselReadyToStart] = useState(false);
+  const [overlayOpacity, setOverlayOpacity] = useState(0.3); // Начальная прозрачность оверлея
   const router = useRouter();
 
   useEffect(() => {
@@ -68,6 +69,23 @@ const HeroBackdropSlider: React.FC<HeroBackdropSliderProps> = ({ items }) => {
     return () => clearInterval(intervalId);
   }, [carouselReadyToStart, shuffledClientItems]);
 
+  useEffect(() => {
+    // Обработчик скролла для изменения прозрачности оверлея
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+      const scrollThreshold = 300; // Дистанция скролла для полного изменения прозрачности (в пикселях)
+      const minOverlayOpacity = 0.3;
+      const maxOverlayOpacity = 0.85; // Максимальная прозрачность (0.85 для сильного, но не полного затемнения)
+      const opacityRange = maxOverlayOpacity - minOverlayOpacity;
+      let scrollFraction = Math.min(scrollY / scrollThreshold, 1);
+      const newOpacity = minOverlayOpacity + opacityRange * scrollFraction;
+      setOverlayOpacity(newOpacity);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []); // Пустой массив зависимостей, чтобы эффект выполнился один раз
+
   if (!items || items.length === 0) {
     return null;
   }
@@ -107,7 +125,7 @@ const HeroBackdropSlider: React.FC<HeroBackdropSliderProps> = ({ items }) => {
 
   return (
     <div
-      className="relative w-full h-[60vh] md:h-[75vh] cursor-pointer [mask-image:linear-gradient(to_bottom,white_calc(100%-150px),transparent_100%)]"
+      className="fixed top-0 left-0 right-0 w-full h-[60vh] md:h-[75vh] cursor-pointer z-0 [mask-image:linear-gradient(to_bottom,white_calc(100%-150px),transparent_100%)]"
       onClick={handleBackdropClick}
     >
       <Image
@@ -118,7 +136,10 @@ const HeroBackdropSlider: React.FC<HeroBackdropSliderProps> = ({ items }) => {
         className="transition-opacity duration-500 ease-in-out"
         priority={imagePriority}
       />
-      <div className="absolute inset-0 bg-black bg-opacity-30 transition-opacity duration-300"></div>
+      <div
+        className="absolute inset-0 transition-opacity duration-100" // Убрали bg-opacity, будем управлять через style
+        style={{ backgroundColor: `rgba(0, 0, 0, ${overlayOpacity})` }}
+      ></div>
     </div>
   );
 };

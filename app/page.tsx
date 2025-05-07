@@ -264,7 +264,8 @@ async function HomePageContent() {
           {popularMovies && popularMovies.length > 0 && (
             <HeroBackdropSlider items={popularMovies.slice(0, 20)} />
           )}
-          <div className="container-fluid mx-auto space-y-4 pt-8 md:pt-12">
+          {/* Контейнер для основного контента страницы с отступом сверху под фиксированный HeroBackdropSlider */}
+          <div className="relative z-20 container-fluid mx-auto space-y-4 pt-[60vh] md:pt-[75vh]">
             {/* Фиксированные первые 3 слайдера */}
             <MovieRow
               title="В тренде за неделю"
