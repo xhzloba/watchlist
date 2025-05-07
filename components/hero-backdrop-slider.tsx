@@ -61,6 +61,11 @@ const HeroBackdropSlider: React.FC<HeroBackdropSliderProps> = ({ items }) => {
   const [currentMovieLogoUrl, setCurrentMovieLogoUrl] = useState<string | null>(
     null
   );
+  const [detailsStyle, setDetailsStyle] = useState<React.CSSProperties>({
+    opacity: 1,
+    pointerEvents: "auto",
+    transition: "opacity 0.3s ease-out",
+  });
   const router = useRouter();
 
   useEffect(() => {
@@ -103,16 +108,41 @@ const HeroBackdropSlider: React.FC<HeroBackdropSliderProps> = ({ items }) => {
   }, [carouselReadyToStart, shuffledClientItems]);
 
   useEffect(() => {
-    // Обработчик скролла для изменения прозрачности оверлея
+    // Обработчик скролла для изменения прозрачности оверлея и деталей фильма
     const handleScroll = () => {
       const scrollY = window.scrollY;
-      const scrollThreshold = 300; // Дистанция скролла для полного изменения прозрачности (в пикселях)
+
+      // Логика для прозрачности оверлея
+      const overlayScrollThreshold = 300;
       const minOverlayOpacity = 0.3;
-      const maxOverlayOpacity = 0.85; // Максимальная прозрачность (0.85 для сильного, но не полного затемнения)
-      const opacityRange = maxOverlayOpacity - minOverlayOpacity;
-      let scrollFraction = Math.min(scrollY / scrollThreshold, 1);
-      const newOpacity = minOverlayOpacity + opacityRange * scrollFraction;
-      setOverlayOpacity(newOpacity);
+      const maxOverlayOpacity = 0.85;
+      const overlayOpacityRange = maxOverlayOpacity - minOverlayOpacity;
+      let overlayScrollFraction = Math.min(scrollY / overlayScrollThreshold, 1);
+      const newOverlayOpacity =
+        minOverlayOpacity + overlayOpacityRange * overlayScrollFraction;
+      setOverlayOpacity(newOverlayOpacity);
+
+      // Логика для прозрачности и доступности блока деталей
+      const detailsFadeStartScrollY = 50; // Начать скрытие деталей
+      const detailsFadeEndScrollY = 150; // Детали полностью скрыты
+      let newDetailsOpacity = 1;
+
+      if (scrollY <= detailsFadeStartScrollY) {
+        newDetailsOpacity = 1;
+      } else if (scrollY >= detailsFadeEndScrollY) {
+        newDetailsOpacity = 0;
+      } else {
+        newDetailsOpacity =
+          1 -
+          (scrollY - detailsFadeStartScrollY) /
+            (detailsFadeEndScrollY - detailsFadeStartScrollY);
+      }
+
+      setDetailsStyle({
+        opacity: newDetailsOpacity,
+        pointerEvents: newDetailsOpacity === 0 ? "none" : "auto",
+        transition: "opacity 0.3s ease-out", // Плавный переход
+      });
     };
 
     window.addEventListener("scroll", handleScroll);
@@ -222,11 +252,14 @@ const HeroBackdropSlider: React.FC<HeroBackdropSliderProps> = ({ items }) => {
         priority={imagePriority}
       />
       <div
-        className="absolute inset-0 transition-opacity duration-100" // Убрали bg-opacity, будем управлять через style
+        className="absolute inset-0 transition-opacity duration-100"
         style={{ backgroundColor: `rgba(0, 0, 0, ${overlayOpacity})` }}
       ></div>
-      {/* Контейнер для логотипа или названия */}
-      <div className="absolute top-1/2 left-10 md:left-20 transform -translate-y-1/2 z-10 max-w-[calc(100%-80px)] md:max-w-[calc(100%-160px)] text-white">
+      {/* Контейнер для логотипа или названия и остальной информации */}
+      <div
+        className="absolute top-1/2 left-10 md:left-20 transform -translate-y-1/2 z-10 max-w-[calc(100%-80px)] md:max-w-[calc(100%-160px)] text-white"
+        style={detailsStyle} // Применяем стиль для управления видимостью и доступностью
+      >
         <div className="mb-4">
           {currentMovieLogoUrl ? (
             <Image
