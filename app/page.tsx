@@ -90,6 +90,7 @@ async function HomePageContent() {
     const popularMovies: LocalMovieType[] = popularMoviesData.items.map(
       ensurePlainMovieObject
     );
+
     console.log(
       "Получено популярных фильмов (без фильтрации):",
       popularMovies.length
@@ -260,12 +261,14 @@ async function HomePageContent() {
         {/* Header больше не рендерится здесь */}
         {/* <Header /> */}
         <main className="pb-8">
-          {/* Слайдер популярных фильмов во всю ширину */}
-          {popularMovies && popularMovies.length > 0 && (
-            <HeroBackdropSlider items={popularMovies.slice(0, 20)} />
+          {/* Слайдер популярных фильмов во всю ширину - ИЗМЕНЯЕМ ИСТОЧНИК ДАННЫХ */}
+          {nowPlaying && nowPlaying.length > 0 && (
+            <HeroBackdropSlider items={nowPlaying.slice(0, 20)} /> // Используем nowPlaying вместо popularMovies
           )}
           {/* Контейнер для основного контента страницы с отступом сверху под фиксированный HeroBackdropSlider */}
           <div className="relative z-20 container-fluid mx-auto space-y-4 pt-[60vh] md:pt-[75vh]">
+            {" "}
+            {/* Добавлены relative и z-20 */}
             {/* Фиксированные первые 3 слайдера */}
             <MovieRow
               title="В тренде за неделю"
@@ -332,7 +335,6 @@ async function HomePageContent() {
             <div className="mt-8">
               <ViewingHistoryRow />
             </div>
-
             {/* Объединенные и перемешанные слайдеры актеров и жанров */}
             {allSliders.map((slider, index) =>
               slider.type === "actor" ? (
