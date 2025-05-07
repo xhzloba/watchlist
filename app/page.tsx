@@ -262,8 +262,8 @@ async function HomePageContent() {
         {/* <Header /> */}
         <main className="pb-8">
           {/* Слайдер популярных фильмов во всю ширину - ИЗМЕНЯЕМ ИСТОЧНИК ДАННЫХ */}
-          {nowPlaying && nowPlaying.length > 0 && (
-            <HeroBackdropSlider items={nowPlaying.slice(0, 20)} /> // Используем nowPlaying вместо popularMovies
+          {popularMovies && popularMovies.length > 0 && (
+            <HeroBackdropSlider items={popularMovies.slice(0, 20)} /> // Используем nowPlaying вместо popularMovies
           )}
           {/* Контейнер для основного контента страницы с отступом сверху под фиксированный HeroBackdropSlider */}
           <div className="relative z-20 container-fluid mx-auto space-y-4 pt-[60vh] md:pt-[75vh]">

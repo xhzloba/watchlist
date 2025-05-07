@@ -200,7 +200,7 @@ const HeroBackdropSlider: React.FC<HeroBackdropSliderProps> = ({ items }) => {
   }
 
   const ratingValue = currentMovie.vote_average;
-  const ratingText = ratingValue ? ratingValue.toFixed(1) : "N/A";
+  const ratingText = ratingValue ? ratingValue.toFixed(1) : "-";
   let ratingBgClass = "bg-gray-600"; // Default
   if (ratingValue && ratingValue !== 0) {
     // Добавим проверку на 0, чтобы не было красным если просто нет данных
