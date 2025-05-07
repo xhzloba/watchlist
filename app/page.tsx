@@ -19,6 +19,7 @@ import {
 import { getAllActorsInfo, getAllActorsMovies } from "@/lib/actors";
 import dynamic from "next/dynamic";
 import { ensurePlainMovieObject } from "@/lib/movie-utils";
+import HeroBackdropSlider from "@/components/hero-backdrop-slider";
 
 // Динамический импорт компонента GenreStrip
 const GenreStrip = dynamic(() => import("@/components/genre-strip"), {
@@ -258,8 +259,12 @@ async function HomePageContent() {
       <div className="min-h-screen text-white">
         {/* Header больше не рендерится здесь */}
         {/* <Header /> */}
-        <main className="pt-24 md:pt-32 pb-8">
-          <div className="container-fluid mx-auto space-y-4">
+        <main className="pb-8">
+          {/* Слайдер популярных фильмов во всю ширину */}
+          {popularMovies && popularMovies.length > 0 && (
+            <HeroBackdropSlider items={popularMovies.slice(0, 10)} />
+          )}
+          <div className="container-fluid mx-auto space-y-4 pt-8 md:pt-12">
             {/* Фиксированные первые 3 слайдера */}
             <MovieRow
               title="В тренде за неделю"
