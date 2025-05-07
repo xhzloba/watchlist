@@ -32,7 +32,7 @@ interface MovieRowProps {
   backdropStyle?: boolean;
   onMovieClick?: () => void;
   posterSize?: "normal" | "large" | "small" | "xlarge";
-  backdropSize?: "normal" | "large" | "small";
+  backdropSize?: "normal" | "large" | "small" | "xlarge";
   actorImage?: string;
   gap?: string;
   titleIcon?: React.ReactNode;
@@ -139,14 +139,17 @@ export default function MovieRow({
     if (variant === "backdrop") {
       // Используем специальные классы с CSS media queries внутри
       switch (backdropSize) {
+        case "xlarge":
+          baseClass = "w-[280px] md:w-[480px]"; // xlarge: мобильный 280px, десктоп 480px
+          break;
         case "large":
           baseClass = "w-[260px] md:w-[400px]"; // Мобильный и десктоп размеры
           break;
         case "small":
-          baseClass = "w-[260px]"; // Одинаковый для мобильного и десктопа
+          baseClass = "w-[240px] md:w-[280px]"; // Уменьшил small для backdrop
           break;
         default: // normal
-          baseClass = "w-[260px] md:w-[320px]"; // Мобильный и десктоп размеры
+          baseClass = "w-[260px] md:w-[480px]"; // normal: мобильный 260px, десктоп 480px (XL десктоп по умолчанию)
       }
     } else {
       // variant === "poster"

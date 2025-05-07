@@ -283,7 +283,7 @@ async function HomePageContent() {
               title="ПОСЛЕДНИЕ ДОБАВЛЕННЫЕ ТРЕЙЛЕРЫ"
               items={latestTrailers.slice(0, 20)}
               variant="backdrop"
-              backdropSize="large"
+              backdropSize="xlarge"
               showDate
               showYear
               showLogo
@@ -315,7 +315,7 @@ async function HomePageContent() {
               title="ЛУЧШИЕ ФИЛЬМЫ 2025 ГОДА ПО ОЦЕНКАМ"
               items={movies2025.slice(0, 20)}
               variant="backdrop"
-              backdropSize="large"
+              backdropSize="xlarge"
               showDate
               showYear
               showLogo
@@ -325,7 +325,7 @@ async function HomePageContent() {
               title="ЛУЧШИЕ ФИЛЬМЫ 2024 ГОДА ПО ОЦЕНКАМ"
               items={movies2024.slice(0, 20)}
               variant="backdrop"
-              backdropSize="large"
+              backdropSize="xlarge"
               showDate
               showYear
               showLogo
