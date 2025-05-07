@@ -119,16 +119,6 @@ const HeroBackdropSlider: React.FC<HeroBackdropSliderProps> = ({ items }) => {
         priority={imagePriority}
       />
       <div className="absolute inset-0 bg-black bg-opacity-30 transition-opacity duration-300"></div>
-      <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10 bg-gradient-to-t from-black via-black/70 to-transparent">
-        <h2 className="text-2xl md:text-4xl font-bold text-white drop-shadow-lg">
-          {currentMovie.title}
-        </h2>
-        {currentMovie.overview && (
-          <p className="text-sm md:text-base text-gray-300 mt-2 max-w-2xl line-clamp-2 md:line-clamp-3 drop-shadow-md">
-            {currentMovie.overview}
-          </p>
-        )}
-      </div>
     </div>
   );
 };
