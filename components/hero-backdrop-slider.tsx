@@ -227,6 +227,21 @@ const HeroBackdropSlider: React.FC<HeroBackdropSliderProps> = ({ items }) => {
       ? currentMovie.genres.map((g) => g.name).join(", ")
       : "";
 
+  let releaseQualityDisplay: string | undefined = undefined;
+  if (currentMovie.release_quality) {
+    if (typeof currentMovie.release_quality === "string") {
+      releaseQualityDisplay = currentMovie.release_quality;
+    } else if (
+      typeof currentMovie.release_quality === "object" &&
+      currentMovie.release_quality.type
+    ) {
+      releaseQualityDisplay = currentMovie.release_quality.type;
+    }
+  } else if (currentMovie.releaseQuality) {
+    // Fallback
+    releaseQualityDisplay = currentMovie.releaseQuality;
+  }
+
   const backdropUrl = currentMovie.backdrop_path
     ? `https://imagetmdb.com/t/p/original${currentMovie.backdrop_path}`
     : "/placeholder-backdrop.jpg";
@@ -295,6 +310,11 @@ const HeroBackdropSlider: React.FC<HeroBackdropSliderProps> = ({ items }) => {
                 </span>
               )}
             {year !== "Дата неизвестна" && <span>{year}</span>}
+            {releaseQualityDisplay && (
+              <span className="text-xs md:text-sm uppercase bg-black/20 px-1.5 py-0.5 rounded-sm">
+                {releaseQualityDisplay}
+              </span>
+            )}
             {runtimeFormatted && <span>{runtimeFormatted}</span>}
           </div>
           {genresText && (
