@@ -3032,6 +3032,8 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
   };
   // === КОНЕЦ ФУНКЦИИ ===
 
+  const reviewsSliderRef = useRef<HTMLDivElement>(null); // <-- НОВЫЙ REF ДЛЯ СЛАЙДЕРА РЕЦЕНЗИЙ
+
   return (
     <>
       {/* Убираем полноэкранный индикатор загрузки, чтобы он не перекрывал хедер */}
@@ -4103,7 +4105,12 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                 <section className="relative">
                   <div className="group relative">
                     {/* === ИЗМЕНЯЕМ КЛАССЫ СЛАЙДЕРА РЕЦЕНЗИЙ === */}
-                    <div className="flex overflow-x-auto gap-4 py-2 -mx-4 md:-mx-10 px-4 md:px-10 relative trailer-row scrollbar-hide scroll-smooth">
+                    <div
+                      ref={reviewsSliderRef}
+                      className="flex overflow-x-auto gap-4 py-2 -mx-4 md:-mx-10 px-4 md:px-10 relative review-row scrollbar-hide scroll-smooth"
+                    >
+                      {" "}
+                      {/* ИСПРАВЛЕНО: trailer-row на review-row + ДОБАВЛЕН REF */}
                       {reviews.map((review) => (
                         <div
                           key={review.id}
@@ -4210,9 +4217,8 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                     {/* Navigation buttons */}
                     <button
                       onClick={() => {
-                        const container = document.querySelector(".review-row");
-                        if (container) {
-                          container.scrollBy({
+                        if (reviewsSliderRef.current) {
+                          reviewsSliderRef.current.scrollBy({
                             left: -300,
                             behavior: "smooth",
                           });
@@ -4227,9 +4233,8 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                     </button>
                     <button
                       onClick={() => {
-                        const container = document.querySelector(".review-row");
-                        if (container) {
-                          container.scrollBy({
+                        if (reviewsSliderRef.current) {
+                          reviewsSliderRef.current.scrollBy({
                             left: 300,
                             behavior: "smooth",
                           });
