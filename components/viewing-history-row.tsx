@@ -39,7 +39,7 @@ export default function ViewingHistoryRow() {
       <div className="mb-8">
         <div className="flex items-center gap-3 relative">
           <History className="w-6 h-6 text-yellow-500" />
-          <h2 className="text-xl uppercase tracking-wide font-bebas-neue pb-2 pr-8 relative border-b border-transparent">
+          <h2 className="text-xl uppercase tracking-wide font-exo-2 pb-2 pr-8 relative border-b border-transparent">
             ИСТОРИЯ ПРОСМОТРОВ
             <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-yellow-500/40 to-transparent"></div>
           </h2>
@@ -61,6 +61,7 @@ export default function ViewingHistoryRow() {
       showYear
       emptyMessage="История просмотров пуста"
       titleIcon={<History className="w-6 h-6 text-yellow-500" />}
+      titleFontClass="font-exo-2"
     />
   );
 }

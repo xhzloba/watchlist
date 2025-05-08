@@ -277,6 +277,7 @@ async function HomePageContent() {
               posterSize="xlarge"
               showDate
               showYear
+              titleFontClass="font-exo-2"
               disableGlowEffect={true}
             />
             <MovieRow
@@ -288,6 +289,7 @@ async function HomePageContent() {
               showYear
               showLogo
               isTrailerSection
+              titleFontClass="font-exo-2"
               disableGlowEffect={true}
             />
             <MovieRow
@@ -298,6 +300,7 @@ async function HomePageContent() {
               showDate
               showYear
               viewAllLink="/popular" // <--- Добавляем ссылку "Показать все"
+              titleFontClass="font-exo-2"
               disableGlowEffect={true}
             />
             <MovieRow
@@ -307,6 +310,7 @@ async function HomePageContent() {
               posterSize="xlarge"
               showDate
               showYear
+              titleFontClass="font-exo-2"
               disableGlowEffect={true}
             />
             {/* Полоса жанров */}
@@ -319,6 +323,7 @@ async function HomePageContent() {
               showDate
               showYear
               showLogo
+              titleFontClass="font-exo-2"
               disableGlowEffect={true}
             />
             <MovieRow
@@ -329,6 +334,7 @@ async function HomePageContent() {
               showDate
               showYear
               showLogo
+              titleFontClass="font-exo-2"
               disableGlowEffect={true}
             />
             {/* История просмотров */}
@@ -349,6 +355,7 @@ async function HomePageContent() {
                   showDate
                   showYear
                   viewAllLink={`/actors/${slider.actor.id}`}
+                  titleFontClass="font-exo-2"
                   disableGlowEffect={true}
                 />
               ) : (
@@ -364,6 +371,7 @@ async function HomePageContent() {
                   keywordIds={
                     slider.genreId !== -1 ? [slider.genreId] : undefined
                   }
+                  titleFontClass="font-exo-2"
                   disableGlowEffect={true}
                 />
               )

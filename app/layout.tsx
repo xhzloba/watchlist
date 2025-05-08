@@ -1,6 +1,6 @@
 import "./globals.css";
 import type { Metadata } from "next";
-import { Inter, Bebas_Neue } from "next/font/google";
+import { Inter, Bebas_Neue, Exo_2 } from "next/font/google";
 import NextTopLoader from "nextjs-toploader";
 import PageTransition from "@/components/page-transition";
 import { ColorProvider } from "@/contexts/color-context";
@@ -23,6 +23,14 @@ const bebasNeue = Bebas_Neue({
   weight: "400",
   subsets: ["latin"],
   variable: "--font-bebas-neue",
+});
+
+// Добавляем настройку для Exo 2
+const exo2 = Exo_2({
+  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"], // Можно указать диапазон или конкретные значения
+  subsets: ["latin", "cyrillic"], // Добавим кириллицу, если нужна
+  variable: "--font-exo-2",
+  display: "swap",
 });
 
 // Fallback компонент для Header
@@ -66,7 +74,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ru" className={`bg-[#121212] ${bebasNeue.variable}`}>
+    <html
+      lang="ru"
+      className={`bg-[#121212] ${bebasNeue.variable} ${exo2.variable}`}
+    >
       <body className={`${inter.className} bg-[#121212] text-white`}>
         <NextTopLoader color="#FFCC00" showSpinner={false} height={3} />
         <WatchlistProvider>
@@ -76,7 +87,6 @@ export default function RootLayout({
                 <ViewingHistoryProvider>
                   <UsernameProvider>
                     <UISettingsProvider>
-                      {/* Удаляем Suspense, так как dynamic компонент уже имеет свой loading */}
                       <Header />
                       <PageTransition>{children}</PageTransition>
                     </UISettingsProvider>

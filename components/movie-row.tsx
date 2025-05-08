@@ -41,6 +41,7 @@ interface MovieRowProps {
   viewAllLink?: string;
   containerClassName?: string;
   disableGlowEffect?: boolean;
+  titleFontClass?: string;
 }
 
 export default function MovieRow({
@@ -66,6 +67,7 @@ export default function MovieRow({
   viewAllLink,
   containerClassName = "",
   disableGlowEffect = false,
+  titleFontClass,
 }: MovieRowProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
@@ -195,7 +197,11 @@ export default function MovieRow({
                   className="w-10 h-10 rounded-full mr-3 object-cover border-2 border-yellow-500"
                 />
               )}
-              <h2 className="text-xl uppercase tracking-wide font-bebas-neue pb-2 pr-2 relative border-b border-transparent">
+              <h2
+                className={`text-xl uppercase tracking-wide pb-2 pr-2 relative border-b border-transparent ${
+                  titleFontClass ? titleFontClass : "font-bebas-neue"
+                }`}
+              >
                 {title}
                 <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-yellow-500/40 to-transparent"></div>
               </h2>

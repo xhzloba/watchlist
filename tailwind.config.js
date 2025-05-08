@@ -12,6 +12,7 @@ module.exports = {
     extend: {
       fontFamily: {
         "bebas-neue": ["var(--font-bebas-neue)", "sans-serif"],
+        "exo-2": ["var(--font-exo-2)", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
