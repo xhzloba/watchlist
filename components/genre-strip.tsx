@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { getImageUrl } from "@/lib/tmdb"; // Убедимся, что getImageUrl импортирован
-import { useCallback, useRef, Fragment } from "react";
+import { useCallback, useRef, Fragment, useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 // Определяем типы для пропсов
@@ -75,6 +75,37 @@ export default function GenreStrip({
 }: GenreStripProps) {
   const generateTimestamp = useCallback(() => Date.now(), []);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [roundedCorners, setRoundedCorners] = useState(false);
+
+  // Эффект для отслеживания настройки закругленных углов
+  useEffect(() => {
+    // Инициализация значения из localStorage
+    if (typeof window !== "undefined") {
+      const savedRoundedCorners = localStorage.getItem(
+        "settings_rounded_corners"
+      );
+      setRoundedCorners(savedRoundedCorners === "true");
+    }
+
+    // Обработчик изменения настроек
+    const handleSettingsChange = (event: CustomEvent) => {
+      if (event.detail?.roundedCorners !== undefined) {
+        setRoundedCorners(event.detail.roundedCorners);
+      }
+    };
+
+    document.addEventListener(
+      "settingsChange",
+      handleSettingsChange as EventListener
+    );
+
+    return () => {
+      document.removeEventListener(
+        "settingsChange",
+        handleSettingsChange as EventListener
+      );
+    };
+  }, []);
 
   const scroll = (direction: "left" | "right") => {
     if (!scrollRef.current) return;
@@ -110,7 +141,9 @@ export default function GenreStrip({
                 className="flex-shrink-0 group/genreblock"
               >
                 <div
-                  className={`relative w-60 h-52 md:w-72 md:h-60 ${gradientClass} rounded-lg overflow-hidden shadow-lg transition-all duration-300 ease-in-out transform`}
+                  className={`relative w-60 h-52 md:w-72 md:h-60 ${gradientClass} ${
+                    roundedCorners ? "rounded-xl" : "rounded-md"
+                  } overflow-hidden shadow-lg transition-all duration-300 ease-in-out transform`}
                 >
                   <div className="absolute inset-0 bg-black/20 z-10 group-hover/genreblock:bg-black/10 transition-colors duration-300"></div>
 
@@ -130,7 +163,9 @@ export default function GenreStrip({
                           movie.poster_path && (
                             <div
                               key={movie.id}
-                              className={`relative w-[72px] h-[108px] md:w-[80px] md:h-[120px] rounded-md shadow-lg group-hover/genreblock:opacity-95 transition-transform duration-300 border-2 border-black/30 overflow-hidden ${
+                              className={`relative w-[72px] h-[108px] md:w-[80px] md:h-[120px] ${
+                                roundedCorners ? "rounded-xl" : "rounded-md"
+                              } shadow-lg group-hover/genreblock:opacity-95 transition-transform duration-300 border-2 border-black/30 overflow-hidden ${
                                 index === 0 ? "-rotate-3 translate-y-1" : ""
                               } ${index === 2 ? "rotate-3 translate-y-1" : ""}`}
                             >
@@ -138,7 +173,9 @@ export default function GenreStrip({
                                 src={getImageUrl(movie.poster_path, "w300")}
                                 alt={movie.title || movie.name || "Постер"}
                                 fill
-                                className="object-cover rounded-md"
+                                className={`object-cover ${
+                                  roundedCorners ? "rounded-xl" : "rounded-md"
+                                }`}
                                 sizes="(max-width: 768px) 20vw, 10vw"
                               />
                             </div>
