@@ -60,6 +60,7 @@ async function HomePageContent() {
       dramaMovies,
       familyMovies,
       westernMovies,
+      thrillerMovies,
       popularMoviesData,
     ] = await Promise.all([
       getTrendingMovies(),
@@ -83,6 +84,7 @@ async function HomePageContent() {
       getMoviesByGenre(18).then((data) => data.map(ensurePlainMovieObject)),
       getMoviesByGenre(10751).then((data) => data.map(ensurePlainMovieObject)),
       getMoviesByGenre(37).then((data) => data.map(ensurePlainMovieObject)),
+      getMoviesByGenre(53).then((data) => data.map(ensurePlainMovieObject)),
       getPopularMoviesOnly(),
     ]);
 
@@ -95,12 +97,22 @@ async function HomePageContent() {
       popularMovies.length
     ); // Добавим лог для проверки
 
-    // Подготовка данных для GenreStrip
+    // Подготовка данных для GenreStrip - Вестерны перемещены на 2 позицию
     const genresForStrip = [
       {
-        id: 16,
-        name: "Мультфильмы",
-        movies: animationMovies.slice(0, 3).map((m) => ({
+        id: 53,
+        name: "Триллеры",
+        movies: thrillerMovies.slice(0, 3).map((m) => ({
+          id: m.id,
+          poster_path: m.poster_path,
+          title: m.title,
+          name: m.name,
+        })),
+      },
+      {
+        id: 37,
+        name: "Вестерны",
+        movies: westernMovies.slice(0, 3).map((m) => ({
           id: m.id,
           poster_path: m.poster_path,
           title: m.title,
@@ -238,9 +250,9 @@ async function HomePageContent() {
         })),
       },
       {
-        id: 37,
-        name: "Вестерны",
-        movies: westernMovies.slice(0, 3).map((m) => ({
+        id: 16,
+        name: "Мультфильмы",
+        movies: animationMovies.slice(0, 3).map((m) => ({
           id: m.id,
           poster_path: m.poster_path,
           title: m.title,
@@ -249,12 +261,22 @@ async function HomePageContent() {
       },
     ].filter((genre) => genre.movies.length > 0);
 
-    // Обновляем genreSliders с преобразованными items
+    // Вестерны перемещены на 2 позицию
     const genreSliders = [
       {
         id: -1,
         title: "ПОПУЛЯРНЫЕ ФИЛЬМЫ ИЗ РОССИИ",
         items: russianMovies.slice(0, 20),
+      },
+      {
+        id: 53,
+        title: "ТРИЛЛЕРЫ",
+        items: thrillerMovies.slice(0, 20),
+      },
+      {
+        id: 37,
+        title: "ВЕСТЕРНЫ",
+        items: westernMovies.slice(0, 20),
       },
       {
         id: 35,
@@ -312,11 +334,6 @@ async function HomePageContent() {
         items: historyMovies.slice(0, 20),
       },
       {
-        id: 16,
-        title: "МУЛЬТФИЛЬМЫ",
-        items: animationMovies.slice(0, 20),
-      },
-      {
         id: 18,
         title: "ДРАМЫ",
         items: dramaMovies.slice(0, 20),
@@ -327,9 +344,9 @@ async function HomePageContent() {
         items: familyMovies.slice(0, 20),
       },
       {
-        id: 37,
-        title: "ВЕСТЕРНЫ",
-        items: westernMovies.slice(0, 20),
+        id: 16,
+        title: "МУЛЬТФИЛЬМЫ",
+        items: animationMovies.slice(0, 20),
       },
     ];
 
