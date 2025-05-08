@@ -670,10 +670,12 @@ function DiscoverContent() {
     movie,
     index,
     isLastElement,
+    titleFontClass,
   }: {
     movie: DiscoverMovie;
     index: number;
     isLastElement: boolean;
+    titleFontClass?: string;
   }) => {
     const [isHovered, setIsHovered] = useState(false);
     const { showCardGlow } = useUISettings();
@@ -773,12 +775,18 @@ function DiscoverContent() {
           </div>
         </Link>
         {showTitles && (
-          <h3 className="text-sm font-medium truncate px-1 mt-1">
+          <h3
+            className={`text-sm font-medium truncate px-1 mt-1 ${
+              titleFontClass || ""
+            }`}
+          >
             {movie.title || movie.name}
           </h3>
         )}
         {showTitles && year && (
-          <p className="text-xs text-gray-400 px-1">{year}</p>
+          <p className={`text-xs text-gray-400 px-1 ${titleFontClass || ""}`}>
+            {year}
+          </p>
         )}
       </div>
     );
@@ -1026,6 +1034,7 @@ function DiscoverContent() {
                       movie={movie}
                       index={index}
                       isLastElement={index === movies.length - 1}
+                      titleFontClass="font-exo-2"
                     />
                   ))}
                 </div>
