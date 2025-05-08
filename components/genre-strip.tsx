@@ -25,47 +25,47 @@ interface GenreStripProps {
   genresWithMovies: GenreWithMovies[]; // Новый проп
 }
 
-// Функция для получения градиента по ID жанра
+// Функция для получения градиента по ID жанра - с обновленными цветами
 const getGenreGradient = (genreId: number): string => {
   switch (genreId) {
     case 28:
-      return "bg-gradient-to-br from-red-500 via-orange-500 to-red-600"; // Боевик
+      return "bg-gradient-to-br from-red-600 via-rose-500 to-red-700"; // Боевик (более насыщенный)
     case 12:
-      return "bg-gradient-to-br from-emerald-500 via-teal-600 to-green-600"; // Приключения
+      return "bg-gradient-to-br from-teal-500 via-cyan-500 to-emerald-600"; // Приключения (более бирюзово-зеленый)
     case 16:
-      return "bg-gradient-to-br from-sky-400 via-blue-500 to-indigo-500"; // Мультфильм
+      return "bg-gradient-to-br from-blue-400 via-sky-400 to-cyan-300"; // Мультфильм (светлее и ярче)
     case 35:
-      return "bg-gradient-to-br from-lime-400 via-yellow-400 to-green-500"; // Комедия
+      return "bg-gradient-to-br from-yellow-300 via-lime-300 to-green-400"; // Комедия (ярче и веселее)
     case 80:
-      return "bg-gradient-to-br from-slate-600 via-neutral-700 to-zinc-800"; // Криминал
+      return "bg-gradient-to-br from-slate-600 via-neutral-700 to-zinc-800"; // Криминал (темный, ок)
     case 99:
-      return "bg-gradient-to-br from-cyan-600 via-sky-700 to-blue-700"; // Документальный
+      return "bg-gradient-to-br from-blue-500 via-sky-600 to-cyan-700"; // Документальный (сине-голубой)
     case 18:
-      return "bg-gradient-to-br from-blue-600 via-indigo-700 to-slate-800"; // Драма
+      return "bg-gradient-to-br from-indigo-600 via-blue-700 to-slate-800"; // Драма (глубже синий)
     case 10751:
-      return "bg-gradient-to-br from-yellow-300 via-orange-400 to-amber-500"; // Семейный
+      return "bg-gradient-to-br from-orange-300 via-yellow-300 to-amber-400"; // Семейный (теплее)
     case 14:
-      return "bg-gradient-to-br from-purple-500 via-fuchsia-600 to-indigo-600"; // Фэнтези
+      return "bg-gradient-to-br from-fuchsia-500 via-purple-600 to-violet-700"; // Фэнтези (более фиолетовый)
     case 36:
-      return "bg-gradient-to-br from-amber-700 via-orange-800 to-stone-800"; // История
+      return "bg-gradient-to-br from-stone-600 via-amber-700 to-orange-800"; // История (более "земляной")
     case 27:
-      return "bg-gradient-to-br from-rose-800 via-red-900 to-black"; // Ужасы
+      return "bg-gradient-to-br from-rose-800 via-red-900 to-black"; // Ужасы (темно-красный, ок)
     case 10402:
-      return "bg-gradient-to-br from-pink-500 via-purple-600 to-fuchsia-600"; // Музыка
+      return "bg-gradient-to-br from-pink-500 via-purple-600 to-fuchsia-600"; // Музыка (яркий, ок)
     case 9648:
-      return "bg-gradient-to-br from-indigo-700 via-violet-800 to-neutral-900"; // Детектив
+      return "bg-gradient-to-br from-purple-700 via-indigo-800 to-slate-900"; // Детектив (глубже фиолетовый/синий)
     case 10749:
-      return "bg-gradient-to-br from-rose-400 via-pink-500 to-red-500"; // Мелодрама
+      return "bg-gradient-to-br from-pink-400 via-rose-400 to-red-400"; // Мелодрама (нежнее)
     case 878:
-      return "bg-gradient-to-br from-cyan-500 via-blue-600 to-violet-700"; // Фантастика
+      return "bg-gradient-to-br from-sky-500 via-cyan-600 to-indigo-700"; // Фантастика (более "электрик")
     case 53:
-      return "bg-gradient-to-br from-slate-500 via-gray-600 to-neutral-700"; // Триллер
+      return "bg-gradient-to-br from-slate-500 via-gray-600 to-neutral-700"; // Триллер (приглушенный, ок)
     case 10752:
-      return "bg-gradient-to-br from-lime-700 via-green-800 to-emerald-900"; // Военный
+      return "bg-gradient-to-br from-green-700 via-emerald-800 to-teal-900"; // Военный (темнее зеленый)
     case 37:
-      return "bg-gradient-to-br from-yellow-600 via-amber-700 to-orange-800"; // Вестерн
+      return "bg-gradient-to-br from-amber-600 via-yellow-700 to-orange-800"; // Вестерн (более "песочный")
     default:
-      return "bg-gradient-to-br from-gray-700 to-gray-800"; // По умолчанию
+      return "bg-gradient-to-br from-gray-700 to-gray-800";
   }
 };
 
@@ -100,7 +100,7 @@ export default function GenreStrip({
           className="flex items-center justify-start overflow-x-auto gap-4 py-4 scrollbar-hide scroll-smooth px-1 md:px-6"
         >
           {genresWithMovies.map((genre) => {
-            const gradientClass = getGenreGradient(genre.id); // Получаем классы градиента
+            const gradientClass = getGenreGradient(genre.id);
             return (
               <Link
                 key={genre.id}
@@ -110,7 +110,7 @@ export default function GenreStrip({
                 className="flex-shrink-0 group/genreblock"
               >
                 <div
-                  className={`relative w-60 h-52 md:w-72 md:h-60 ${gradientClass} rounded-lg overflow-hidden shadow-lg transition-all duration-300 ease-in-out transform border-2 border-transparent group-hover/genreblock:border-white`}
+                  className={`relative w-60 h-52 md:w-72 md:h-60 ${gradientClass} rounded-lg overflow-hidden shadow-lg transition-all duration-300 ease-in-out transform`}
                 >
                   <div className="absolute inset-0 bg-black/20 z-10 group-hover/genreblock:bg-black/10 transition-colors duration-300"></div>
 
