@@ -449,7 +449,7 @@ const AINavigationLink = ({
     <div className="relative overflow-visible">
       <Link
         href={href}
-        className={`relative z-10 flex items-center gap-2 font-bebas-neue text-base uppercase tracking-wider transition-colors px-2 py-1.5 text-white hover:text-yellow-400 cursor-pointer overflow-visible group`}
+        className={`relative z-10 flex items-center gap-2 font-exo-2 text-base uppercase tracking-wider transition-colors px-2 py-1.5 text-white hover:text-yellow-400 cursor-pointer overflow-visible group`}
         onClick={handleClick}
         prefetch={!isActorsLink}
       >
@@ -1071,35 +1071,35 @@ const Header = memo(function HeaderComponent() {
                 <Link
                   href="/"
                   onClick={closeMobileMenu}
-                  className="text-white hover:text-yellow-400 transition-colors py-2 text-2xl font-semibold uppercase tracking-wider flex items-center justify-center gap-3"
+                  className="text-white hover:text-yellow-400 transition-colors py-2 text-2xl font-exo-2 font-semibold uppercase tracking-wider flex items-center justify-center gap-3"
                 >
                   <Home size={22} /> Главная
                 </Link>
                 <Link
                   href="/keywords"
                   onClick={closeMobileMenu}
-                  className="text-white hover:text-yellow-400 transition-colors py-2 text-2xl font-semibold uppercase tracking-wider flex items-center justify-center gap-3"
+                  className="text-white hover:text-yellow-400 transition-colors py-2 text-2xl font-exo-2 font-semibold uppercase tracking-wider flex items-center justify-center gap-3"
                 >
                   <Bookmark size={22} /> Коллекции
                 </Link>
                 <Link
                   href="/actors"
                   onClick={closeMobileMenu}
-                  className="text-white hover:text-yellow-400 transition-colors py-2 text-2xl font-semibold uppercase tracking-wider flex items-center justify-center gap-3"
+                  className="text-white hover:text-yellow-400 transition-colors py-2 text-2xl font-exo-2 font-semibold uppercase tracking-wider flex items-center justify-center gap-3"
                 >
                   <User size={22} /> Актеры
                 </Link>
                 <Link
                   href="/discover"
                   onClick={closeMobileMenu}
-                  className="text-white hover:text-yellow-400 transition-colors py-2 text-2xl font-semibold uppercase tracking-wider flex items-center justify-center gap-3"
+                  className="text-white hover:text-yellow-400 transition-colors py-2 text-2xl font-exo-2 font-semibold uppercase tracking-wider flex items-center justify-center gap-3"
                 >
                   <Compass size={22} /> ОБЗОР
                 </Link>
                 <Link
                   href="/watchlist"
                   onClick={closeMobileMenu}
-                  className="text-white hover:text-yellow-400 transition-colors py-2 text-2xl font-semibold uppercase tracking-wider flex items-center justify-center gap-3"
+                  className="text-white hover:text-yellow-400 transition-colors py-2 text-2xl font-exo-2 font-semibold uppercase tracking-wider flex items-center justify-center gap-3"
                 >
                   <MonitorSmartphone size={22} /> Медиатека
                 </Link>
