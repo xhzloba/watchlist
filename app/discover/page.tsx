@@ -797,10 +797,12 @@ function DiscoverContent() {
     movie,
     index,
     isLastElement,
+    titleFontClass,
   }: {
     movie: DiscoverMovie;
     index: number;
     isLastElement: boolean;
+    titleFontClass?: string;
   }) => {
     const { showReleaseQuality } = useReleaseQualityVisibility();
     const releaseQuality = movie.release_quality || null;
@@ -884,13 +886,25 @@ function DiscoverContent() {
         </div>
 
         <div className="flex-grow">
-          <h3 className="text-lg font-semibold text-white group-hover:text-black mb-1 line-clamp-2 transition-colors duration-200">
+          <h3
+            className={`text-lg font-semibold text-white group-hover:text-black mb-1 line-clamp-2 transition-colors duration-200 ${
+              titleFontClass || ""
+            }`}
+          >
             {movie.title || movie.name || "Без названия"}
           </h3>
-          <p className="text-sm text-zinc-400 group-hover:text-black mb-2 transition-colors duration-200">
+          <p
+            className={`text-sm text-zinc-400 group-hover:text-black mb-2 transition-colors duration-200 ${
+              titleFontClass || ""
+            }`}
+          >
             {year}
           </p>
-          <p className="text-sm text-zinc-400 group-hover:text-black line-clamp-3 transition-colors duration-200">
+          <p
+            className={`text-sm text-zinc-400 group-hover:text-black line-clamp-3 transition-colors duration-200 ${
+              titleFontClass || ""
+            }`}
+          >
             {movie.overview || "Описание недоступно."}
           </p>
         </div>
@@ -979,7 +993,7 @@ function DiscoverContent() {
         <div className="max-w-full mx-auto">
           <div className="flex flex-col sm:flex-row justify-between items-center mb-4 sm:mb-6">
             <div className="flex-grow mr-0 sm:mr-4 w-full sm:w-auto mb-4 sm:mb-0 hidden xl:block">
-              <DynamicHeading />
+              <DynamicHeading titleFontClass="font-exo-2" />
             </div>
             <DiscoverFilterBar
               posterSize={posterSize}
@@ -1046,6 +1060,7 @@ function DiscoverContent() {
                       movie={movie}
                       index={index}
                       isLastElement={index === movies.length - 1}
+                      titleFontClass="font-exo-2"
                     />
                   ))}
                 </div>

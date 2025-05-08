@@ -39,7 +39,13 @@ const countries = [
   { code: "ES", name: "Испании" },
 ];
 
-export default function DynamicHeading() {
+interface DynamicHeadingProps {
+  titleFontClass?: string;
+}
+
+export default function DynamicHeading({
+  titleFontClass,
+}: DynamicHeadingProps) {
   const searchParams = useSearchParams();
   const [headingText, setHeadingText] = useState("Обзор популярных фильмов");
   const [headingJSX, setHeadingJSX] = useState<React.ReactNode | null>(null);
@@ -152,7 +158,11 @@ export default function DynamicHeading() {
   }, [searchParams]);
 
   return (
-    <h1 className="text-xl uppercase tracking-wide font-bebas-neue pb-2 relative">
+    <h1
+      className={`text-xl uppercase tracking-wide pb-2 relative ${
+        titleFontClass || "font-bebas-neue"
+      }`}
+    >
       <span className="relative inline-block">
         {headingJSX || headingText}
         <div className="absolute left-0 bottom-0 w-full h-px bg-gradient-to-r from-transparent via-yellow-500/40 to-transparent"></div>
