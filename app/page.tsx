@@ -466,7 +466,7 @@ async function HomePageContent() {
             {/* Полоса жанров */}
             <GenreStrip genresWithMovies={genresForStrip} />
             <MovieRow
-              title="ЛУЧШИЕ ФИЛЬМЫ 2025 ГОДА ПО ОЦЕНКАМ"
+              title="2025"
               items={movies2025.slice(0, 20)}
               variant="backdrop"
               backdropSize="xlarge"
@@ -477,7 +477,7 @@ async function HomePageContent() {
               disableGlowEffect={true}
             />
             <MovieRow
-              title="ЛУЧШИЕ ФИЛЬМЫ 2024 ГОДА ПО ОЦЕНКАМ"
+              title="2024"
               items={movies2024.slice(0, 20)}
               variant="backdrop"
               backdropSize="xlarge"
