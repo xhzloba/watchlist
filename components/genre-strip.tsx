@@ -43,15 +43,17 @@ export default function GenreStrip({
   }
 
   return (
-    <div className="relative px-1 md:px-6">
-      <h2 className="text-xl uppercase tracking-wide font-exo-2 pb-2 pr-2 relative border-b border-transparent mb-3">
-        {title}
-        <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-yellow-500/40 to-transparent"></div>
-      </h2>
+    <section className="relative">
+      <div className="px-2 md:px-6">
+        <h2 className="text-xl uppercase tracking-wide font-exo-2 pb-2 pr-2 relative border-b border-transparent mb-3">
+          {title}
+          <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-yellow-500/40 to-transparent"></div>
+        </h2>
+      </div>
       <div className="group relative">
         <div
           ref={scrollRef}
-          className="flex items-center justify-start overflow-x-auto gap-4 py-4 scrollbar-hide scroll-smooth"
+          className="flex items-center justify-start overflow-x-auto gap-4 py-4 scrollbar-hide scroll-smooth px-1 md:px-6"
         >
           {genresWithMovies.map((genre) => (
             <Link
@@ -100,7 +102,7 @@ export default function GenreStrip({
         </div>
         <button
           onClick={() => scroll("left")}
-          className="absolute top-1/2 -translate-y-1/2 left-0 z-30 p-2 rounded-full 
+          className="absolute top-1/2 -translate-y-1/2 left-2 z-30 p-2 rounded-full 
                      bg-yellow-400 hover:bg-yellow-500 text-black 
                      transition-all duration-300 disabled:opacity-0 disabled:cursor-not-allowed 
                      opacity-0 md:group-hover:opacity-100"
@@ -109,7 +111,7 @@ export default function GenreStrip({
         </button>
         <button
           onClick={() => scroll("right")}
-          className="absolute top-1/2 -translate-y-1/2 right-0 z-30 p-2 rounded-full 
+          className="absolute top-1/2 -translate-y-1/2 right-2 z-30 p-2 rounded-full 
                      bg-yellow-400 hover:bg-yellow-500 text-black 
                      transition-all duration-300 disabled:opacity-0 disabled:cursor-not-allowed 
                      opacity-0 md:group-hover:opacity-100"
@@ -117,6 +119,6 @@ export default function GenreStrip({
           <ChevronRight className="w-6 h-6" />
         </button>
       </div>
-    </div>
+    </section>
   );
 }
