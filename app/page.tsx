@@ -67,26 +67,25 @@ async function HomePageContent() {
       getLatestTrailers(),
       getBestMoviesOf2025(),
       getBestMoviesOf2024(),
-      getRussianMovies(),
-      getMoviesByGenre(35), // Комедия
-      getMoviesByGenre(27), // Ужасы
-      getMoviesByGenre(28), // Боевики
-      getMoviesByGenre(9648), // Детективы
-      getMoviesByGenre(878), // Фантастика
-      getMoviesByGenre(10752), // Военные
-      getMoviesByGenre(12), // Приключения
-      getMoviesByGenre(80), // Криминал
-      getMoviesByGenre(14), // Фэнтези
-      getMoviesByGenre(10749), // Мелодрама
-      getMoviesByGenre(36), // История
-      getMoviesByGenre(16), // Мультфильм
-      getMoviesByGenre(18), // Драма
-      getMoviesByGenre(10751), // Семейный
-      getMoviesByGenre(37), // Вестерн
+      getRussianMovies().then((data) => data.map(ensurePlainMovieObject)),
+      getMoviesByGenre(35).then((data) => data.map(ensurePlainMovieObject)),
+      getMoviesByGenre(27).then((data) => data.map(ensurePlainMovieObject)),
+      getMoviesByGenre(28).then((data) => data.map(ensurePlainMovieObject)),
+      getMoviesByGenre(9648).then((data) => data.map(ensurePlainMovieObject)),
+      getMoviesByGenre(878).then((data) => data.map(ensurePlainMovieObject)),
+      getMoviesByGenre(10752).then((data) => data.map(ensurePlainMovieObject)),
+      getMoviesByGenre(12).then((data) => data.map(ensurePlainMovieObject)),
+      getMoviesByGenre(80).then((data) => data.map(ensurePlainMovieObject)),
+      getMoviesByGenre(14).then((data) => data.map(ensurePlainMovieObject)),
+      getMoviesByGenre(10749).then((data) => data.map(ensurePlainMovieObject)),
+      getMoviesByGenre(36).then((data) => data.map(ensurePlainMovieObject)),
+      getMoviesByGenre(16).then((data) => data.map(ensurePlainMovieObject)),
+      getMoviesByGenre(18).then((data) => data.map(ensurePlainMovieObject)),
+      getMoviesByGenre(10751).then((data) => data.map(ensurePlainMovieObject)),
+      getMoviesByGenre(37).then((data) => data.map(ensurePlainMovieObject)),
       getPopularMoviesOnly(),
     ]);
 
-    // Просто преобразуем результат, предполагая, что там только фильмы
     const popularMovies: LocalMovieType[] = popularMoviesData.items.map(
       ensurePlainMovieObject
     );
@@ -96,107 +95,241 @@ async function HomePageContent() {
       popularMovies.length
     ); // Добавим лог для проверки
 
-    // Преобразуем остальные массивы
-    const plainRussianMovies = russianMovies.map(ensurePlainMovieObject);
-    const plainComedyMovies = comedyMovies.map(ensurePlainMovieObject);
-    const plainHorrorMovies = horrorMovies.map(ensurePlainMovieObject);
-    const plainActionMovies = actionMovies.map(ensurePlainMovieObject);
-    const plainMysteryMovies = mysteryMovies.map(ensurePlainMovieObject);
-    const plainScienceFictionMovies = scienceFictionMovies.map(
-      ensurePlainMovieObject
-    );
-    const plainWarMovies = warMovies.map(ensurePlainMovieObject);
-    const plainAdventureMovies = adventureMovies.map(ensurePlainMovieObject);
-    const plainCrimeMovies = crimeMovies.map(ensurePlainMovieObject);
-    const plainFantasyMovies = fantasyMovies.map(ensurePlainMovieObject);
-    const plainRomanceMovies = romanceMovies.map(ensurePlainMovieObject);
-    const plainHistoryMovies = historyMovies.map(ensurePlainMovieObject);
-    const plainAnimationMovies = animationMovies.map(ensurePlainMovieObject);
-    const plainDramaMovies = dramaMovies.map(ensurePlainMovieObject);
-    const plainFamilyMovies = familyMovies.map(ensurePlainMovieObject);
-    const plainWesternMovies = westernMovies.map(ensurePlainMovieObject);
+    // Подготовка данных для GenreStrip
+    const genresForStrip = [
+      {
+        id: 16,
+        name: "Мультфильмы",
+        movies: animationMovies.slice(0, 3).map((m) => ({
+          id: m.id,
+          poster_path: m.poster_path,
+          title: m.title,
+          name: m.name,
+        })),
+      },
+      {
+        id: 35,
+        name: "Комедии",
+        movies: comedyMovies.slice(0, 3).map((m) => ({
+          id: m.id,
+          poster_path: m.poster_path,
+          title: m.title,
+          name: m.name,
+        })),
+      },
+      {
+        id: 27,
+        name: "Ужасы",
+        movies: horrorMovies.slice(0, 3).map((m) => ({
+          id: m.id,
+          poster_path: m.poster_path,
+          title: m.title,
+          name: m.name,
+        })),
+      },
+      {
+        id: 28,
+        name: "Боевики",
+        movies: actionMovies.slice(0, 3).map((m) => ({
+          id: m.id,
+          poster_path: m.poster_path,
+          title: m.title,
+          name: m.name,
+        })),
+      },
+      {
+        id: 878,
+        name: "Фантастика",
+        movies: scienceFictionMovies.slice(0, 3).map((m) => ({
+          id: m.id,
+          poster_path: m.poster_path,
+          title: m.title,
+          name: m.name,
+        })),
+      },
+      {
+        id: 12,
+        name: "Приключения",
+        movies: adventureMovies.slice(0, 3).map((m) => ({
+          id: m.id,
+          poster_path: m.poster_path,
+          title: m.title,
+          name: m.name,
+        })),
+      },
+      {
+        id: 14,
+        name: "Фэнтези",
+        movies: fantasyMovies.slice(0, 3).map((m) => ({
+          id: m.id,
+          poster_path: m.poster_path,
+          title: m.title,
+          name: m.name,
+        })),
+      },
+      {
+        id: 10749,
+        name: "Мелодрамы",
+        movies: romanceMovies.slice(0, 3).map((m) => ({
+          id: m.id,
+          poster_path: m.poster_path,
+          title: m.title,
+          name: m.name,
+        })),
+      },
+      {
+        id: 18,
+        name: "Драмы",
+        movies: dramaMovies.slice(0, 3).map((m) => ({
+          id: m.id,
+          poster_path: m.poster_path,
+          title: m.title,
+          name: m.name,
+        })),
+      },
+      {
+        id: 10751,
+        name: "Семейные",
+        movies: familyMovies.slice(0, 3).map((m) => ({
+          id: m.id,
+          poster_path: m.poster_path,
+          title: m.title,
+          name: m.name,
+        })),
+      },
+      {
+        id: 9648,
+        name: "Детективы",
+        movies: mysteryMovies.slice(0, 3).map((m) => ({
+          id: m.id,
+          poster_path: m.poster_path,
+          title: m.title,
+          name: m.name,
+        })),
+      },
+      {
+        id: 10752,
+        name: "Военные фильмы",
+        movies: warMovies.slice(0, 3).map((m) => ({
+          id: m.id,
+          poster_path: m.poster_path,
+          title: m.title,
+          name: m.name,
+        })),
+      },
+      {
+        id: 80,
+        name: "Криминальные фильмы",
+        movies: crimeMovies.slice(0, 3).map((m) => ({
+          id: m.id,
+          poster_path: m.poster_path,
+          title: m.title,
+          name: m.name,
+        })),
+      },
+      {
+        id: 36,
+        name: "Исторические фильмы",
+        movies: historyMovies.slice(0, 3).map((m) => ({
+          id: m.id,
+          poster_path: m.poster_path,
+          title: m.title,
+          name: m.name,
+        })),
+      },
+      {
+        id: 37,
+        name: "Вестерны",
+        movies: westernMovies.slice(0, 3).map((m) => ({
+          id: m.id,
+          poster_path: m.poster_path,
+          title: m.title,
+          name: m.name,
+        })),
+      },
+    ].filter((genre) => genre.movies.length > 0);
 
     // Обновляем genreSliders с преобразованными items
     const genreSliders = [
       {
         id: -1,
         title: "ПОПУЛЯРНЫЕ ФИЛЬМЫ ИЗ РОССИИ",
-        items: plainRussianMovies.slice(0, 20),
+        items: russianMovies.slice(0, 20),
       },
       {
         id: 35,
         title: "ЛУЧШИЕ КОМЕДИИ",
-        items: plainComedyMovies.slice(0, 20),
+        items: comedyMovies.slice(0, 20),
       },
       {
         id: 27,
         title: "УЖАСЫ",
-        items: plainHorrorMovies.slice(0, 20),
+        items: horrorMovies.slice(0, 20),
       },
       {
         id: 28,
         title: "БОЕВИКИ",
-        items: plainActionMovies.slice(0, 20),
+        items: actionMovies.slice(0, 20),
       },
       {
         id: 9648,
         title: "ДЕТЕКТИВЫ",
-        items: plainMysteryMovies.slice(0, 20),
+        items: mysteryMovies.slice(0, 20),
       },
       {
         id: 878,
         title: "ФАНТАСТИКА",
-        items: plainScienceFictionMovies.slice(0, 20),
+        items: scienceFictionMovies.slice(0, 20),
       },
       {
         id: 10752,
         title: "ВОЕННЫЕ ФИЛЬМЫ",
-        items: plainWarMovies.slice(0, 20),
+        items: warMovies.slice(0, 20),
       },
       {
         id: 12,
         title: "ПРИКЛЮЧЕНИЯ",
-        items: plainAdventureMovies.slice(0, 20),
+        items: adventureMovies.slice(0, 20),
       },
       {
         id: 80,
         title: "КРИМИНАЛЬНЫЕ ФИЛЬМЫ",
-        items: plainCrimeMovies.slice(0, 20),
+        items: crimeMovies.slice(0, 20),
       },
       {
         id: 14,
         title: "ФЭНТЕЗИ",
-        items: plainFantasyMovies.slice(0, 20),
+        items: fantasyMovies.slice(0, 20),
       },
       {
         id: 10749,
         title: "МЕЛОДРАМЫ",
-        items: plainRomanceMovies.slice(0, 20),
+        items: romanceMovies.slice(0, 20),
       },
       {
         id: 36,
         title: "ИСТОРИЧЕСКИЕ ФИЛЬМЫ",
-        items: plainHistoryMovies.slice(0, 20),
+        items: historyMovies.slice(0, 20),
       },
       {
         id: 16,
         title: "МУЛЬТФИЛЬМЫ",
-        items: plainAnimationMovies.slice(0, 20),
+        items: animationMovies.slice(0, 20),
       },
       {
         id: 18,
         title: "ДРАМЫ",
-        items: plainDramaMovies.slice(0, 20),
+        items: dramaMovies.slice(0, 20),
       },
       {
         id: 10751,
         title: "СЕМЕЙНЫЕ ФИЛЬМЫ",
-        items: plainFamilyMovies.slice(0, 20),
+        items: familyMovies.slice(0, 20),
       },
       {
         id: 37,
         title: "ВЕСТЕРНЫ",
-        items: plainWesternMovies.slice(0, 20),
+        items: westernMovies.slice(0, 20),
       },
     ];
 
@@ -314,7 +447,7 @@ async function HomePageContent() {
               disableGlowEffect={true}
             />
             {/* Полоса жанров */}
-            <GenreStrip />
+            <GenreStrip genresWithMovies={genresForStrip} />
             <MovieRow
               title="ЛУЧШИЕ ФИЛЬМЫ 2025 ГОДА ПО ОЦЕНКАМ"
               items={movies2025.slice(0, 20)}
