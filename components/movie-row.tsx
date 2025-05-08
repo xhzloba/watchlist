@@ -198,7 +198,7 @@ export default function MovieRow({
                 />
               )}
               <h2
-                className={`text-xl uppercase tracking-wide pb-2 pr-2 relative border-b border-transparent ${
+                className={`text-lg md:text-xl uppercase tracking-wide pb-2 pr-2 relative border-b border-transparent ${
                   titleFontClass ? titleFontClass : "font-bebas-neue"
                 }`}
               >
