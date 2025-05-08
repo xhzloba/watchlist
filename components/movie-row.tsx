@@ -510,12 +510,12 @@ function MovieCard({
           </div>
         )}
       </div>
-      <h3 className="text-sm font-medium truncate">
+      <h3 className="text-sm md:text-base font-medium truncate font-exo-2">
         {item.title || item.name}
       </h3>
       {((showDate || showYear) && (item.release_date || item.first_air_date)) ||
       (!item.release_date && !item.first_air_date && item.status) ? (
-        <p className="text-xs text-gray-400">
+        <p className="text-xs md:text-sm text-gray-400 font-exo-2">
           {!item.release_date && !item.first_air_date
             ? item.status === "Post Production"
               ? "В производстве"
