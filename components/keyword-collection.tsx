@@ -41,9 +41,9 @@ export default function KeywordCollection({
       <div className="px-6 mb-4">
         <div className="flex flex-col">
           <div className="flex items-center">
-            <h2 className="text-xl uppercase tracking-wide font-bebas-neue pb-2 pr-2 relative border-b-0">
+            <h2 className="text-xl uppercase tracking-wide font-exo-2 pb-2 pr-2 relative border-b border-transparent">
               {title}
-              <div className="absolute left-0 right-[60%] bottom-0 h-px bg-gradient-to-r from-yellow-500/40 via-yellow-500/40 to-transparent"></div>
+              <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-yellow-500/40 to-transparent"></div>
             </h2>
             {keywordIds && (
               <ChevronRightCircle
