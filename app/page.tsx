@@ -15,11 +15,13 @@ import {
   getRussianMovies,
   getPopularMoviesOnly,
   type Movie as LocalMovieType,
+  getImageUrl,
 } from "@/lib/tmdb";
 import { getAllActorsInfo, getAllActorsMovies } from "@/lib/actors";
 import dynamic from "next/dynamic";
 import { ensurePlainMovieObject } from "@/lib/movie-utils";
 import HeroBackdropSlider from "@/components/hero-backdrop-slider";
+import FaqAccordion from "@/components/FaqAccordion";
 
 // Динамический импорт компонента GenreStrip
 const GenreStrip = dynamic(() => import("@/components/genre-strip"), {
@@ -408,6 +410,7 @@ async function HomePageContent() {
     // Сортируем фильмы по показателю популярности в убывающем порядке
     return (
       <div className="min-h-screen text-white">
+        <FaqAccordion />
         {/* Header больше не рендерится здесь */}
         {/* <Header /> */}
         <main className="pb-8">

@@ -114,13 +114,23 @@ const HeroBackdropSlider: React.FC<HeroBackdropSliderProps> = ({ items }) => {
       const scrollY = window.scrollY;
 
       // Логика для прозрачности оверлея
-      const overlayScrollThreshold = 300;
-      const minOverlayOpacity = 0.3;
-      const maxOverlayOpacity = 0.85;
-      const overlayOpacityRange = maxOverlayOpacity - minOverlayOpacity;
-      let overlayScrollFraction = Math.min(scrollY / overlayScrollThreshold, 1);
-      const newOverlayOpacity =
-        minOverlayOpacity + overlayOpacityRange * overlayScrollFraction;
+      const fullDimScrollThreshold = 150; // Порог для полного затемнения
+      const maxOverlayOpacity = 0.95; // Максимальная прозрачность (полное затемнение) - УВЕЛИЧЕНО
+
+      let newOverlayOpacity;
+      if (scrollY >= fullDimScrollThreshold) {
+        newOverlayOpacity = maxOverlayOpacity;
+      } else {
+        // Плавное увеличение прозрачности до порога
+        const minOverlayOpacity = 0.3; // Начальная прозрачность
+        const overlayOpacityRange = maxOverlayOpacity - minOverlayOpacity;
+        let overlayScrollFraction = Math.min(
+          scrollY / fullDimScrollThreshold,
+          1
+        );
+        newOverlayOpacity =
+          minOverlayOpacity + overlayOpacityRange * overlayScrollFraction;
+      }
       setOverlayOpacity(newOverlayOpacity);
 
       // Логика для прозрачности и доступности блока деталей

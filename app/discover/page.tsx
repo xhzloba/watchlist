@@ -16,7 +16,7 @@ import DiscoverFilterBar from "@/components/discover/DiscoverFilterBar";
 import FilterPopoverContent from "@/components/discover/FilterPopoverContent";
 import CategoryPopoverContent from "@/components/discover/CategoryPopoverContent";
 import clsx from "clsx";
-import { Star, X as CloseIcon } from "lucide-react";
+import { X as CloseIcon } from "lucide-react";
 
 // Определяем ключи для localStorage
 const DISCOVER_SETTINGS_POSTER_SIZE_KEY = "discover_poster_size";
