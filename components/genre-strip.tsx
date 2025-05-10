@@ -157,17 +157,51 @@ export default function GenreStrip({
                   </div>
 
                   {genre.movies && genre.movies.length > 0 && (
-                    <div className="absolute bottom-0 left-0 right-0 h-32 md:h-36 z-20 flex justify-center items-center gap-2 px-2 pb-2 pt-1">
-                      {genre.movies.slice(0, 3).map(
-                        (movie, index) =>
+                    <div className="absolute bottom-0 left-0 right-0 h-36 md:h-40 z-20 flex justify-center items-end gap-1 px-2 pb-1 pt-1">
+                      {genre.movies.slice(0, 3).map((movie, index) => {
+                        // Определяем стили для каждого постера
+                        let posterStyles =
+                          "relative w-[72px] h-[108px] md:w-[80px] md:h-[120px] shadow-lg group-hover/genreblock:opacity-95 transition-all duration-300 ease-in-out border-2 border-black/30 overflow-hidden";
+                        posterStyles += roundedCorners
+                          ? " rounded-xl"
+                          : " rounded-md";
+
+                        // Обновленные стили для наложения, поворота и высоты
+                        if (genre.movies.slice(0, 3).length === 1) {
+                          posterStyles +=
+                            " z-20 -translate-y-2 group-hover/genreblock:scale-110 group-hover/genreblock:-translate-y-4"; // Один фильм, чуть поднят + ховер эффект
+                        } else if (genre.movies.slice(0, 3).length === 2) {
+                          if (index === 0) {
+                            posterStyles +=
+                              " z-10 -rotate-[10deg] translate-x-[12px] group-hover/genreblock:scale-105 group-hover/genreblock:-translate-y-2"; // Левый + ховер
+                          } else {
+                            posterStyles +=
+                              " z-20 rotate-[0deg] -translate-x-[12px] -translate-y-3 group-hover/genreblock:scale-110 group-hover/genreblock:-translate-y-5"; // Правый (центральный), выше + ховер
+                          }
+                        } else {
+                          // Три фильма
+                          if (index === 0) {
+                            posterStyles +=
+                              " z-10 -rotate-[15deg] translate-x-[25px] group-hover/genreblock:scale-105 group-hover/genreblock:-translate-y-2"; // Левый + ховер
+                          } else if (index === 1) {
+                            posterStyles +=
+                              " z-20 rotate-[0deg] -translate-y-4 group-hover/genreblock:scale-110 group-hover/genreblock:-translate-y-6"; // Центральный, постоянно выше + ховер
+                          } else if (index === 2) {
+                            posterStyles +=
+                              " z-10 rotate-[15deg] -translate-x-[25px] group-hover/genreblock:scale-105 group-hover/genreblock:-translate-y-2"; // Правый + ховер
+                          }
+                        }
+
+                        return (
                           movie.poster_path && (
                             <div
                               key={movie.id}
-                              className={`relative w-[72px] h-[108px] md:w-[80px] md:h-[120px] ${
-                                roundedCorners ? "rounded-xl" : "rounded-md"
-                              } shadow-lg group-hover/genreblock:opacity-95 transition-transform duration-300 border-2 border-black/30 overflow-hidden ${
-                                index === 0 ? "-rotate-3 translate-y-1" : ""
-                              } ${index === 2 ? "rotate-3 translate-y-1" : ""}`}
+                              className={posterStyles}
+                              style={
+                                {
+                                  // marginBottom: "-10px", // Пример для "выхода" из низа, если overflow родителя позволяет
+                                }
+                              }
                             >
                               <Image
                                 src={getImageUrl(movie.poster_path, "w300")}
@@ -180,7 +214,8 @@ export default function GenreStrip({
                               />
                             </div>
                           )
-                      )}
+                        );
+                      })}
                     </div>
                   )}
                 </div>
