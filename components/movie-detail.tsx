@@ -918,6 +918,9 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
   // Устанавливаем isComponentLoaded сразу в true, чтобы избежать затемнения
   const [isComponentLoaded, setIsComponentLoaded] = useState(true);
 
+  // Состояние для отображения всех жанров или только первых двух
+  const [areAllGenresShown, setAreAllGenresShown] = useState(false);
+
   // Добавляем состояние для уведомления
   const [notification, setNotification] = useState<{
     message: string;
@@ -3460,7 +3463,10 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                       {" "}
                       {/* Возвращаем items-center */}
-                      {movie.genres?.map((genre, index) => (
+                      {(areAllGenresShown
+                        ? movie.genres
+                        : movie.genres.slice(0, 2)
+                      ).map((genre, index) => (
                         <span
                           key={`${genre.id}-${index}`}
                           className="text-sm text-gray-300 whitespace-nowrap"
@@ -3468,6 +3474,21 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                           {genre.name}
                         </span>
                       ))}
+                      {movie.genres.length > 2 && (
+                        <button
+                          onClick={() => {
+                            setAreAllGenresShown(!areAllGenresShown);
+                            playSound("interface-soft-click.mp3");
+                          }}
+                          className="text-yellow-400 hover:text-yellow-300 text-sm ml-1 whitespace-nowrap focus:outline-none"
+                        >
+                          {areAllGenresShown
+                            ? "Скрыть"
+                            : movie.genres.length - 2 === 1
+                            ? "Показать еще"
+                            : `Показать еще (${movie.genres.length - 2})`}
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
