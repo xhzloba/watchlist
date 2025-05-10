@@ -4109,185 +4109,189 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
             {/* </div> */}
           </div>
 
-          {/* Блок с рецензиями */}
-          <div className="mt-8">
-            <div className="px-2 mb-2">
-              <div className="flex flex-col">
-                <div className="flex items-center">
-                  <h2 className="text-xl uppercase tracking-wide font-bebas-neue pb-2 pr-8 relative border-b border-transparent">
-                    РЕЦЕНЗИИ
-                    <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-yellow-500/40 to-transparent"></div>
-                  </h2>
+          {/* Блок с рецензиями - НАЧАЛО УСЛОВНОГО РЕНДЕРИНГА */}
+          {(loadingReviews || (reviews && reviews.length > 0)) && (
+            <div className="mt-8">
+              {" "}
+              {/* Это начало блока "Рецензии" */}
+              <div className="px-2 mb-2">
+                <div className="flex flex-col">
+                  <div className="flex items-center">
+                    <h2 className="text-xl uppercase tracking-wide font-bebas-neue pb-2 pr-8 relative border-b border-transparent">
+                      РЕЦЕНЗИИ
+                      <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-yellow-500/40 to-transparent"></div>
+                    </h2>
+                  </div>
                 </div>
               </div>
-            </div>
-
-            <div className="relative">
-              {loadingReviews ? (
-                <div className="flex justify-center w-full py-6 px-10">
-                  {" "}
-                  {/* Loading Skeleton */}
-                  <div className="w-8 h-8 border-2 border-gray-600 border-t-yellow-400 rounded-full animate-spin"></div>
-                </div>
-              ) : reviews.length > 0 ? (
-                <section className="relative">
-                  <div className="group relative">
-                    {/* === ИЗМЕНЯЕМ КЛАССЫ СЛАЙДЕРА РЕЦЕНЗИЙ === */}
-                    <div
-                      ref={reviewsSliderRef}
-                      className="flex overflow-x-auto gap-4 py-2 -mx-4 md:-mx-10 px-4 md:px-10 relative review-row scrollbar-hide scroll-smooth"
-                    >
-                      {" "}
-                      {/* ИСПРАВЛЕНО: trailer-row на review-row + ДОБАВЛЕН REF */}
-                      {reviews.map((review) => (
-                        <div
-                          key={review.id}
-                          className="flex-none w-72 p-1 relative group/item" // Outer container with p-1
-                          onClick={() => setSelectedReview(review)}
-                        >
-                          <div className="bg-gray-800/50 rounded-lg p-3 cursor-pointer border-2 border-transparent hover:border-white hover:border-opacity-80 transition-colors duration-300 h-full flex flex-col">
-                            {" "}
-                            {/* Inner card with p-3 */}
-                            <div className="flex items-start mb-3 flex-shrink-0">
-                              <div className="w-10 h-10 rounded-full bg-gray-700 flex-shrink-0 mr-3 overflow-hidden">
-                                {review.isDiscussion ? (
-                                  <div className="w-full h-full flex items-center justify-center bg-gray-700 text-gray-400">
-                                    <MessageCircle size={20} />
+              <div className="relative">
+                {loadingReviews ? (
+                  <div className="flex justify-center w-full py-6 px-10">
+                    {" "}
+                    {/* Loading Skeleton */}
+                    <div className="w-8 h-8 border-2 border-gray-600 border-t-yellow-400 rounded-full animate-spin"></div>
+                  </div>
+                ) : reviews.length > 0 ? (
+                  <section className="relative">
+                    <div className="group relative">
+                      {/* === ИЗМЕНЯЕМ КЛАССЫ СЛАЙДЕРА РЕЦЕНЗИЙ === */}
+                      <div
+                        ref={reviewsSliderRef}
+                        className="flex overflow-x-auto gap-4 py-2 -mx-4 md:-mx-10 px-4 md:px-10 relative review-row scrollbar-hide scroll-smooth"
+                      >
+                        {" "}
+                        {/* ИСПРАВЛЕНО: trailer-row на review-row + ДОБАВЛЕН REF */}
+                        {reviews.map((review) => (
+                          <div
+                            key={review.id}
+                            className="flex-none w-72 p-1 relative group/item" // Outer container with p-1
+                            onClick={() => setSelectedReview(review)}
+                          >
+                            <div className="bg-gray-800/50 rounded-lg p-3 cursor-pointer border-2 border-transparent hover:border-white hover:border-opacity-80 transition-colors duration-300 h-full flex flex-col">
+                              {" "}
+                              {/* Inner card with p-3 */}
+                              <div className="flex items-start mb-3 flex-shrink-0">
+                                <div className="w-10 h-10 rounded-full bg-gray-700 flex-shrink-0 mr-3 overflow-hidden">
+                                  {review.isDiscussion ? (
+                                    <div className="w-full h-full flex items-center justify-center bg-gray-700 text-gray-400">
+                                      <MessageCircle size={20} />
+                                    </div>
+                                  ) : review.author_details?.avatar_path ? (
+                                    <img
+                                      src={
+                                        review.author_details.avatar_path.startsWith(
+                                          "/http"
+                                        )
+                                          ? review.author_details.avatar_path.substring(
+                                              1
+                                            )
+                                          : `https://imagetmdb.com/t/p/w100_and_h100_face${review.author_details.avatar_path}`
+                                      }
+                                      alt={review.author}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center bg-gray-700 text-gray-400">
+                                      <User size={20} />
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="flex-1">
+                                  <div className="flex justify-between items-center">
+                                    <h3 className="text-white font-medium">
+                                      {review.author}
+                                    </h3>
+                                    <span className="text-xs py-0.5 px-1.5 rounded bg-gray-700 text-gray-300">
+                                      {review.language === "ru" ? "RU" : "EN"}
+                                    </span>
                                   </div>
-                                ) : review.author_details?.avatar_path ? (
-                                  <img
-                                    src={
-                                      review.author_details.avatar_path.startsWith(
-                                        "/http"
-                                      )
-                                        ? review.author_details.avatar_path.substring(
-                                            1
-                                          )
-                                        : `https://imagetmdb.com/t/p/w100_and_h100_face${review.author_details.avatar_path}`
-                                    }
-                                    alt={review.author}
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center bg-gray-700 text-gray-400">
-                                    <User size={20} />
+                                  <div className="flex items-center">
+                                    {review.isDiscussion &&
+                                      review.likes !== 0 && (
+                                        <div className="flex items-center mr-2">
+                                          <ThumbsUp
+                                            size={14}
+                                            className="text-blue-400 mr-1"
+                                            fill={
+                                              review.likes > 0
+                                                ? "currentColor"
+                                                : "none"
+                                            }
+                                          />
+                                          <span className="text-xs text-gray-300">
+                                            {review.likes}
+                                          </span>
+                                        </div>
+                                      )}
+                                    {!review.isDiscussion &&
+                                      review.author_details?.rating && (
+                                        <div className="flex items-center mr-2">
+                                          <Star
+                                            size={14}
+                                            className="text-yellow-400 mr-1"
+                                            fill="currentColor"
+                                          />
+                                          <span className="text-xs text-gray-300">
+                                            {review.author_details.rating}/10
+                                          </span>
+                                        </div>
+                                      )}
+                                    <span className="text-xs text-gray-400">
+                                      {new Date(
+                                        review.created_at
+                                      ).toLocaleDateString("ru-RU", {
+                                        day: "numeric",
+                                        month: "long",
+                                        year: "numeric",
+                                      })}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="text-gray-300 text-sm review-content max-h-36 overflow-y-auto flex-grow">
+                                {" "}
+                                {/* Adjusted max-h, added flex-grow */}
+                                {review.content.length > 250
+                                  ? `${review.content.substring(0, 250)}...`
+                                  : review.content}
+                                {review.content.length > 250 && (
+                                  <div className="block mt-2 text-yellow-400 hover:text-yellow-500 transition-colors">
+                                    Читать полностью
                                   </div>
                                 )}
                               </div>
-                              <div className="flex-1">
-                                <div className="flex justify-between items-center">
-                                  <h3 className="text-white font-medium">
-                                    {review.author}
-                                  </h3>
-                                  <span className="text-xs py-0.5 px-1.5 rounded bg-gray-700 text-gray-300">
-                                    {review.language === "ru" ? "RU" : "EN"}
-                                  </span>
-                                </div>
-                                <div className="flex items-center">
-                                  {review.isDiscussion &&
-                                    review.likes !== 0 && (
-                                      <div className="flex items-center mr-2">
-                                        <ThumbsUp
-                                          size={14}
-                                          className="text-blue-400 mr-1"
-                                          fill={
-                                            review.likes > 0
-                                              ? "currentColor"
-                                              : "none"
-                                          }
-                                        />
-                                        <span className="text-xs text-gray-300">
-                                          {review.likes}
-                                        </span>
-                                      </div>
-                                    )}
-                                  {!review.isDiscussion &&
-                                    review.author_details?.rating && (
-                                      <div className="flex items-center mr-2">
-                                        <Star
-                                          size={14}
-                                          className="text-yellow-400 mr-1"
-                                          fill="currentColor"
-                                        />
-                                        <span className="text-xs text-gray-300">
-                                          {review.author_details.rating}/10
-                                        </span>
-                                      </div>
-                                    )}
-                                  <span className="text-xs text-gray-400">
-                                    {new Date(
-                                      review.created_at
-                                    ).toLocaleDateString("ru-RU", {
-                                      day: "numeric",
-                                      month: "long",
-                                      year: "numeric",
-                                    })}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="text-gray-300 text-sm review-content max-h-36 overflow-y-auto flex-grow">
-                              {" "}
-                              {/* Adjusted max-h, added flex-grow */}
-                              {review.content.length > 250
-                                ? `${review.content.substring(0, 250)}...`
-                                : review.content}
-                              {review.content.length > 250 && (
-                                <div className="block mt-2 text-yellow-400 hover:text-yellow-500 transition-colors">
-                                  Читать полностью
-                                </div>
-                              )}
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
+                      {/* Navigation buttons */}
+                      <button
+                        onClick={() => {
+                          if (reviewsSliderRef.current) {
+                            reviewsSliderRef.current.scrollBy({
+                              left: -300,
+                              behavior: "smooth",
+                            });
+                          }
+                        }}
+                        className="absolute top-1/2 -translate-y-1/2 left-2 z-10 p-2 rounded-full 
+                               bg-yellow-400 hover:bg-yellow-500 text-black 
+                               transition-all duration-300 disabled:opacity-0 disabled:cursor-not-allowed 
+                               opacity-0 md:group-hover:opacity-100"
+                      >
+                        <ChevronLeft className="w-6 h-6" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (reviewsSliderRef.current) {
+                            reviewsSliderRef.current.scrollBy({
+                              left: 300,
+                              behavior: "smooth",
+                            });
+                          }
+                        }}
+                        className="absolute top-1/2 -translate-y-1/2 right-2 z-10 p-2 rounded-full 
+                               bg-yellow-400 hover:bg-yellow-500 text-black 
+                               transition-all duration-300 disabled:opacity-0 disabled:cursor-not-allowed 
+                               opacity-0 md:group-hover:opacity-100"
+                      >
+                        <ChevronRight className="w-6 h-6" />
+                      </button>
                     </div>
-                    {/* Navigation buttons */}
-                    <button
-                      onClick={() => {
-                        if (reviewsSliderRef.current) {
-                          reviewsSliderRef.current.scrollBy({
-                            left: -300,
-                            behavior: "smooth",
-                          });
-                        }
-                      }}
-                      className="absolute top-1/2 -translate-y-1/2 left-2 z-10 p-2 rounded-full 
-                               bg-yellow-400 hover:bg-yellow-500 text-black 
-                               transition-all duration-300 disabled:opacity-0 disabled:cursor-not-allowed 
-                               opacity-0 md:group-hover:opacity-100"
-                    >
-                      <ChevronLeft className="w-6 h-6" />
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (reviewsSliderRef.current) {
-                          reviewsSliderRef.current.scrollBy({
-                            left: 300,
-                            behavior: "smooth",
-                          });
-                        }
-                      }}
-                      className="absolute top-1/2 -translate-y-1/2 right-2 z-10 p-2 rounded-full 
-                               bg-yellow-400 hover:bg-yellow-500 text-black 
-                               transition-all duration-300 disabled:opacity-0 disabled:cursor-not-allowed 
-                               opacity-0 md:group-hover:opacity-100"
-                    >
-                      <ChevronRight className="w-6 h-6" />
-                    </button>
+                  </section>
+                ) : (
+                  <div className="px-10">
+                    {" "}
+                    {/* Нет рецензий */}
+                    <div className="py-4 text-gray-400 text-center ">
+                      Для этого фильма пока нет рецензий
+                    </div>
                   </div>
-                </section>
-              ) : (
-                <div className="px-10">
-                  {" "}
-                  {/* Нет рецензий */}
-                  <div className="py-4 text-gray-400 text-center ">
-                    Для этого фильма пока нет рецензий
-                  </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          </div>
+          )}
+          {/* Блок с рецензиями - КОНЕЦ УСЛОВНОГО РЕНДЕРИНГА */}
 
           {/* Модальное окно для просмотра полной рецензии */}
           {selectedReview && (
