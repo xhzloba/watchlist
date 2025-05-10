@@ -3220,6 +3220,13 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                     stroke="white"
                   />
                 </div>
+                {/* === НАЧАЛО: Отображение качества на постере (только десктоп) === */}
+                {movieQuality && (
+                  <div className="absolute top-2 right-2 bg-blue-600 text-white text-xs font-medium px-1.5 py-0.5 rounded shadow-md z-10">
+                    {movieQuality}
+                  </div>
+                )}
+                {/* === КОНЕЦ: Отображение качества на постере === */}
               </div>
 
               {/* Индикатор "В медиатеке" или уведомление - фиксированная высота - Скрываем на мобильных */}
@@ -3246,7 +3253,7 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                         }
                         className="flex-shrink-0 hover:opacity-80 transition-opacity"
                       >
-                        <X className="w-4 h-4" />
+                        <X size={16} />
                       </button>
                     </motion.div>
                   ) : (
@@ -3442,11 +3449,11 @@ export default function MovieDetail({ movie, cast }: MovieDetailProps) {
                   {" "}
                   {/* Возвращаем items-center */}
                   {/* Качество (осталось здесь) */}
-                  {movieQuality && (
+                  {/* movieQuality && (
                     <span className="px-1.5 py-0.5 bg-blue-600 rounded text-white text-xs font-medium whitespace-nowrap">
                       {movieQuality}
                     </span>
-                  )}
+                  ) */}
                   {/* Жанры */}
                   {movie.genres && movie.genres.length > 0 && (
                     // Обертка для жанров остается с flex-wrap
