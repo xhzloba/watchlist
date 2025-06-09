@@ -768,7 +768,9 @@ function DiscoverContent() {
                 <span className="px-3 py-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-[10px] font-bold rounded-lg shadow-lg">
                   {typeof releaseQuality === "object" && releaseQuality.type
                     ? releaseQuality.type
-                    : "HDRip"}
+                    : typeof releaseQuality === "string"
+                    ? releaseQuality
+                    : ""}
                 </span>
               </div>
             )}
