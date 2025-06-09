@@ -158,7 +158,7 @@ export default function MovieRow({
       // Используем специальные классы с CSS media queries внутри
       switch (posterSize) {
         case "xlarge":
-          baseClass = "w-[180px] md:w-[280px]"; // xlarge: мобильный 180px, десктоп 280px
+          baseClass = "w-[180px] md:w-[250px]"; // xlarge: мобильный 180px, десктоп 280px
           break;
         case "large":
           baseClass = "w-[160px] md:w-[230px]"; // large: мобильный 160px, десктоп 230px
@@ -167,7 +167,7 @@ export default function MovieRow({
           baseClass = "w-[140px] md:w-[180px]"; // small: мобильный 140px, десктоп 180px
           break;
         default: // normal (или не указан)
-          baseClass = "w-[160px] md:w-[280px]"; // normal: мобильный 160px, десктоп 280px (XL десктоп по умолчанию)
+          baseClass = "w-[180px] md:w-[250px]"; // normal: мобильный 160px, десктоп 280px (XL десктоп по умолчанию)
       }
     }
 

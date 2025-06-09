@@ -221,104 +221,201 @@ const ActorNotification: React.FC<ActorNotificationProps> = memo(
 
     return (
       <motion.div
-        initial={{ opacity: 0, x: 100 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: 100 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="fixed bottom-4 right-4 z-[70] w-80 md:w-96 max-w-[calc(100vw-2rem)] bg-blue-600 rounded-xl shadow-lg border border-black/20 overflow-hidden text-white"
+        initial={{ opacity: 0, x: 100, scale: 0.9 }}
+        animate={{ opacity: 1, x: 0, scale: 1 }}
+        exit={{ opacity: 0, x: 100, scale: 0.9 }}
+        transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
+        className="fixed bottom-4 left-4 right-4 md:bottom-4 md:right-4 md:left-auto md:w-[580px] z-[70] 
+                   bg-gradient-to-br from-indigo-600 via-purple-600 to-blue-700 
+                   rounded-2xl shadow-2xl border border-white/20 overflow-hidden text-white
+                   backdrop-blur-lg before:absolute before:inset-0 before:bg-white/5 before:rounded-2xl
+                   after:absolute after:inset-0 after:bg-gradient-to-br after:from-transparent after:via-white/5 after:to-transparent after:rounded-2xl"
+        style={{
+          boxShadow:
+            "0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 30px rgba(99, 102, 241, 0.3)",
+        }}
       >
-        <div className="p-2 border-b border-white/10 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <User className="w-5 h-5 text-white" />
-            <h3 className="text-sm font-semibold truncate">
-              Хиты с актерами фильма
-            </h3>
+        {/* Glow эффект сверху */}
+        <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-32 h-10 bg-gradient-to-b from-indigo-400/50 to-transparent blur-xl opacity-70"></div>
+
+        <div className="relative z-10 p-3 border-b border-white/20 backdrop-blur-sm bg-white/10 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg shadow-lg">
+              <User className="w-5 h-5 text-white drop-shadow-sm" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-white drop-shadow-sm">
+                Хиты с актерами фильма
+              </h3>
+              <p className="text-xs text-white/80">
+                {orderedAndShuffledMovies.length} рекомендаций
+              </p>
+            </div>
           </div>
           <button
             onClick={onClose}
-            className="text-white/70 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10"
+            className="text-white/70 hover:text-white transition-all duration-300 p-2 rounded-full 
+                     hover:bg-white/20 hover:scale-110 active:scale-95 backdrop-blur-sm
+                     shadow-lg hover:shadow-xl"
             aria-label="Закрыть уведомление"
           >
-            <X size={16} />
+            <X size={18} />
           </button>
         </div>
-        <div className="p-2 relative group">
+
+        <div className="relative z-10 p-3 group">
           <div
             ref={scrollContainerRef}
-            className="flex overflow-x-auto scrollbar-hide gap-2 pb-1 scroll-smooth"
+            className="flex overflow-x-auto scrollbar-hide gap-3 pb-2 scroll-smooth"
           >
-            {orderedAndShuffledMovies.map(({ movie, actors: movieActors }) => (
-              <div
-                key={`${movie.id}-actor-rec-ordered`}
-                className="cursor-pointer group/item flex-none w-24"
-                onClick={() => handleMovieClick(movie.id)}
-              >
-                <div
-                  className={`relative aspect-[2/3] ${
-                    roundedCorners ? "rounded-md" : "rounded"
-                  } overflow-hidden border-2 border-transparent group-hover/item:border-white transition-colors duration-200 mb-1`}
+            {orderedAndShuffledMovies.map(
+              ({ movie, actors: movieActors }, index) => (
+                <motion.div
+                  key={`${movie.id}-actor-rec-ordered`}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05, duration: 0.4 }}
+                  className="cursor-pointer group/item flex-none w-28"
+                  onClick={() => handleMovieClick(movie.id)}
                 >
-                  <NextImage
-                    src={getImageUrl(movie.poster_path || "", "w300")}
-                    alt={movie.title || "Постер"}
-                    fill
-                    sizes="96px"
-                    className="object-cover"
-                    onError={(e) => {
-                      e.currentTarget.src = "/placeholder.svg";
+                  <div
+                    className={`relative aspect-[2/3] ${
+                      roundedCorners ? "rounded-xl" : "rounded-lg"
+                    } overflow-hidden border-2 border-white/20 group-hover/item:border-yellow-400 
+                    transition-all duration-300 mb-2 shadow-lg group-hover/item:shadow-2xl
+                    bg-gradient-to-b from-gray-800 to-gray-900`}
+                    style={{
+                      boxShadow:
+                        "0 8px 25px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
                     }}
-                  />
-                  {/* Оверлей */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover/item:opacity-100 transition-opacity duration-200 flex flex-col justify-end p-1">
-                    <p className="text-[10px] text-white font-semibold line-clamp-2 leading-tight">
-                      {movie.title} ({getYear(movie.release_date)})
-                    </p>
+                  >
+                    <NextImage
+                      src={getImageUrl(movie.poster_path || "", "w300")}
+                      alt={movie.title || "Постер"}
+                      fill
+                      sizes="112px"
+                      className="object-cover"
+                      onError={(e) => {
+                        e.currentTarget.src = "/placeholder.svg";
+                      }}
+                    />
+
+                    {/* Градиентный оверлей */}
+                    <div
+                      className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent 
+                                opacity-0 group-hover/item:opacity-100 transition-all duration-300 
+                                flex flex-col justify-end p-2"
+                    >
+                      <div className="transform translate-y-2 group-hover/item:translate-y-0 transition-transform duration-300">
+                        <p className="text-[11px] text-white font-bold line-clamp-2 leading-tight mb-1 drop-shadow-lg">
+                          {movie.title}
+                        </p>
+                        <p className="text-[9px] text-yellow-400 font-semibold">
+                          {getYear(movie.release_date)}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Глянцевый эффект */}
+                    <div
+                      className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-transparent 
+                                opacity-0 group-hover/item:opacity-100 transition-opacity duration-300 pointer-events-none"
+                    ></div>
+
+                    {/* Аватар актера */}
+                    {movieActors.length > 0 && (
+                      <div
+                        className="absolute top-2 right-2 opacity-0 group-hover/item:opacity-100 
+                                  transition-all duration-300 transform scale-75 group-hover/item:scale-100"
+                      >
+                        <div className="bg-gradient-to-r from-purple-500 to-pink-500 p-0.5 rounded-full shadow-lg">
+                          {movieActors[0].profile_path ? (
+                            <img
+                              src={getImageUrl(
+                                movieActors[0].profile_path,
+                                "w45"
+                              )}
+                              alt={movieActors[0].name}
+                              className="w-6 h-6 rounded-full object-cover border border-white/50"
+                              loading="lazy"
+                            />
+                          ) : (
+                            <div
+                              className="w-6 h-6 rounded-full bg-gradient-to-r from-gray-600 to-gray-700 
+                                        flex items-center justify-center border border-white/50"
+                            >
+                              <User className="w-3 h-3 text-white" />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Эффект свечения при ховере */}
+                    <div
+                      className="absolute -inset-0.5 bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-600 
+                                rounded-xl blur opacity-0 group-hover/item:opacity-30 transition-opacity duration-300 -z-10"
+                    ></div>
                   </div>
-                  {/* Отображение первого актера */}
+
+                  {/* Улучшенное имя актера */}
                   {movieActors.length > 0 && (
-                    <div className="absolute top-1 left-1 bg-black/60 rounded-full px-1.5 py-0.5 flex items-center gap-1 opacity-0 group-hover/item:opacity-100 transition-opacity duration-200">
-                      {movieActors[0].profile_path ? (
-                        <img
-                          src={getImageUrl(movieActors[0].profile_path, "w45")}
-                          alt={movieActors[0].name}
-                          className="w-3 h-3 rounded-full object-cover"
-                          loading="lazy"
-                        />
-                      ) : (
-                        <User className="w-3 h-3 text-gray-300" />
-                      )}
+                    <div className="text-center px-1">
+                      <p className="text-[10px] text-white/90 font-medium truncate leading-tight">
+                        {movieActors[0].name}
+                      </p>
+                      <div
+                        className="w-full h-px bg-gradient-to-r from-transparent via-white/30 to-transparent mt-1 
+                                  opacity-0 group-hover/item:opacity-100 transition-opacity duration-300"
+                      ></div>
                     </div>
                   )}
-                </div>
-                {/* Имя актера под постером */}
-                {movieActors.length > 0 && (
-                  <p className="text-[10px] text-center text-gray-300 truncate px-1">
-                    {movieActors[0].name}
-                  </p>
-                )}
-              </div>
-            ))}
+                </motion.div>
+              )
+            )}
           </div>
-          {/* Кнопки навигации */}
+
+          {/* Улучшенные кнопки навигации */}
           <button
             onClick={scrollLeft}
-            className="absolute top-1/2 -translate-y-1/2 left-0 z-10 p-1 rounded-full 
-                     bg-black/40 hover:bg-black/70 text-white 
+            className="absolute top-1/2 -translate-y-1/2 -left-1 z-20 p-2 rounded-full 
+                     bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 
+                     text-white shadow-lg hover:shadow-xl backdrop-blur-sm border border-white/20
                      transition-all duration-300 disabled:opacity-0 disabled:cursor-not-allowed 
-                     opacity-0 md:group-hover:opacity-100"
+                     opacity-0 md:group-hover:opacity-100 hover:scale-110 active:scale-95
+                     before:absolute before:inset-0 before:bg-white/10 before:rounded-full before:blur-sm"
+            style={{
+              boxShadow: "0 8px 20px rgba(99, 102, 241, 0.4)",
+            }}
           >
-            <ChevronLeft className="w-5 h-5" />
+            <ChevronLeft className="w-5 h-5 relative z-10" />
           </button>
+
           <button
             onClick={scrollRight}
-            className="absolute top-1/2 -translate-y-1/2 right-0 z-10 p-1 rounded-full 
-                     bg-black/40 hover:bg-black/70 text-white 
+            className="absolute top-1/2 -translate-y-1/2 -right-1 z-20 p-2 rounded-full 
+                     bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 
+                     text-white shadow-lg hover:shadow-xl backdrop-blur-sm border border-white/20
                      transition-all duration-300 disabled:opacity-0 disabled:cursor-not-allowed 
-                     opacity-0 md:group-hover:opacity-100"
+                     opacity-0 md:group-hover:opacity-100 hover:scale-110 active:scale-95
+                     before:absolute before:inset-0 before:bg-white/10 before:rounded-full before:blur-sm"
+            style={{
+              boxShadow: "0 8px 20px rgba(219, 39, 119, 0.4)",
+            }}
           >
-            <ChevronRight className="w-5 h-5" />
+            <ChevronRight className="w-5 h-5 relative z-10" />
           </button>
         </div>
+
+        {/* Декоративные элементы */}
+        <div
+          className="absolute bottom-0 left-0 w-20 h-20 bg-gradient-to-r from-yellow-400/20 to-transparent 
+                      rounded-full blur-xl opacity-50"
+        ></div>
+        <div
+          className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-l from-pink-400/20 to-transparent 
+                      rounded-full blur-xl opacity-50"
+        ></div>
       </motion.div>
     );
   }

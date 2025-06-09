@@ -7,14 +7,6 @@ interface Movie {
   release_date?: string;
 }
 
-interface KinoboxMovie {
-  id: number;
-  title: {
-    russian: string | null;
-    original: string | null;
-  };
-  year: number;
-}
 
 /**
  * Хук для поиска ID фильма на Кинопоиске через API Kinobox
@@ -42,7 +34,7 @@ export function useKinobox(movie: Movie | null) {
 
         // Выполняем запрос к API Kinobox
         const response = await fetch(
-          `https://kp.kinobox.tv/films/search/?query=${encodeURIComponent(
+          `https://kp.kinobox.tv/movies/search/?query=${encodeURIComponent(
             movie.title
           )}`
         );
@@ -61,6 +53,9 @@ export function useKinobox(movie: Movie | null) {
           let exactMatch = null;
           // А также запоминаем первое совпадение только по названию
           let titleOnlyMatch = null;
+          // И фильм с наиболее близким годом
+          let closestYearMatch = null;
+          let smallestYearDifference = Infinity;
 
           // Проходим по всем результатам поиска
           for (const item of data.data.items) {
@@ -101,6 +96,25 @@ export function useKinobox(movie: Movie | null) {
             if (titleMatches && !titleOnlyMatch) {
               titleOnlyMatch = item;
             }
+
+            // Если совпадает название и есть год релиза у нашего фильма
+            // ищем фильм с наиболее близким годом
+            if (titleMatches && movie.release_date && item.year) {
+              const movieYear = parseInt(movie.release_date.substring(0, 4));
+              const yearDifference = Math.abs(item.year - movieYear);
+
+              if (yearDifference < smallestYearDifference) {
+                smallestYearDifference = yearDifference;
+                closestYearMatch = item;
+              } else if (yearDifference === smallestYearDifference) {
+                // Если разница в годах одинаковая, предпочитаем более ранний год из результатов Kinobox
+                // (предполагая, что это может быть оригинальный фильм, а не ремейк)
+                // Это спорное решение, возможно, потребуется другая логика или более точные данные
+                if (closestYearMatch && item.year < closestYearMatch.year) {
+                  closestYearMatch = item;
+                }
+              }
+            }
           }
 
           // Сначала используем точное совпадение, если есть
@@ -113,7 +127,17 @@ export function useKinobox(movie: Movie | null) {
             console.log(`ID фильма на Кинопоиске: ${kinopoiskId}`);
             setKinoboxId(kinopoiskId);
           }
-          // Если точного совпадения нет, но есть совпадение по названию, используем его
+          // Если точного совпадения нет, но есть совпадение по наиболее близкому году, используем его
+          else if (closestYearMatch) {
+            const kinopoiskId = closestYearMatch.id;
+            console.log(
+              "Найдено совпадение по наиболее близкому году:",
+              closestYearMatch
+            );
+            console.log(`Используем ID (ближайший год): ${kinopoiskId}`);
+            setKinoboxId(kinopoiskId);
+          }
+          // Если нет ни точного совпадения, ни по близкому году, но есть совпадение по названию, используем его
           else if (titleOnlyMatch) {
             const kinopoiskId = titleOnlyMatch.id;
             console.log(
