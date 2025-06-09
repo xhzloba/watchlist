@@ -39,6 +39,14 @@ const ActorNotification: React.FC<ActorNotificationProps> = memo(
     >({});
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [isVisible, setIsVisible] = useState(false);
+    const [isClosing, setIsClosing] = useState(false);
+
+    // Запускаем анимацию появления после монтирования
+    useEffect(() => {
+      const timer = setTimeout(() => setIsVisible(true), 100);
+      return () => clearTimeout(timer);
+    }, []);
 
     useEffect(() => {
       const fetchActorMovies = async () => {
@@ -161,15 +169,41 @@ const ActorNotification: React.FC<ActorNotificationProps> = memo(
     }
 
     const handleMovieClick = (movieId: number) => {
+      setIsClosing(true);
       playSound("choose.mp3");
-      onClose();
-      router.push(`/movie/${movieId}`);
+
+      setTimeout(() => {
+        onClose();
+        router.push(`/movie/${movieId}`);
+      }, 150);
+    };
+
+    const handleClose = () => {
+      setIsClosing(true);
+      setTimeout(() => {
+        onClose();
+      }, 150);
     };
 
     return (
       <div
-        className="fixed bottom-4 left-4 right-4 md:bottom-4 md:right-4 md:left-auto md:w-[500px] z-[70] 
-                      bg-gray-900/95 backdrop-blur-sm rounded-lg shadow-xl border border-gray-700 text-white"
+        className={`fixed bottom-4 left-4 right-4 md:bottom-4 md:right-4 md:left-auto md:w-[500px] z-[70] 
+                    bg-gray-900/95 backdrop-blur-sm rounded-lg shadow-xl border border-gray-700 text-white
+                    ${
+                      isVisible && !isClosing
+                        ? "opacity-100 translate-y-0 scale-100 transition-all duration-500 ease-out"
+                        : isClosing
+                        ? "opacity-0 translate-y-4 scale-95 transition-all duration-150 ease-in"
+                        : "opacity-0 translate-y-8 scale-90 transition-all duration-500 ease-out"
+                    }`}
+        style={{
+          transform:
+            isVisible && !isClosing
+              ? "translateY(0) scale(1)"
+              : isClosing
+              ? "translateY(16px) scale(0.95)"
+              : "translateY(32px) scale(0.9)",
+        }}
       >
         {/* Заголовок */}
         <div className="flex items-center justify-between p-3 border-b border-gray-700">
@@ -185,8 +219,8 @@ const ActorNotification: React.FC<ActorNotificationProps> = memo(
             </div>
           </div>
           <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-white p-1 rounded"
+            onClick={handleClose}
+            className="text-gray-400 hover:text-white p-1 rounded transition-colors duration-150"
           >
             <X size={16} />
           </button>
@@ -195,54 +229,64 @@ const ActorNotification: React.FC<ActorNotificationProps> = memo(
         {/* Список фильмов */}
         <div className="p-3">
           <div className="grid grid-cols-6 gap-2">
-            {orderedAndShuffledMovies.map(({ movie, actors: movieActors }) => (
-              <div
-                key={movie.id}
-                className="cursor-pointer group"
-                onClick={() => handleMovieClick(movie.id)}
-              >
+            {orderedAndShuffledMovies.map(
+              ({ movie, actors: movieActors }, index) => (
                 <div
-                  className="relative aspect-[2/3] rounded-md overflow-hidden bg-gray-800 
-                               border border-gray-700 group-hover:border-yellow-500 transition-colors"
+                  key={movie.id}
+                  className={`cursor-pointer group
+                           ${
+                             isVisible
+                               ? "opacity-100 translate-y-0 transition-all duration-300 ease-out"
+                               : "opacity-0 translate-y-4 transition-all duration-300 ease-out"
+                           }`}
+                  style={{
+                    transitionDelay: isVisible ? `${index * 30}ms` : "0ms",
+                  }}
+                  onClick={() => handleMovieClick(movie.id)}
                 >
-                  {movie.poster_path ? (
-                    <NextImage
-                      src={getImageUrl(movie.poster_path, "w185")}
-                      alt={movie.title || ""}
-                      fill
-                      sizes="80px"
-                      className="object-cover"
-                    />
-                  ) : (
-                    <div className="flex items-center justify-center h-full text-gray-500">
-                      <User className="w-6 h-6" />
-                    </div>
-                  )}
-
-                  {/* Название при ховере */}
                   <div
-                    className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 
-                                 transition-opacity flex items-end p-1"
+                    className="relative aspect-[2/3] rounded-md overflow-hidden bg-gray-800 
+                               border border-gray-700 group-hover:border-yellow-500 transition-colors duration-150"
                   >
-                    <div className="text-[10px] text-white">
-                      <p className="font-medium line-clamp-2 leading-tight">
-                        {movie.title}
-                      </p>
-                      <p className="text-gray-300">
-                        {getYear(movie.release_date)}
-                      </p>
+                    {movie.poster_path ? (
+                      <NextImage
+                        src={getImageUrl(movie.poster_path, "w185")}
+                        alt={movie.title || ""}
+                        fill
+                        sizes="80px"
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center h-full text-gray-500">
+                        <User className="w-6 h-6" />
+                      </div>
+                    )}
+
+                    {/* Название при ховере */}
+                    <div
+                      className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 
+                                 transition-opacity duration-150 flex items-end p-1"
+                    >
+                      <div className="text-[10px] text-white">
+                        <p className="font-medium line-clamp-2 leading-tight">
+                          {movie.title}
+                        </p>
+                        <p className="text-gray-300">
+                          {getYear(movie.release_date)}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Имя актера */}
-                {movieActors.length > 0 && (
-                  <p className="text-[9px] text-gray-400 mt-1 truncate text-center">
-                    {movieActors[0].name}
-                  </p>
-                )}
-              </div>
-            ))}
+                  {/* Имя актера */}
+                  {movieActors.length > 0 && (
+                    <p className="text-[9px] text-gray-400 mt-1 truncate text-center">
+                      {movieActors[0].name}
+                    </p>
+                  )}
+                </div>
+              )
+            )}
           </div>
         </div>
       </div>
